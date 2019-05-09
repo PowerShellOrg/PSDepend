@@ -93,9 +93,10 @@ if($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction 
 }
 else
 {
-if ($Force) {New-Item -ItemType Directory -Name $Dependency.Target -Force | Out-Null
+if ($Force) {
+            New-Item -ItemType Directory -Name (Split-Path $Dependency.Target -Leaf) -Force | Out-Null
             Write-Debug "Target folder $($Dependency.Target) created as -Force switch was specified"
-            $Target = Join-Path $PWD "$($Dependency.Target)"
+            $Target = Join-Path $PWD "$(Split-Path $Dependency.Target -Leaf)"
             }
     else {
         $Target = $PWD.Path
