@@ -194,7 +194,7 @@ Function Invoke-PSDepend {
                 }
                 else
                 {
-                    Write-Warning "No *.depend.ps1 files found under [$PathItem]"
+                    Write-Warning "No *.depend.psd1 files found under [$PathItem]"
                 }
             }
             $GetPSDependParams.add('Path',$DependencyFiles)
