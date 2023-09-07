@@ -16,7 +16,10 @@
                 Force = $true
             }
             if ($Version -and $Version -ne 'latest') {
-                $importParams.add('RequiredVersion',$Version)
+                # Sanitize version string. The RequiredVersion parameter is a System.Version and
+                # doesn't know anything about pre-release tags.
+                $BaseVersion = ($Version -split '-')[0]
+                $importParams.add('RequiredVersion',$BaseVersion)
             }
             Import-Module @importParams
         }
