@@ -1,6 +1,6 @@
 <#
     .SYNOPSIS
-        Installs a PowerShell resource (module) from a PowerShell repository using PSResourceGet.
+        Installs a PowerShell resource from a PowerShell repository using PSResourceGet.
 
     .DESCRIPTION
         Installs a PowerShell module from a PowerShell repository (such as the PowerShell Gallery)

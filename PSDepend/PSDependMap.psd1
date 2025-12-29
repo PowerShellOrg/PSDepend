@@ -86,7 +86,7 @@
 
     PsResourceGet  = @{
         Script      = 'PSResourceGet.ps1'
-        Description = 'Installs a PowerShell resource (module) from a PowerShell repository using PSResourceGet'
+        Description = 'Installs a PowerShell resource from a PowerShell repository using PSResourceGet'
         Supports    = 'windows', 'core', 'macos', 'linux'
     }
 
