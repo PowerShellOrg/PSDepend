@@ -14,6 +14,8 @@ properties {
     $PSBPreference.Test.ScriptAnalysis.Enabled                  = $true
     $PSBPreference.Test.ScriptAnalysis.FailBuildOnSeverityLevel = 'Error'
     $PSBPreference.Test.CodeCoverage.Enabled                    = $false
+    # Explicit casing required for Linux (case-sensitive filesystem)
+    $PSBPreference.Test.RootDir                                 = Join-Path $ENV:BHProjectPath 'Tests'
 
     # Exclude Windows-only tests on non-Windows runners
     if (-not $IsWindows) {
@@ -24,6 +26,10 @@ properties {
     $PSBPreference.Publish.PSRepository        = 'PSGallery'
     $PSBPreference.Publish.PSRepositoryApiKey  = $env:PSGALLERY_API_KEY
 }
+
+# Skip help generation: Build-PSBuildMarkdown calls Remove-Module on a module required by
+# PowerShellBuild itself, causing a fatal error in CI. Doc generation is not needed for tests.
+$PSBBuildDependency = @('StageFiles')
 
 task default -depends Test
 
