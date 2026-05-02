@@ -21,12 +21,13 @@ Properties {
     if (-not $IsWindows) {
         $PSBPreference.Test.ExcludeTagFilter = @('WindowsOnly')
     }
-
-    # Publish configuration — API key injected via environment in CI
-    $PSBPreference.Publish.PSRepository        = 'PSGallery'
-    $PSBPreference.Publish.PSRepositoryApiKey  = $env:PSGALLERY_API_KEY
 }
+
+# Pre-set before -FromModule so PowerShellBuild 0.7.x's null-check doesn't override it.
+# Skips BuildHelp (GenerateMarkdown) — doc generation is not needed in the test pipeline
+# and Build-PSBuildMarkdown has a Remove-Module scope bug specific to PSDepend.
+$PSBBuildDependency = @('StageFiles')
 
 Task Default -Depends Test
 
-Task Test -FromModule PowerShellBuild -MinimumVersion '0.6.1'
+Task Test -FromModule PowerShellBuild -MinimumVersion '0.7.3'
