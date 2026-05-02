@@ -10,13 +10,15 @@ on:
       - 'PSDepend/**'
       - 'Tests/**'
       - 'build.ps1'
-      - 'psake.ps1'
+      - 'psakeFile.ps1'
+      - 'requirements.psd1'
   pull_request:
     paths:
       - 'PSDepend/**'
       - 'Tests/**'
       - 'build.ps1'
-      - 'psake.ps1'
+      - 'psakeFile.ps1'
+      - 'requirements.psd1'
   workflow_dispatch:
 
 jobs:
@@ -29,15 +31,15 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: Test
+      - name: Bootstrap and Test
         shell: pwsh
-        run: ./build.ps1 -Task Test
+        run: ./build.ps1 -Bootstrap -Task Test
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: testResults-${{ matrix.os }}
-          path: ./Tests/out/testResults.xml
+          path: ./Output/testResults.xml
 
   publish-test-results:
     name: Publish Test Results

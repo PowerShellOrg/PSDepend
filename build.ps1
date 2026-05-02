@@ -1,18 +1,31 @@
-﻿[CmdletBinding()]
-param (
-    [parameter(Position = 0)]
-    [ValidateSet('Default','Init','Test','Build','Deploy')]
-    $Task = 'Default'
+[cmdletbinding(DefaultParameterSetName = 'Task')]
+param(
+    [parameter(ParameterSetName = 'Task', Position = 0)]
+    [string[]]$Task = 'default',
+
+    # Install build dependencies from requirements.psd1 via PSDepend
+    [switch]$Bootstrap,
+
+    [parameter(ParameterSetName = 'Help')]
+    [switch]$Help
 )
 
-# Grab nuget bits, install modules, set build variables, start build.
-Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
+$ErrorActionPreference = 'Stop'
 
-Install-Module Psake, PSDeploy, BuildHelpers -force -AllowClobber -Scope CurrentUser
-Install-Module Pester -RequiredVersion 4.10.1 -Force -AllowClobber -SkipPublisherCheck -Scope CurrentUser
-Import-Module Psake, BuildHelpers
+if ($Bootstrap.IsPresent) {
+    Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+    if (-not (Get-Module -Name PSDepend -ListAvailable)) {
+        Install-Module -Name PSDepend -Repository PSGallery -Scope CurrentUser -Force
+    }
+    Import-Module -Name PSDepend -Verbose:$false
+    Invoke-PSDepend -Path './requirements.psd1' -Install -Import -Force -WarningAction SilentlyContinue
+}
 
-Set-BuildEnvironment -ErrorAction SilentlyContinue
-
-Invoke-psake -buildFile $ENV:BHProjectPath\psake.ps1 -taskList $Task -nologo
-exit ( [int]( -not $psake.build_success ) )
+if ($PSCmdlet.ParameterSetName -eq 'Help') {
+    Get-PSakeScriptTasks -buildFile './psakeFile.ps1' | Format-Table -Property Name, Description
+} else {
+    Set-BuildEnvironment -Force
+    Invoke-psake -buildFile './psakeFile.ps1' -taskList $Task -Verbose:$VerbosePreference
+    exit ([int](-not $psake.build_success))
+}
