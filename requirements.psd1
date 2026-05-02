@@ -6,7 +6,7 @@
         Version = '4.9.1'
     }
     'PowerShellBuild' = @{
-        Version = '0.7.2'
+        Version = '0.6.1'
     }
     'Pester' = @{
         Version    = '5.7.1'
