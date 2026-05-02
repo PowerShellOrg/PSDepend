@@ -7,7 +7,10 @@
 
     # test core/full
     if('Core' -eq $PSVersionTable.PSEdition) {
-        if($Support -notcontains 'core') {
+        # On Windows with PS Core, 'windows' in Support is sufficient (backwards compat with types
+        # declared before PS Core on Windows was common)
+        $windowsCoreOk = $IsWindows -and ($Support -contains 'windows')
+        if(-not $windowsCoreOk -and $Support -notcontains 'core') {
             Write-Verbose "Supported platforms [$Support] for type [$Type] does not contain [core].  Pull requests welcome!"
             return $false
         }
