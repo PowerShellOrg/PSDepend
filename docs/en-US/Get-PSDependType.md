@@ -15,7 +15,7 @@ Get dependency types and related information.
 
 ```
 Get-PSDependType [[-DependencyType] <String>] [[-Path] <String>] [-ShowHelp] [-SkipHelp]
- [<CommonParameters>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -51,11 +51,12 @@ Limit results to this dependency type. Accepts wildcards.
 Type: String
 Parameter Sets: (All)
 Aliases:
+
 Required: False
-Position: 0
+Position: 1
 Default value: None
 Accept pipeline input: False
-Accept wildcard characters: True
+Accept wildcard characters: False
 ```
 
 ### -Path
@@ -66,8 +67,9 @@ Path to a PSDependMap.psd1 file. Defaults to the one in the PSDepend module root
 Type: String
 Parameter Sets: (All)
 Aliases:
+
 Required: False
-Position: 1
+Position: 2
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -81,6 +83,7 @@ Display help content for the dependency type script.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -96,6 +99,22 @@ Skip retrieving help content for dependency type scripts.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
 Required: False
 Position: Named
 Default value: None
@@ -104,10 +123,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
--InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable,
--Verbose, -WarningAction, and -WarningVariable.
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 

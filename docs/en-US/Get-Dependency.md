@@ -13,9 +13,16 @@ Read a dependency psd1 file.
 
 ## SYNTAX
 
+### File (Default)
 ```
-Get-Dependency [[-Path] <String[]>] [-Tags <String[]>] [-Recurse] [-InputObject <Hashtable[]>]
- [-Credentials <Hashtable>] [<CommonParameters>]
+Get-Dependency [-Path <String[]>] [-Tags <String[]>] [-Recurse] [-Credentials <Hashtable>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+### Hashtable
+```
+Get-Dependency [-Tags <String[]>] [-InputObject <Hashtable[]>] [-Credentials <Hashtable>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -48,10 +55,11 @@ Path to project root or a specific dependency file.
 
 ```yaml
 Type: String[]
-Parameter Sets: (All)
+Parameter Sets: File
 Aliases:
+
 Required: False
-Position: 0
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -65,6 +73,7 @@ Limit results to dependencies with one or more matching tags.
 Type: String[]
 Parameter Sets: (All)
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -78,8 +87,9 @@ Search recursively for dependency files under Path.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: File
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -93,12 +103,13 @@ Treat a hashtable as dependency file contents rather than reading from disk.
 
 ```yaml
 Type: Hashtable[]
-Parameter Sets: (All)
+Parameter Sets: Hashtable
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
-Accept pipeline input: True (ByValue)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -110,6 +121,22 @@ Hashtable of PSCredentials keyed by credential name for private feeds.
 Type: Hashtable
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
 Required: False
 Position: Named
 Default value: None
@@ -118,10 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
--InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable,
--Verbose, -WarningAction, and -WarningVariable.
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 

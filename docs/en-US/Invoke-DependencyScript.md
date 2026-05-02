@@ -14,8 +14,8 @@ Invoke a dependency type script for a given action.
 ## SYNTAX
 
 ```
-Invoke-DependencyScript [-Dependency] <PSObject> [[-PSDependTypePath] <String>]
- [[-PSDependAction] <String[]>] [-Tags <String[]>] [-Quiet] [<CommonParameters>]
+Invoke-DependencyScript -Dependency <PSObject> [-PSDependTypePath <String>] [-PSDependAction <String[]>]
+ [-Tags <String[]>] [-Quiet] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -43,8 +43,9 @@ A PSDepend.Dependency object from Get-Dependency.
 Type: PSObject
 Parameter Sets: (All)
 Aliases:
+
 Required: True
-Position: 0
+Position: Named
 Default value: None
 Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
@@ -58,8 +59,9 @@ Path to a PSDependMap.psd1 file. Defaults to the one in the PSDepend module root
 Type: String
 Parameter Sets: (All)
 Aliases:
+
 Required: False
-Position: 1
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -73,8 +75,9 @@ The action to invoke: Test, Install, or Import.
 Type: String[]
 Parameter Sets: (All)
 Aliases:
+
 Required: False
-Position: 2
+Position: Named
 Default value: Install
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -88,6 +91,7 @@ Only invoke dependencies with the specified tags.
 Type: String[]
 Parameter Sets: (All)
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -103,6 +107,22 @@ Return $true or $false for Test actions instead of detailed output.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
 Required: False
 Position: Named
 Default value: None
@@ -111,10 +131,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
--InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable,
--Verbose, -WarningAction, and -WarningVariable.
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 

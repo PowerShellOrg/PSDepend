@@ -13,10 +13,31 @@ Install, import, or test dependencies defined in a PSDepend file.
 
 ## SYNTAX
 
+### installimport-file (Default)
 ```
-Invoke-PSDepend [[-Path] <String[]>] [[-InputObject] <Hashtable[]>] [[-PSDependTypePath] <String>]
- [-Tags <String[]>] [-Recurse] [-Test] [-Quiet] [-Import] [-Install] [-Force] [-Target <String>]
- [-Credentials <Hashtable>] [<CommonParameters>]
+Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Recurse <Boolean>]
+ [-Import] [-Install] [-Force] [-Target <String>] [-Credentials <Hashtable>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### test-file
+```
+Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Recurse <Boolean>]
+ [-Test] [-Quiet] [-Force] [-Target <String>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
+```
+
+### test-hashtable
+```
+Invoke-PSDepend [[-InputObject] <Hashtable[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Test] [-Quiet]
+ [-Force] [-Target <String>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### installimport-hashtable
+```
+Invoke-PSDepend [[-InputObject] <Hashtable[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Import]
+ [-Install] [-Force] [-Target <String>] [-Credentials <Hashtable>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -69,12 +90,13 @@ Path to a dependency file or folder. Defaults to the current directory.
 
 ```yaml
 Type: String[]
-Parameter Sets: (All)
+Parameter Sets: installimport-file, test-file
 Aliases:
+
 Required: False
-Position: 0
+Position: 1
 Default value: .
-Accept pipeline input: False
+Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
@@ -84,12 +106,13 @@ Treat a hashtable as dependency file contents rather than reading from disk.
 
 ```yaml
 Type: Hashtable[]
-Parameter Sets: (All)
+Parameter Sets: test-hashtable, installimport-hashtable
 Aliases:
+
 Required: False
 Position: 1
 Default value: None
-Accept pipeline input: True (ByValue)
+Accept pipeline input: True (ByPropertyName, ByValue)
 Accept wildcard characters: False
 ```
 
@@ -101,8 +124,9 @@ Path to a PSDependMap.psd1 file. Defaults to the one in the PSDepend module root
 Type: String
 Parameter Sets: (All)
 Aliases:
+
 Required: False
-Position: 2
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -116,6 +140,7 @@ Only process dependencies with the specified tags.
 Type: String[]
 Parameter Sets: (All)
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -128,9 +153,10 @@ Accept wildcard characters: False
 Recursively search for dependency files under Path.
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
+Type: Boolean
+Parameter Sets: installimport-file, test-file
 Aliases:
+
 Required: False
 Position: Named
 Default value: True
@@ -144,8 +170,9 @@ Test whether dependencies are already satisfied instead of installing.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: test-file, test-hashtable
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -159,8 +186,9 @@ When used with -Test, return $true or $false instead of detailed objects.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: test-file, test-hashtable
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -174,8 +202,9 @@ Import dependencies after installation, if supported by the dependency type.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: installimport-file, installimport-hashtable
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -189,8 +218,9 @@ Run the install action. This is the default behavior.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: installimport-file, installimport-hashtable
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -206,6 +236,7 @@ Force dependency installation, skipping interactive prompts.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -221,6 +252,7 @@ Override the Target property for all dependencies.
 Type: String
 Parameter Sets: (All)
 Aliases:
+
 Required: False
 Position: Named
 Default value: None
@@ -234,8 +266,54 @@ Hashtable of PSCredentials keyed by credential name for private feeds.
 
 ```yaml
 Type: Hashtable
-Parameter Sets: (All)
+Parameter Sets: installimport-file, installimport-hashtable
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
 Required: False
 Position: Named
 Default value: None
@@ -244,10 +322,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
--InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable,
--Verbose, -WarningAction, and -WarningVariable.
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 

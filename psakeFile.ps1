@@ -27,10 +27,10 @@ properties {
 
 task default -depends Test
 
-task Init    -FromModule PowerShellBuild -Version '0.6.1'
-task Clean   -FromModule PowerShellBuild -Version '0.6.1'
-task Build   -FromModule PowerShellBuild -Version '0.6.1'
-task Analyze -FromModule PowerShellBuild -Version '0.6.1'
-task Pester  -FromModule PowerShellBuild -Version '0.6.1'
-task Test    -FromModule PowerShellBuild -Version '0.6.1'
-task Publish -FromModule PowerShellBuild -Version '0.6.1'
+task Init    -FromModule PowerShellBuild -minimumVersion '0.6.1'
+task Clean   -FromModule PowerShellBuild -minimumVersion '0.6.1'
+task Build   -FromModule PowerShellBuild -minimumVersion '0.6.1'
+task Analyze -FromModule PowerShellBuild -minimumVersion '0.6.1'
+task Pester  -FromModule PowerShellBuild -minimumVersion '0.6.1'
+task Test    -FromModule PowerShellBuild -minimumVersion '0.6.1'
+task Publish -FromModule PowerShellBuild -minimumVersion '0.6.1'
