@@ -1,4 +1,4 @@
-properties {
+Properties {
     # PSDepend stages files without compiling to a single PSM1
     $PSBPreference.Build.CompileModule = $false
 
@@ -27,16 +27,6 @@ properties {
     $PSBPreference.Publish.PSRepositoryApiKey  = $env:PSGALLERY_API_KEY
 }
 
-# Skip help generation: Build-PSBuildMarkdown calls Remove-Module on a module required by
-# PowerShellBuild itself, causing a fatal error in CI. Doc generation is not needed for tests.
-$PSBBuildDependency = @('StageFiles')
+Task Default -Depends Test
 
-task default -depends Test
-
-task Init    -FromModule PowerShellBuild -minimumVersion '0.6.1'
-task Clean   -FromModule PowerShellBuild -minimumVersion '0.6.1'
-task Build   -FromModule PowerShellBuild -minimumVersion '0.6.1'
-task Analyze -FromModule PowerShellBuild -minimumVersion '0.6.1'
-task Pester  -FromModule PowerShellBuild -minimumVersion '0.6.1'
-task Test    -FromModule PowerShellBuild -minimumVersion '0.6.1'
-task Publish -FromModule PowerShellBuild -minimumVersion '0.6.1'
+Task Test -FromModule PowerShellBuild -MinimumVersion '0.6.1'
