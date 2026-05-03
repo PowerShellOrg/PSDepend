@@ -876,14 +876,17 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         BeforeAll {
             $script:SavePath = (New-Item 'TestDrive:/PSDependPesterTest' -ItemType Directory -Force).FullName
 
-            # Inject stub functions into PSDepend's module scope so Package.ps1
-            # (dot-sourced inside the module) resolves these names to stubs instead
-            # of the real PackageManagement commands, allowing -ModuleName PSDepend mocks to work.
+            # Inject stub functions into PSDepend's module scope so Pester generates
+            # mock proxies from these simple param signatures instead of the real
+            # PackageManagement/AnyPackage cmdlets (whose multi-parameter-set definitions
+            # cause ParameterBindingException when called with our test splats).
+            # NOTE: 'script:' qualifier is required — without it, the function is created
+            # in a temporary scope that vanishes when the scriptblock returns.
             & (Get-Module PSDepend) {
-                function Get-Package     { [cmdletbinding()]param($ProviderName, $Name, $RequiredVersion) }
-                function Install-Package { [cmdletbinding()]param($Source, $Name, $RequiredVersion, $Force) }
-                function Find-Package    { [cmdletbinding()]param($Name, $Source) }
-                function Get-PackageSource { [cmdletbinding()]param() }
+                function script:Get-Package     { [cmdletbinding()]param($ProviderName, $Name, $RequiredVersion) }
+                function script:Install-Package { [cmdletbinding()]param($Source, $Name, $RequiredVersion, $Force) }
+                function script:Find-Package    { [cmdletbinding()]param($Name, $Source) }
+                function script:Get-PackageSource { [cmdletbinding()]param() }
             }
         }
 
