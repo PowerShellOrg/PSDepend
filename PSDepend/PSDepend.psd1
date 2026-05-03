@@ -87,10 +87,10 @@
             Tags = @('requirements', 'dependencies', 'dependency', 'manager', 'bundle', 'package')
 
             # A URL to the license for this module.
-            LicenseUri = 'https://github.com/PowerShellOr/PSDepend/blob/master/LICENSE'
+            LicenseUri = 'https://github.com/PowerShellOrg/PSDepend/blob/master/LICENSE'
 
             # A URL to the main website for this project.
-            ProjectUri = 'https://github.com/PowerShellOr/PSDepend/'
+            ProjectUri = 'https://github.com/PowerShellOrg/PSDepend/'
 
             # A URL to an icon representing this module.
             # IconUri = ''
