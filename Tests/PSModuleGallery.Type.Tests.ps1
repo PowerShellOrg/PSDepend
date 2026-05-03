@@ -883,7 +883,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 function Get-Package     { [cmdletbinding()]param($ProviderName, $Name, $RequiredVersion) }
                 function Install-Package { [cmdletbinding()]param($Source, $Name, $RequiredVersion, $Force) }
                 function Find-Package    { [cmdletbinding()]param($Name, $Source) }
-                function Get-PackageSource { }
+                function Get-PackageSource { [cmdletbinding()]param() }
             }
         }
 
@@ -923,6 +923,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Same package version exists' {
             BeforeAll {
+                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
                 Mock Install-Package -ModuleName PSDepend
                 Mock Get-Package {
                     [pscustomobject]@{
@@ -943,6 +944,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Latest package required, and already installed' {
             BeforeAll {
+                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
                 Mock Install-Package -ModuleName PSDepend
                 Mock Get-Package {
                     [pscustomobject]@{
@@ -967,6 +969,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Test-Dependency' {
             BeforeEach {
+                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
                 Mock Install-Package {} -ModuleName PSDepend
                 Mock Find-Package {} -ModuleName PSDepend
             }
@@ -1111,7 +1114,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                         'gitbook-cli' = @{
                             version = '2.3.0'
                         }
-                    } } -ParameterFilter { $Target -eq 'Global' } -ModuleName PSDepend
+                    } } -ParameterFilter { $Global -eq $true } -ModuleName PSDepend
                 Mock Get-NodeModule { return [pscustomobject]@{
                         'gitbook-summary' = @{
                             version = '1.2.3'
@@ -1220,29 +1223,23 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         BeforeAll {
             $script:SavePath = (New-Item 'TestDrive:/PSDependPesterTest' -ItemType Directory -Force).FullName
 
-            # So... these didn't work with mocking.  Create function, define alias to override any function call, mock that.
-            function Invoke-ChocoInstallPackage {
-                [cmdletbinding()]param($Name, $Version, $Source, $Force, $Credential)
-            }
-            function Get-ChocoLatestPackage {
-                [cmdletbinding()]param( $Source, $Name, $RequiredVersion)
-            }
-            function Get-ChocoInstalledPackage {
-                [cmdletbinding()]param($Name)
-            }
+            # Simulate choco.exe being present so tests don't hit the install-chocolatey branch by default
+            Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { [pscustomobject]@{Name = 'choco.exe'} } -ModuleName PSDepend
+            # Default catch-all for Invoke-ExternalCommand; individual tests register specific ParameterFilter mocks
+            Mock Invoke-ExternalCommand -ModuleName PSDepend
         }
 
         Context 'Chocolatey is not installed' {
 
             It 'installs Chocolatey' {
-                Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { return $false }
-                Mock Invoke-WebRequest
+                Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { return $false } -ModuleName PSDepend
+                Mock Invoke-WebRequest -ModuleName PSDepend
 
                 # this will throw as the source is invalid - lets catch that
                 { Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.specificversionrequested.depend.psd1" -Force -ErrorAction Stop } | Should -Throw
 
-                Should -Invoke Get-Command -Times 1 -Exactly
-                Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+                Should -Invoke Get-Command -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ModuleName PSDepend
             }
         }
 
@@ -1256,64 +1253,55 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Package version installed is what is requested' {
 
             It 'skips installing the package' {
-
-                Mock Get-ChocoInstalledPackage { @{ Name = $Name; Version = '1.0' } }
-                Mock Get-ChocoLatestPackage
-                Mock Invoke-ChocoInstallPackage
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.specificversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Get-ChocoInstalledPackage -Times 1 -Exactly
-                Should -Invoke Get-ChocoLatestPackage -Times 0 -Exactly
-                Should -Invoke Invoke-ChocoInstallPackage -Times 0 -Exactly
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 0 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 0 -Exactly -ModuleName PSDepend
             }
         }
 
         Context 'Package version installed is latest' {
 
             It 'skips installing the package' {
-
-                Mock Get-ChocoInstalledPackage { @{ Name = $Name; Version = '2.0' } }
-                Mock Get-ChocoLatestPackage { @{ Name = $Name; Version = '2.0' } }
-                Mock Invoke-ChocoInstallPackage
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.latestversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Get-ChocoInstalledPackage -Times 1 -Exactly
-                Should -Invoke Get-ChocoLatestPackage -Times 1 -Exactly
-                Should -Invoke Invoke-ChocoInstallPackage -Times 0 -Exactly
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 0 -Exactly -ModuleName PSDepend
             }
         }
 
         Context 'Package requested is latest and version installed is newer than available in source' {
 
             It 'skips installing the package' {
-
-                Mock Get-ChocoInstalledPackage { @{ Name = $Name; Version = '2.0' } }
-                Mock Get-ChocoLatestPackage { @{ Name = $Name; Version = '1.0' } }
-                Mock Invoke-ChocoInstallPackage
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.latestversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Get-ChocoInstalledPackage -Times 1 -Exactly
-                Should -Invoke Get-ChocoLatestPackage -Times 1 -Exactly
-                Should -Invoke Invoke-ChocoInstallPackage -Times 0 -Exactly
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 0 -Exactly -ModuleName PSDepend
             }
         }
 
         Context 'Package requested is latest and version installed is older than available in source' {
 
             It 'installs the package' {
-
-                Mock Get-ChocoInstalledPackage { @{ Name = $Name; Version = '1.0' } }
-                Mock Get-ChocoLatestPackage { @{ Name = $Name; Version = '2.0' } }
-                Mock Invoke-ChocoInstallPackage
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.latestversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Get-ChocoInstalledPackage -Times 1 -Exactly
-                Should -Invoke Get-ChocoLatestPackage -Times 1 -Exactly
-                Should -Invoke Invoke-ChocoInstallPackage -Times 1 -Exactly
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 1 -Exactly -ModuleName PSDepend
             }
         }
     }
