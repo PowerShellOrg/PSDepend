@@ -52,7 +52,7 @@ Function Install-Dependency {
     )
     Process
     {
-        $InvokeParams = $PSBoundParameters.Clone()
+        $InvokeParams = @{} + $PSBoundParameters
         $null = $InvokeParams.Remove('Force')
         Invoke-DependencyScript @InvokeParams -PSDependAction Install
     }
