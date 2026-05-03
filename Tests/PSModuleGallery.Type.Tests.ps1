@@ -389,6 +389,10 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Save-Module { $True }
             }
 
+            AfterEach {
+                $ENV:PSModulePath = $script:ExistingPSModulePath
+            }
+
             It 'Adds folder to path' {
                 Invoke-PSDepend @Verbose -Path "$TestDepends\psgallerymodule.addtopath.depend.psd1" -Force -ErrorAction Stop
                 ($env:PSModulePath -split ([IO.Path]::PathSeparator)) -contains $script:SavePath | Should -Be $True
@@ -754,6 +758,10 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             BeforeAll {
                 Mock Invoke-ExternalCommand { $True }
                 Mock Import-Module
+            }
+
+            AfterEach {
+                $ENV:PSModulePath = $script:ExistingPSModulePath
             }
 
             It 'Adds folder to path' {
