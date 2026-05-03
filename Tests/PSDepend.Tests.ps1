@@ -103,4 +103,27 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
             @($Dependencies[2].Tags) -contains 'prd' | Should -Be $True
         }
     }
+
+    Context 'Error and edge cases' {
+        BeforeAll { Set-StrictMode -Version latest }
+        AfterAll  { Set-StrictMode -Off }
+
+        It 'Filters results to matching tags when -Tags is specified' {
+            $Dependencies = Get-Dependency -Path $TestDepends\allprops.depend.psd1 -Tags 'tags'
+            $Dependencies | Should -Not -BeNullOrEmpty
+            $Dependencies.DependencyName | Should -Be 'DependencyName'
+        }
+
+        It 'Returns nothing when -Tags matches no dependency' {
+            $Dependencies = Get-Dependency -Path $TestDepends\allprops.depend.psd1 -Tags 'nonexistenttag' -WarningAction SilentlyContinue
+            $Dependencies | Should -BeNullOrEmpty
+        }
+
+        It 'Parses -InputObject hashtable as PSGalleryModule by default' {
+            $Dependencies = Get-Dependency -InputObject @{ Pester = 'latest' }
+            $Dependencies.DependencyName | Should -Be 'Pester'
+            $Dependencies.DependencyType | Should -Be 'PSGalleryModule'
+            $Dependencies.Version | Should -Be 'latest'
+        }
+    }
 }
