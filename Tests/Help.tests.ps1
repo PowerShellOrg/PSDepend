@@ -75,8 +75,8 @@ Describe "Test help for <_.Name>" -ForEach $commands {
         ($script:commandHelp.Examples.Example.Remarks | Select-Object -First 1).Text | Should -Not -BeNullOrEmpty
     }
 
-    It "Help link <_> is valid" -ForEach $helpLinks {
-        (Invoke-WebRequest -Uri $_ -UseBasicParsing).StatusCode | Should -Be '200'
+    It "Help link <_> is valid" -Tag 'Acceptance' -ForEach $helpLinks {
+        (Invoke-WebRequest -Uri $_ -UseBasicParsing -TimeoutSec 10).StatusCode | Should -Be '200'
     }
 
     Context "Parameter <_.Name>" -ForEach $commandParameters {
