@@ -885,24 +885,22 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             }
         }
 
-        <# Works, but waiting on https://github.com/pester/Pester/issues/604...
-         # Got past Get-Package, but Install-Package is still giving the parameter error
         Context 'Installs Packages' {
-            Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) }
-            Mock Get-Package
-            Mock Install-Package { $True }
-
-            $Results = Invoke-PSDepend @Verbose -Path "$TestDepends\package.depend.psd1" -Force
+            BeforeAll {
+                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) }
+                Mock Get-Package
+                Mock Install-Package { $True }
+                $script:Results = Invoke-PSDepend @Verbose -Path "$TestDepends\package.depend.psd1" -Force
+            }
 
             It 'Should execute Install-Package' {
-                Should -Invoke Install-Package -Times 1 -Exactly
+                Should -Invoke Install-Package -Times 1 -Exactly -Scope Context
             }
 
             It 'Should Return Mocked output' {
-                $Results | Should -Be $True
+                $script:Results | Should -Be $True
             }
         }
-        #>
         Context 'PackageSource does not Exist' {
             BeforeAll {
                 Mock Install-Package
@@ -921,12 +919,8 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                     [cmdletbinding()]param( $Source, $Name, $RequiredVersion, $Force)
                 }
                 function Get-PackageSource {
-                    @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' }) 
+                    @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' })
                 }
-            }
-
-            It 'Skips Install-Package' {
-
                 Mock Install-Package
                 Mock Get-Package {
                     [pscustomobject]@{
@@ -934,43 +928,25 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                     }
                 }
                 Mock Find-Package
+            }
 
+            It 'Skips Install-Package' {
                 Invoke-PSDepend @Verbose -Path "$TestDepends\package.sameversion.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Get-Package -Times 1 -Exactly
-                Should -Invoke Find-Package -Times 0 -Exactly
-                Should -Invoke Install-Package -Times 0 -Exactly
+                Should -Invoke Get-Package -Times 1 -Exactly -Scope Context
+                Should -Invoke Find-Package -Times 0 -Exactly -Scope Context
+                Should -Invoke Install-Package -Times 0 -Exactly -Scope Context
             }
         }
 
         Context 'Latest package required, and already installed' {
-
-            <#
-                This test works on my machine but not in AppVeyor (!)
-                The test DOES work in AppVeyor but only if the previous test above is skipped (!!)
-
-                I think this is a problem can be isolated to something to do with Pester Mocks.
-
-                AppVeyor failure:
-
-                "Parameter set cannot be resolved using the specified named parameters.
-                at line: 188 in C:\projects\psdepend\psdepend\Public\Invoke-DependencyScript.ps1"
-
-                See build logs: https://ci.appveyor.com/project/RamblingCookieMonster/psdepend/build/1.0.124
-
-            #>
-
             BeforeAll {
                 function Install-Package {
                     [cmdletbinding()]param( $Source, $Name, $RequiredVersion, $Force)
                 }
                 function Get-PackageSource {
-                    @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' }) 
+                    @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' })
                 }
-            }
-
-            It 'Runs Get-Package and Find-Package, skips Install-Package' -Skip {
-
                 Mock Install-Package
                 Mock Get-Package {
                     [pscustomobject]@{
@@ -982,12 +958,14 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                         Version = '1.1'
                     }
                 }
+            }
 
+            It 'Runs Get-Package and Find-Package, skips Install-Package' {
                 Invoke-PSDepend @Verbose -Path "$TestDepends\package.latestversion.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Get-Package -Times 1 -Exactly
-                Should -Invoke Find-Package -Times 1 -Exactly
-                Should -Invoke Install-Package -Times 0 -Exactly
+                Should -Invoke Get-Package -Times 1 -Exactly -Scope Context
+                Should -Invoke Find-Package -Times 1 -Exactly -Scope Context
+                Should -Invoke Install-Package -Times 0 -Exactly -Scope Context
             }
         }
 
