@@ -1,3 +1,4 @@
 nuget.exe
 Output/**
 Tests/Output/**
+Tests/out/**

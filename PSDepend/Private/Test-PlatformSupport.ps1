@@ -1,8 +1,9 @@
 ﻿function Test-PlatformSupport {
-    [cmdletbinding()]
+    [CmdletBinding()]
     param(
         $Type,
-        [string[]]$Support
+        [string[]]
+        $Support
     )
 
     # test core/full
@@ -14,8 +15,8 @@
             Write-Verbose "Supported platforms [$Support] for type [$Type] does not contain [core].  Pull requests welcome!"
             return $false
         }
-    }
-    else { # full windows powershell
+    } else {
+        # full windows powershell
         if($Support -notcontains 'windows') {
             Write-Verbose "Supported platforms [$Support] for type [$Type] does not contain [windows].  Pull requests welcome!"
             return $false

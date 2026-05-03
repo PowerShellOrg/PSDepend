@@ -1,8 +1,4 @@
 name: CI
-permissions:
-  checks: write
-  pull-requests: write
-  contents: read
 on:
   push:
     branches: [ master ]
@@ -25,6 +21,8 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -48,6 +46,9 @@ jobs:
     name: Publish Test Results
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
     if: ${{ !cancelled() }}
     steps:
       - uses: actions/download-artifact@v4

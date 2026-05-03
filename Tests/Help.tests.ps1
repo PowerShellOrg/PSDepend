@@ -1,6 +1,9 @@
 # Taken with love from @juneb_get_help (https://raw.githubusercontent.com/juneb/PesterTDD/master/Module.Help.Tests.ps1)
 
 BeforeDiscovery {
+    if ($null -eq $env:BHPSModuleManifest) {
+        & "$PSScriptRoot/../Build.ps1" -Task Init
+    }
     function global:FilterOutCommonParams {
         param ($Params)
         $commonParameters = [System.Management.Automation.PSCmdlet]::CommonParameters +

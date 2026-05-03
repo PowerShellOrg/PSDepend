@@ -385,7 +385,7 @@ function Get-Dependency {
         }
     }
 
-    # Heleper to retrieve the credential for a dependency
+    # Helper to retrieve the credential for a dependency
     function Resolve-Credential {
         [CmdletBinding()]
         param (

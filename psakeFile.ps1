@@ -9,7 +9,8 @@ Properties {
     $PSBPreference.Build.CopyDirectories = @('PSDependScripts', 'en-US')
 
     # Test configuration
-    $PSBPreference.Test.OutputFile                              = './Output/testResults.xml'
+    $PSBPreference.Help.DefaultLocale = 'en-US'
+    $PSBPreference.Test.OutputFile = 'out/testResults.xml'
     $PSBPreference.Test.OutputFormat                            = 'JUnitXml'
     $PSBPreference.Test.ScriptAnalysis.Enabled                  = $true
     $PSBPreference.Test.ScriptAnalysis.FailBuildOnSeverityLevel = 'Error'
@@ -30,4 +31,13 @@ $PSBBuildDependency = @('StageFiles')
 
 Task Default -Depends Test
 
+# PowerShellBuild adds the following tasks:
+# - Init
+# - Clean
+# - StageFiles
+# - Build
+# - Test
+# - BuildHelp
+# - GenerateMarkdown
+# - Publish
 Task Test -FromModule PowerShellBuild -MinimumVersion '0.7.3'
