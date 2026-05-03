@@ -40,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: testResults-${{ matrix.os }}
-          path: ./Output/testResults.xml
+          path: ./Tests/out/testResults.xml
 
   publish-test-results:
     name: Publish Test Results
