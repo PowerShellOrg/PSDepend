@@ -96,19 +96,7 @@ Function Invoke-PSDepend {
         # Find and run *.depend.psd1 and requirements.psd1 files under C\Requirements (but not subfolders)
 
     .LINK
-        about_PSDepend
-
-    .LINK
-        about_PSDepend_Definitions
-
-    .LINK
-        Get-Dependency
-
-    .LINK
-        Install-Dependency
-
-    .LINK
-        https://github.com/RamblingCookieMonster/PSDepend
+        https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding( DefaultParameterSetName = 'installimport-file',
                     SupportsShouldProcess = $True,

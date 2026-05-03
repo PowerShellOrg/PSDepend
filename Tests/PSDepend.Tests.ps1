@@ -186,14 +186,14 @@ Describe "Install-Dependency PS$PSVersion" -Tag 'Unit' {
     Context 'PSGalleryModule install' {
         BeforeAll {
             Set-StrictMode -Version latest
-            Mock Install-Module {}
+            Mock Install-Module {} -ModuleName PSDepend
         }
         AfterAll { Set-StrictMode -Off }
 
         It 'Calls Install-Module when given a PSGalleryModule dependency via pipeline' {
             Get-Dependency -Path $TestDepends\psgallerymodule.depend.psd1 |
                 Install-Dependency -Force
-            Should -Invoke Install-Module -Times 1 -Exactly
+            Should -Invoke Install-Module -Times 1 -Exactly -ModuleName PSDepend
         }
     }
 }
@@ -218,7 +218,7 @@ Describe "Invoke-DependencyScript PS$PSVersion" -Tag 'Unit' {
     Context 'Test action' {
         BeforeAll {
             Set-StrictMode -Version latest
-            Mock Get-Module { [pscustomobject]@{ Version = '1.2.5' } }
+            Mock Get-Module { [pscustomobject]@{ Version = '1.2.5' } } -ModuleName PSDepend
         }
         AfterAll { Set-StrictMode -Off }
 

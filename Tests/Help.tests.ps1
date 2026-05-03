@@ -39,7 +39,7 @@ Describe "Test help for <_.Name>" -ForEach $commands {
         $commandHelp = Get-Help $command.Name -ErrorAction SilentlyContinue
         $commandParameters = global:FilterOutCommonParams -Params $command.ParameterSets.Parameters
         $commandParameterNames = $commandParameters.Name
-        $helpLinks = $commandHelp.relatedLinks.navigationLink.uri
+        $helpLinks = @($commandHelp.relatedLinks.navigationLink.uri | Where-Object { $_ })
         $helpParameters = global:FilterOutCommonParams -Params $commandHelp.Parameters.Parameter
         $helpParameterNames = $helpParameters.Name
     }
