@@ -1258,7 +1258,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         }
     }
 
-    Describe "Chocolatey Type PS$PSVersion" -Tag 'Chocolatey', "WindowsOnly" {
+    Describe "Chocolatey Type PS$PSVersion" -Tag 'Chocolatey', 'WindowsOnly' -Skip:$nonWindows {
         BeforeAll {
             $script:SavePath = (New-Item 'TestDrive:/PSDependPesterTest' -ItemType Directory -Force).FullName
 
