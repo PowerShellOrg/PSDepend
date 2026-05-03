@@ -1,25 +1,32 @@
-if(-not $ENV:BHProjectPath)
-{
-    Set-BuildEnvironment -Path $PSScriptRoot\..
-}
-Remove-Module $ENV:BHProjectName -ErrorAction SilentlyContinue
-Import-Module (Join-Path $ENV:BHProjectPath $ENV:BHProjectName) -Force
+BeforeDiscovery {
+    if ($null -eq $env:BHPSModuleManifest) {
+        & "$PSScriptRoot/../Build.ps1" -Task Init
+    }
+    $manifest = Import-PowerShellDataFile -Path $env:BHPSModuleManifest
+    $outputDir = Join-Path -Path $env:BHProjectPath -ChildPath 'Output'
+    $outputModDir = Join-Path -Path $outputDir -ChildPath $env:BHProjectName
+    $outputModVerDir = Join-Path -Path $outputModDir -ChildPath $manifest.ModuleVersion
+    $outputModVerManifest = Join-Path -Path $outputModVerDir -ChildPath "$($env:BHProjectName).psd1"
 
-$PSVersion = $PSVersionTable.PSVersion.Major  # discovery-scope for Describe names
+    Get-Module $env:BHProjectName | Remove-Module -Force -ErrorAction Ignore
+    Import-Module -Name $outputModVerManifest -Verbose:$false -ErrorAction Stop
+
+    $PSVersion = $PSVersionTable.PSVersion.Major  # discovery-scope for Describe names
+}
+
 
 BeforeAll {
     $script:TestDepends = Join-Path $ENV:BHProjectPath Tests\DependFiles
     $script:Verbose = @{}
-    if($ENV:BHBranchName -notlike "master" -or $env:BHCommitMessage -match "!verbose")
-    {
+    if($ENV:BHBranchName -notlike "master" -or $env:BHCommitMessage -match "!verbose") {
         $script:Verbose.add("Verbose",$True)
     }
 }
 
-Describe "$ENV:BHProjectName PS$PSVersion" {
+Describe "$ENV:BHProjectName PS$PSVersion" -Tag 'Unit' {
     Context 'Strict mode' {
-
-        Set-StrictMode -Version latest
+        BeforeAll { Set-StrictMode -Version latest }
+        AfterAll  { Set-StrictMode -Off }
 
         It 'Should load' {
             $Module = Get-Module $ENV:BHProjectName
@@ -29,15 +36,16 @@ Describe "$ENV:BHProjectName PS$PSVersion" {
     }
 }
 
-Describe "Get-Dependency PS$PSVersion" {
+Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
     Context 'Strict mode' {
-        Set-StrictMode -Version latest
+        BeforeAll { Set-StrictMode -Version latest }
+        AfterAll  { Set-StrictMode -Off }
 
         It 'Should read ModuleName=Version syntax' {
             $Dependencies = Get-Dependency -Path $TestDepends\simple.depend.psd1
             $Dependencies.Count | Should -Be 4
             @( $Dependencies.DependencyType -like 'PSGalleryModule' ).count | Should -Be 4
-            @( $Dependencies | Where {$_.Name -like $_.DependencyName} ).count | Should -Be 4
+            @( $Dependencies | Where-Object { $_.Name -like $_.DependencyName } ).count | Should -Be 4
         }
 
         It 'Should read DependencyType::DependencyName=Version syntax' {
@@ -45,7 +53,7 @@ Describe "Get-Dependency PS$PSVersion" {
             $Dependencies.Count | Should -Be 2
             @( $Dependencies.DependencyType -like 'PSGalleryModule' ).count | Should -Be 1
             @( $Dependencies.DependencyType -like 'GitHub' ).count | Should -Be 1
-            @( $Dependencies | Where {$_.Name -like $_.DependencyName} ).count | Should -Be 2
+            @( $Dependencies | Where-Object { $_.Name -like $_.DependencyName } ).count | Should -Be 2
         }
 
         It 'Should read each property correctly' {
