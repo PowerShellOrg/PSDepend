@@ -14,6 +14,7 @@ Install, import, or test dependencies defined in a PSDepend file.
 ## SYNTAX
 
 ### installimport-file (Default)
+
 ```
 Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Recurse <Boolean>]
  [-Import] [-Install] [-Force] [-Target <String>] [-Credentials <Hashtable>]
@@ -21,6 +22,7 @@ Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String
 ```
 
 ### test-file
+
 ```
 Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Recurse <Boolean>]
  [-Test] [-Quiet] [-Force] [-Target <String>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
@@ -28,12 +30,14 @@ Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String
 ```
 
 ### test-hashtable
+
 ```
 Invoke-PSDepend [[-InputObject] <Hashtable[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Test] [-Quiet]
  [-Force] [-Target <String>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### installimport-hashtable
+
 ```
 Invoke-PSDepend [[-InputObject] <Hashtable[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Import]
  [-Install] [-Force] [-Target <String>] [-Credentials <Hashtable>] [-ProgressAction <ActionPreference>]
@@ -277,6 +281,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
+
 Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
@@ -292,6 +297,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
+
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
@@ -307,6 +313,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
+
 {{ Fill ProgressAction Description }}
 
 ```yaml
@@ -322,6 +329,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
@@ -333,8 +341,3 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
-
-[Get-Dependency](Get-Dependency.md)
-[Install-Dependency](Install-Dependency.md)
-[Import-Dependency](Import-Dependency.md)
-[Test-Dependency](Test-Dependency.md)

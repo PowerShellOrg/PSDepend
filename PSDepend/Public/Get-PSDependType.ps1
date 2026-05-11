@@ -43,25 +43,7 @@ Function Get-PSDependType {
         # List dependency types defined in a centralized dependency map
 
     .LINK
-        about_PSDepend
-
-    .LINK
-        about_PSDepend_Definitions
-
-    .LINK
-        Get-Dependency
-
-    .LINK
-        Get-PSDependScript
-
-    .LINK
-        Install-Dependency
-
-    .LINK
-        Invoke-PSDepend
-
-    .LINK
-        https://github.com/RamblingCookieMonster/PSDepend
+        https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding()]
     param(

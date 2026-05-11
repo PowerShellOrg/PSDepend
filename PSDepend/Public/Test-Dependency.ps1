@@ -1,4 +1,4 @@
-Function Test-Dependency {
+function Test-Dependency {
     <#
     .SYNOPSIS
         Test a specific dependency
@@ -34,40 +34,24 @@ Function Test-Dependency {
         Get dependencies from C:\requirements.psd1 and test whether they exist
 
     .LINK
-        about_PSDepend
-
-    .LINK
-        about_PSDepend_Definitions
-
-    .LINK
-        Get-Dependency
-
-    .LINK
-        Get-PSDependType
-
-    .LINK
-        Invoke-PSDepend
-
-    .LINK
-        https://github.com/RamblingCookieMonster/PSDepend
+        https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding()]
-    Param(
+    param(
         [parameter( ValueFromPipeline = $True,
-                    ParameterSetName='Map',
-                    Mandatory = $True)]
+            ParameterSetName='Map',
+            Mandatory = $True)]
         [PSTypeName('PSDepend.Dependency')]
         [psobject[]]$Dependency,
 
-        [validatescript({Test-Path -Path $_ -PathType Leaf -ErrorAction Stop})]
+        [validatescript({ Test-Path -Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1),
 
         [string[]]$Tags,
 
         [switch]$Quiet
     )
-    process
-    {
+    process {
         Invoke-DependencyScript @PSBoundParameters -PSDependAction Test
     }
 }

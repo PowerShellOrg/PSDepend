@@ -159,4 +159,4 @@ DETAILED DESCRIPTION
 
 SEE ALSO
     about_PSDepend_Definitions
-    https://github.com/RamblingCookieMonster/PSDepend
+    https://github.com/PowerShellOrg/PSDepend

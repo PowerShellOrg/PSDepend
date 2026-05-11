@@ -14,12 +14,14 @@ Read a dependency psd1 file.
 ## SYNTAX
 
 ### File (Default)
+
 ```
 Get-Dependency [-Path <String[]>] [-Tags <String[]>] [-Recurse] [-Credentials <Hashtable>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### Hashtable
+
 ```
 Get-Dependency [-Tags <String[]>] [-InputObject <Hashtable[]>] [-Credentials <Hashtable>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
@@ -130,6 +132,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
+
 {{ Fill ProgressAction Description }}
 
 ```yaml
@@ -145,6 +148,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
@@ -158,5 +162,3 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
-
-[Invoke-PSDepend](Invoke-PSDepend.md)
