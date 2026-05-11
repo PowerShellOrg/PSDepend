@@ -140,13 +140,12 @@ if('AllUsers', 'CurrentUser' -notcontains $Scope) {
     $command = 'install'
 }
 
-$packageProviderSplat = @{
-    Name = 'NuGet'
-    ListAvailable = $true
-    ErrorAction = 'SilentlyContinue'
-}
-if(-not (Get-PackageProvider @packageProviderSplat)) {
-    Write-Debug "NuGet provider not found.  Attempting to install NuGet provider with parameters: $($packageProviderSplat | Out-String)"
+$nugetProvider = @(Get-PackageProvider -ErrorAction SilentlyContinue) |
+    Where-Object { $_.Name -eq 'NuGet' } |
+    Select-Object -First 1
+
+if(-not $nugetProvider) {
+    Write-Debug 'NuGet provider not found. Attempting to install NuGet provider.'
     # Bootstrap NuGet provider for Windows PowerShell 5.1 and PowerShell 7+.
     $installPackageProviderSplat = @{
         Name = 'NuGet'
