@@ -383,6 +383,7 @@ function Get-Dependency {
                 }
             }
         }
+	}
 
     # Helper to retrieve the credential for a dependency
     function Resolve-Credential {
