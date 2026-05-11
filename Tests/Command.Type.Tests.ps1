@@ -35,23 +35,23 @@ Describe 'Command script' {
         (Get-Content $countPath) | Should -Be @('a', 'b')
     }
 
-    It 'Throws by default when the Source errors' {
+    It 'Writes a non-terminating error and continues by default when the Source errors' {
+        $dep = New-PSDependFixture -DependencyName 'CmdSwallow' -DependencyType 'Command' -Source "throw 'boom'"
+        $err = $null
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath; ErrRef = [ref]$err } {
+            & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue -ErrorVariable scriptErr
+            $ErrRef.Value = $scriptErr
+        }
+        $err | Should -Not -BeNullOrEmpty
+        ($err | Out-String) | Should -Match 'boom'
+    }
+
+    It 'Throws a terminating error when -FailOnError is specified' {
         $dep = New-PSDependFixture -DependencyName 'CmdFail' -DependencyType 'Command' -Source "throw 'boom'"
         {
             InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
-                & $ScriptPath -Dependency $Dep
+                & $ScriptPath -Dependency $Dep -FailOnError
             }
         } | Should -Throw -ExpectedMessage '*boom*'
-    }
-
-    It 'Continues past errors when -FailOnError is specified' {
-        $dep = New-PSDependFixture -DependencyName 'CmdSwallow' -DependencyType 'Command' -Source "throw 'boom'"
-        $err = $null
-        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
-            & $ScriptPath -Dependency $Dep -FailOnError -ErrorAction SilentlyContinue -ErrorVariable err
-            $script:capturedErr = $err
-        }
-        # Did not throw — Write-Error was used
-        $true | Should -BeTrue
     }
 }

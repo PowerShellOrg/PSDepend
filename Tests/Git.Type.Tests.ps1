@@ -36,7 +36,7 @@ Describe 'Git script' {
         }
     }
 
-    It 'Clones the repo via git when the target does not exist' {
+    It 'Clones the repo via git when the repo folder does not yet exist under Target' {
         $targetDir = (New-Item 'TestDrive:/git-target' -ItemType Directory -Force).FullName
         $dep = New-PSDependFixture -DependencyName 'https://example.com/user/repo.git' -DependencyType 'Git' -Target $targetDir
 

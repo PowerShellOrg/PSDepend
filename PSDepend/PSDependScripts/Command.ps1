@@ -60,12 +60,12 @@ foreach($Depend in $Dependency)
         {
             if($FailOnError)
             {
-                Write-Error $_
-                continue
+                throw $_
             }
             else
             {
-                throw $_
+                Write-Error $_
+                continue
             }
         }
     }

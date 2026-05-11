@@ -32,11 +32,11 @@ Describe 'Chocolatey script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
     It 'Defaults Source to https://chocolatey.org/api/v2/ when not supplied' {
         $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey'
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
-            & $ScriptPath -Dependency $Dep -WarningAction SilentlyContinue
+            & $ScriptPath -Dependency $Dep -Force
         }
-        # We can't verify the default by inspecting choco args (script bails out
-        # when latest lookup returns nothing) but the script should not throw.
-        $true | Should -BeTrue
+        Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+            ($Arguments -join ' ') -match "--source='https://chocolatey\.org/api/v2/'"
+        }
     }
 
     It 'Invokes choco upgrade with -Force when -Force switch is set' {

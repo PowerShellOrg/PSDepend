@@ -44,7 +44,7 @@ Describe 'FileSystem script' -Skip:$SkipUnsupported {
         Should -Invoke -CommandName Copy-Item -ModuleName PSDepend -Times 1
     }
 
-    It 'PSDependAction Test returns $false when target is missing' {
+    It 'PSDependAction Test returns $false when the target file is missing from the target directory' {
         $srcDir = Join-Path $TestDrive 'src2'
         $tgtDir = Join-Path $TestDrive 'missing-tgt'
         $null = New-Item -ItemType Directory -Path $srcDir, $tgtDir -Force

@@ -44,13 +44,14 @@ Describe 'Task script' {
     }
 
     It 'Warns and does not throw when the task file is missing' {
-        $dep = New-PSDependFixture -DependencyName 'TaskMissing' -DependencyType 'Task' -Source 'TestDrive:/nope.ps1'
+        $missingPath = Join-Path $TestDrive 'nope.ps1'
+        $dep = New-PSDependFixture -DependencyName 'TaskMissing' -DependencyType 'Task' -Source $missingPath
         $warnings = $null
-        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath; WarnRef = [ref]$warnings } {
             & $ScriptPath -Dependency $Dep -WarningVariable warn -WarningAction SilentlyContinue
-            $script:capturedWarnings = $warn
+            $WarnRef.Value = $warn
         }
-        # No exception means the script handled the missing file gracefully.
-        $true | Should -BeTrue
+        $warnings | Should -Not -BeNullOrEmpty
+        ($warnings | Out-String) | Should -Match 'Could not find task file'
     }
 }
