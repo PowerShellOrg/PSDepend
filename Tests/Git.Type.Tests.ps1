@@ -16,9 +16,23 @@ Describe 'Git script' {
 
     BeforeAll {
         InModuleScope PSDepend {
-            Mock Invoke-ExternalCommand { }
+            # Simulate `git clone <url>` by materialising the repo directory
+            # under PWD so the script's subsequent `Set-Location $RepoPath`
+            # succeeds. Without this, CI fails on the non-terminating error
+            # from line 173 of Git.ps1.
+            Mock Invoke-ExternalCommand {
+                if ($Arguments -contains 'clone') {
+                    $url = $Arguments | Where-Object { $_ -ne 'clone' } | Select-Object -First 1
+                    if ($url) {
+                        $repoName = ($url.TrimEnd('/') -split '/')[-1] -replace '\.git$', ''
+                        if ($repoName -and -not (Test-Path $repoName)) {
+                            $null = New-Item -ItemType Directory -Path $repoName -Force
+                        }
+                    }
+                }
+            }
             Mock Import-PSDependModule { }
-            Mock Add-ToItemCollection { }
+            Mock Add-ToItemCollection  { }
         }
     }
 

@@ -21,12 +21,12 @@ Describe 'FileSystem script' {
     }
 
     It 'Copies a file from Source to Target when hashes differ' {
-        $src = Join-Path 'TestDrive:' 'src.txt'
+        $srcDir = (New-Item 'TestDrive:/src' -ItemType Directory -Force).FullName
         $tgtDir = (New-Item 'TestDrive:/tgt' -ItemType Directory -Force).FullName
+        $src = Join-Path $srcDir 'src.txt'
         Set-Content -Path $src -Value 'hello'
-        $srcResolved = (Resolve-Path $src).ProviderPath
 
-        $dep = New-PSDependFixture -DependencyName 'fs-file' -DependencyType 'FileSystem' -Source $srcResolved -Target $tgtDir
+        $dep = New-PSDependFixture -DependencyName 'fs-file' -DependencyType 'FileSystem' -Source $src -Target $tgtDir
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
             & $ScriptPath -Dependency $Dep
         }
@@ -34,12 +34,12 @@ Describe 'FileSystem script' {
     }
 
     It 'PSDependAction Test returns $false when target is missing' {
-        $src = Join-Path 'TestDrive:' 'src2.txt'
+        $srcDir = (New-Item 'TestDrive:/src2' -ItemType Directory -Force).FullName
         $tgtDir = (New-Item 'TestDrive:/missing-tgt' -ItemType Directory -Force).FullName
+        $src = Join-Path $srcDir 'src2.txt'
         Set-Content -Path $src -Value 'content'
-        $srcResolved = (Resolve-Path $src).ProviderPath
 
-        $dep = New-PSDependFixture -DependencyName 'fs-test' -DependencyType 'FileSystem' -Source $srcResolved -Target $tgtDir
+        $dep = New-PSDependFixture -DependencyName 'fs-test' -DependencyType 'FileSystem' -Source $src -Target $tgtDir
         $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
             & $ScriptPath -Dependency $Dep -PSDependAction Test
         }
@@ -48,7 +48,7 @@ Describe 'FileSystem script' {
 
     It 'Errors and skips when Source does not exist' {
         $tgtDir = (New-Item 'TestDrive:/tgt3' -ItemType Directory -Force).FullName
-        $missingSrc = (Join-Path (Resolve-Path 'TestDrive:').ProviderPath 'does-not-exist.txt')
+        $missingSrc = Join-Path $tgtDir 'does-not-exist.txt'
         $dep = New-PSDependFixture -DependencyName 'fs-missing' -DependencyType 'FileSystem' -Source $missingSrc -Target $tgtDir
 
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
