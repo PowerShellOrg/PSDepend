@@ -20,9 +20,15 @@ Describe 'FileSystem script' {
         }
     }
 
+    # Use the Pester-supplied $TestDrive filesystem path rather than the
+    # 'TestDrive:' PSDrive. On Linux/macOS, (New-Item 'TestDrive:/x').FullName
+    # returns a path that resolves as relative-to-PWD inside the dependency
+    # script, breaking Get-Hash.
+
     It 'Copies a file from Source to Target when hashes differ' {
-        $srcDir = (New-Item 'TestDrive:/src' -ItemType Directory -Force).FullName
-        $tgtDir = (New-Item 'TestDrive:/tgt' -ItemType Directory -Force).FullName
+        $srcDir = Join-Path $TestDrive 'src'
+        $tgtDir = Join-Path $TestDrive 'tgt'
+        $null = New-Item -ItemType Directory -Path $srcDir, $tgtDir -Force
         $src = Join-Path $srcDir 'src.txt'
         Set-Content -Path $src -Value 'hello'
 
@@ -34,8 +40,9 @@ Describe 'FileSystem script' {
     }
 
     It 'PSDependAction Test returns $false when target is missing' {
-        $srcDir = (New-Item 'TestDrive:/src2' -ItemType Directory -Force).FullName
-        $tgtDir = (New-Item 'TestDrive:/missing-tgt' -ItemType Directory -Force).FullName
+        $srcDir = Join-Path $TestDrive 'src2'
+        $tgtDir = Join-Path $TestDrive 'missing-tgt'
+        $null = New-Item -ItemType Directory -Path $srcDir, $tgtDir -Force
         $src = Join-Path $srcDir 'src2.txt'
         Set-Content -Path $src -Value 'content'
 
@@ -47,7 +54,8 @@ Describe 'FileSystem script' {
     }
 
     It 'Errors and skips when Source does not exist' {
-        $tgtDir = (New-Item 'TestDrive:/tgt3' -ItemType Directory -Force).FullName
+        $tgtDir = Join-Path $TestDrive 'tgt3'
+        $null = New-Item -ItemType Directory -Path $tgtDir -Force
         $missingSrc = Join-Path $tgtDir 'does-not-exist.txt'
         $dep = New-PSDependFixture -DependencyName 'fs-missing' -DependencyType 'FileSystem' -Source $missingSrc -Target $tgtDir
 
