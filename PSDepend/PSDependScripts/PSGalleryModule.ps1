@@ -23,6 +23,16 @@
     .PARAMETER AllowClobber
         Allow installation of modules that clobber existing commands.  Defaults to $True
 
+    .PARAMETER AcceptLicense
+        Accepts the license agreement during installation.
+        
+    .PARAMETER AllowPrerelease
+        If specified, allow for prerelease.
+
+        If specified along with version 'latest', a prerelease will be selected if it is the latest version
+
+        Sorting assumes you name prereleases appropriately (i.e. alpha < beta < gamma)
+
     .PARAMETER Import
         If specified, import the module in the global scope
 
@@ -70,6 +80,16 @@
         # No version is specified - we assume latest in this case.
 
         # * Perhaps you use this https://github.com/PowerShell/PSPrivateGallery, or Artifactory, ProGet, etc.
+    
+    .EXAMPLE
+        @{
+            'vmware.powercli' = @{
+                Parameters = @{
+                    AllowPrerelease = $True
+                }
+            }
+        }
+        # Install the latest version of PowerCLI, allowing for prerelease
 #>
 [cmdletbinding()]
 param(
@@ -82,6 +102,10 @@ param(
     [bool]$SkipPublisherCheck, # From Parameters...
 
     [bool]$AllowClobber = $True,
+
+    [bool]$AcceptLicense,
+
+    [bool]$AllowPrerelease,
 
     [switch]$Import,
 
@@ -150,13 +174,21 @@ $params = @{
     Force              = $True
 }
 
+if($PSBoundParameters.ContainsKey('AllowPrerelease')){
+    $params.Add('AllowPrerelease', $AllowPrerelease)
+}
+
+if($PSBoundParameters.ContainsKey('AcceptLicense')){
+    $params.Add('AcceptLicense', $AcceptLicense)
+}
+
 if($Repository) {
     $params.Add('Repository',$Repository)
 }
 
-if( $Version -and $Version -ne 'latest')
+if($Version -and $Version -ne 'latest')
 {
-    $Params.add('RequiredVersion',$Version)
+    $Params.add('RequiredVersion', $Version)
 }
 
 if($Credential)
@@ -201,17 +233,19 @@ if($Existing)
     $ExistingVersion = $Existing | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
     $FindModuleParams = @{Name = $Name}
     if($Repository) {
-        $FindModuleParams.Add('Repository',$Repository)
-	}
-	if($Credential)
-	{
-		$FindModuleParams.Add('Credential', $Credential)
-	}
-
-    $GetGalleryVersion = { Find-Module @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum }
+        $FindModuleParams.Add('Repository', $Repository)
+    }
+    if($Credential)
+    {
+        $FindModuleParams.Add('Credential', $Credential)
+    }
+    if($AllowPrerelease)
+    {
+        $FindModuleParams.Add('AllowPrerelease', $AllowPrerelease)
+    }
 
     # Version string, and equal to current
-    if( $Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
+    if($Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
     {
         Write-Verbose "You have the requested version [$Version] of [$Name]"
         # Conditional import
@@ -219,16 +253,27 @@ if($Existing)
 
         if($PSDependAction -contains 'Test')
         {
-            return $True
+            return $true
         }
         return $null
     }
 
+    $GalleryVersion = Find-Module @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
+    [System.Version]$parsedVersion = $null
+    [System.Management.Automation.SemanticVersion]$parsedSemanticVersion = $null
+    [System.Management.Automation.SemanticVersion]$parsedTempSemanticVersion = $null
+    $isGalleryVersionLessEquals = if (
+        [System.Management.Automation.SemanticVersion]::TryParse($ExistingVersion, [ref]$parsedSemanticVersion) -and
+        [System.Management.Automation.SemanticVersion]::TryParse($GalleryVersion, [ref]$parsedTempSemanticVersion)
+    ) {
+        $GalleryVersion -le $parsedSemanticVersion
+    }
+    elseif ([System.Version]::TryParse($ExistingVersion, [ref]$parsedVersion)) {
+        $GalleryVersion -le $parsedVersion
+    }
+
     # latest, and we have latest
-    if( $Version -and
-        ($Version -eq 'latest' -or $Version -like '') -and
-        [System.Version]($GalleryVersion = (& $GetGalleryVersion)) -le [System.Version]$ExistingVersion
-    )
+    if( $Version -and ($Version -eq 'latest' -or $Version -eq '') -and $isGalleryVersionLessEquals)
     {
         Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and PSGallery version [$GalleryVersion]"
         # Conditional import

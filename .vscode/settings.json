@@ -3,5 +3,7 @@
     "powershell.codeFormatting.ignoreOneLineBlock": false,
     "powershell.codeFormatting.whitespaceAfterSeparator": false,
     "powershell.codeFormatting.whitespaceAroundOperator": false,
-    "powershell.codeFormatting.whitespaceBeforeOpenParen": false
+    "powershell.codeFormatting.whitespaceBeforeOpenParen": false,
+    "powershell.codeFormatting.preset": "OTBS",
+    "powershell.codeFormatting.trimWhitespaceAroundPipe": true
 }

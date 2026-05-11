@@ -1,4 +1,4 @@
-Function Get-PSDependScript {
+function Get-PSDependScript {
     <#
     .SYNOPSIS
         Get dependency types and associated scripts
@@ -26,29 +26,11 @@ Function Get-PSDependScript {
         # List dependency types defined in a centralized dependency map
 
     .LINK
-        about_PSDepend
-
-    .LINK
-        about_PSDepend_Definitions
-
-    .LINK
-        Get-Dependency
-
-    .LINK
-        Get-PSDependType
-
-    .LINK
-        Install-Dependency
-
-    .LINK
-        Invoke-PSDepend
-
-    .LINK
-        https://github.com/RamblingCookieMonster/PSDepend
+        https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding()]
     param(
-        [validatescript({Test-Path $_ -PathType Leaf -ErrorAction Stop})]
+        [validatescript({ Test-Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$Path = $(Join-Path $ModuleRoot PSDependMap.psd1)
     )
 
@@ -58,26 +40,19 @@ Function Get-PSDependScript {
     $DependencyDefinitions = Import-LocalizedData -BaseDirectory $Base -FileName $File
 
     $DependHash = @{}
-    foreach($DependencyType in $DependencyDefinitions.Keys)
-    {
+    foreach($DependencyType in $DependencyDefinitions.Keys) {
         #Determine the path to this script
         $Script =  $DependencyDefinitions.$DependencyType.Script
-        if(Test-Path $Script -ErrorAction SilentlyContinue)
-        {
+        if(Test-Path $Script -ErrorAction SilentlyContinue) {
             $ScriptPath = $Script
-        }
-        else
-        {
+        } else {
             # account for missing ps1
             $ScriptPath = Join-Path $ModuleRoot "PSDependScripts\$($Script -replace ".ps1$").ps1"
         }
 
-        if(test-path $ScriptPath)
-        {
+        if(Test-Path $ScriptPath) {
             $DependHash.$DependencyType = $ScriptPath
-        }
-        else
-        {
+        } else {
             Write-Error "Could not find path '$ScriptPath' for dependency $DependencyType. Origin: $($DependencyDefinitions.$DependencyType.Script)"
         }
     }

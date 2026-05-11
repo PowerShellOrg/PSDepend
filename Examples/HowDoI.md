@@ -1,10 +1,10 @@
 # How Do I
 
-Rather than scour the documentation, which may or may not be scenario focused, here is a quick list of common scenarios and recipes.
+Common scenarios and recipes for working with PSDepend.
 
 ## Specify global defaults
 
-You can use the special PSDependOptions node for default options:
+Use the special `PSDependOptions` node to set defaults that apply to all dependencies in the file:
 
 ```powershell
 @{
@@ -13,29 +13,29 @@ You can use the special PSDependOptions node for default options:
         DependencyType = 'PSGalleryNuget'
     }
 
-    'PSDeploy' = 'latest'
-    'BuildHelpers' = 'latest'
-    'Pester' = 'latest'
-    'InvokeBuild' = 'latest'
+    'PSDeploy'      = 'latest'
+    'BuildHelpers'  = 'latest'
+    'Pester'        = 'latest'
+    'InvokeBuild'   = 'latest'
 }
 ```
 
-This downloads any dependency without an explicit override to `C:\MyProject`, using PSGalleryNuget
+All dependencies without an explicit override will be downloaded to `C:\MyProject` using `PSGalleryNuget`.
 
-You can specify the following in PSDependOptions:
+The following properties can be set in `PSDependOptions`:
 
-* Parameters
-* Source
-* Target
-* AddToPath
-* Tags
-* DependsOn
-* PreScripts
-* PostScripts
+- `Parameters`
+- `Source`
+- `Target`
+- `AddToPath`
+- `Tags`
+- `DependsOn`
+- `PreScripts`
+- `PostScripts`
 
-## Specify global defaults, with overrides
+## Override a global default for specific dependencies
 
-You can override global defaults:
+Individual dependencies can override any value set in `PSDependOptions`:
 
 ```powershell
 @{
@@ -44,7 +44,7 @@ You can override global defaults:
         DependencyType = 'PSGalleryNuget'
     }
 
-    'PSDeploy' = 'latest'
+    'PSDeploy'     = 'latest'
     'BuildHelpers' = 'latest'
     'Pester' = @{
         Target = 'C:\sc'
@@ -53,43 +53,34 @@ You can override global defaults:
 }
 ```
 
-In this example, all modules are downloaded to `C:\MyProject`, apart from Pester, which has an override.
+All modules install to `C:\MyProject` except `Pester`, which installs to `C:\sc`.
 
-## Specify one target for all dependencies
-
-You can certainly set a target on every single dependency, or:
+## Set a single target for all dependencies
 
 ```powershell
 @{
     PSDependOptions = @{
-        Target = 'C:\MyTarget'    # <<<<<<<
+        Target = 'C:\MyTarget'
     }
 
     PSDeploy = 'latest'
-    'darkoperator/ADAudit' = 'dev'
+    'PowerShellOrg/PSDepend' = 'master'
 }
 ```
 
-Just specify a target under PSDependOptions, this will be used as the default target unless you override it.
-
-## Specify one target for most dependencies
-
-If you want to specify one target for most dependencies, with a few exceptions:
+## Set a default target with per-dependency overrides
 
 ```powershell
 @{
     PSDependOptions = @{
-        Target = 'C:\MyTarget'    # <<<<<<<
+        Target = 'C:\MyTarget'
     }
 
-    PSDeploy = 'latest'
-    PSSlack = 'latest'
+    PSDeploy  = 'latest'
+    PSSlack   = 'latest'
     PSJira = @{
         Target = 'C:\OtherTarget'
     }
-    'darkoperator/ADAudit' = 'dev'
+    'PowerShellOrg/PSDepend' = 'master'
 }
 ```
-
-
-

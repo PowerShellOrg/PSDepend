@@ -60,17 +60,25 @@ Function Invoke-PSDepend {
         If specified, override the target in the PSDependOptions or Dependency.
 
     .PARAMETER Import
-		If the dependency supports it, import it
+        If the dependency supports it, import it
 
-	.PARAMETER Credentials
-		Specifies a hashtable of PSCredentials to use for each dependency that is served from a private feed.
+    .PARAMETER Credentials
+        Specifies a hashtable of PSCredentials to use for each dependency that is served from a private feed. The key of the hashtable must match the Credential property value in the dependency.
 
-		For example:
+        For example:
 
-			-Credentials @{
-				PrivatePackage = $privateCredentials
-				AnotherPrivatePackage = $morePrivateCredenials
-			}
+        @{
+            dependency_name = @{
+                ...
+                Credential = 'PrivatePackage'
+                ...
+            }
+        }
+
+        -Credentials @{
+                PrivatePackage = $privateCredentials
+                AnotherPrivatePackage = $morePrivateCredenials
+        }
 
     .EXAMPLE
         Invoke-PSDepend
@@ -88,19 +96,7 @@ Function Invoke-PSDepend {
         # Find and run *.depend.psd1 and requirements.psd1 files under C\Requirements (but not subfolders)
 
     .LINK
-        about_PSDepend
-
-    .LINK
-        about_PSDepend_Definitions
-
-    .LINK
-        Get-Dependency
-
-    .LINK
-        Install-Dependency
-
-    .LINK
-        https://github.com/RamblingCookieMonster/PSDepend
+        https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding( DefaultParameterSetName = 'installimport-file',
                     SupportsShouldProcess = $True,
@@ -154,9 +150,9 @@ Function Invoke-PSDepend {
 
         [switch]$Force,
 
-		[String]$Target,
+        [String]$Target,
 
-		[parameter(ParameterSetName = 'installimport-file')]
+        [parameter(ParameterSetName = 'installimport-file')]
         [parameter(ParameterSetName = 'installimport-hashtable')]
         [hashtable]$Credentials
     )
@@ -212,11 +208,11 @@ Function Invoke-PSDepend {
         if($PSBoundParameters.ContainsKey('Tags'))
         {
             $GetPSDependParams.Add('Tags',$Tags)
-		}
+        }
 
-		if ($null -ne $Credentials) {
-			$GetPSDependParams.Add('Credentials', $Credentials)
-		}
+        if ($null -ne $Credentials) {
+            $GetPSDependParams.Add('Credentials', $Credentials)
+        }
 
         # Handle Dependencies
         $Dependencies = Get-Dependency @GetPSDependParams

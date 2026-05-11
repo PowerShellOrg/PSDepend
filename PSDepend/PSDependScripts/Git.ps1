@@ -214,7 +214,7 @@ if($Dependency.AddToPath)
     Add-ToItemCollection -Reference Env:\PSModulePath -Item (Get-Item $Target).FullName
     
     Write-Verbose "Setting PATH to`n$($RepoPath, $env:PATH -join ';' | Out-String)"
-    Add-ToItemCollection -Reference Env:\Path -Item (Get-Item $Target).FullName
+    Add-ToItemCollection -Reference Env:\PATH -Item (Get-Item $Target).FullName
 }
 
 $ToImport = $Target

@@ -1,31 +1,30 @@
 # Handling Module Dependencies
 
-The PowerShellGet functions are pretty cool - if you run `Install-Module XYZ`, you'll get XYZ, and any modules defined in XYZ's `RequiredModules` manifest section.  But... What if the gallery isn't your only dependency source? 
+`Install-Module` handles dependencies declared in a module manifest's `RequiredModules` section, but it only covers the PowerShell Gallery. PSDepend lets you declare dependencies from multiple sources — Gallery modules, Git repos, and file downloads — in one place.
 
-This is a quick demo illustrating a quick way to pull down module dependencies.  You might run this during an automated build, or even at run time given that this should be idempotent.
+This walkthrough demonstrates embedding a `requirements.psd1` in a module so dependencies are resolved automatically on import.
 
 ## Set Up the Demo Module
 
-We'll set up a demo module in C:\MyModule.
-
 ```powershell
-# Set up a new module.  We'll create a basic skeleton that does nothing.
-mkdir C:\MyModule -force
+mkdir C:\MyModule -Force
+
 New-ModuleManifest -Path C:\MyModule\MyModule.psd1 `
                    -RootModule 'MyModule.psm1' `
                    -FunctionsToExport Test-PSDependExample `
                    -CmdletsToExport $null `
                    -VariablesToExport $null `
                    -AliasesToExport $null
-                   
+
 Set-Content -Path C:\MyModule\MyModule.psm1 @'
-# Load up dependencies!
-Invoke-PSDepend -Path $PSScriptRoot\requirements.psd1 -Target $PSScriptRoot\Dependencies -Install -Force
+# Resolve dependencies on module load
+Invoke-PSDepend -Path $PSScriptRoot\Requirements.psd1 -Target $PSScriptRoot\Dependencies -Install -Force
 
 Import-Module Posh-SSH
+
 Function Test-PSDependExample {
-    Get-ChildItem $PSScriptRoot\Dependencies -Recurse -Depth 1 | Select -ExpandProperty FullName
-    Get-Module | Select Name, Path
+    Get-ChildItem $PSScriptRoot\Dependencies -Recurse -Depth 1 | Select-Object -ExpandProperty FullName
+    Get-Module | Select-Object Name, Path
 }
 '@
 
@@ -38,22 +37,17 @@ Set-Content C:\MyModule\Requirements.psd1 -Value @'
         }
     }
 
-    # Grab some modules
     'Posh-SSH' = 'latest'
 
-    # Clone a repo
-    'ramblingcookiemonster/PowerShell' = 'master'
+    'PowerShellOrg/PSDepend' = 'master'
 
-    # Download a file
     'AzCopy_Download' = @{
         Name = 'azcopy.msi'
         DependencyType = 'FileDownload'
         Source = 'http://aka.ms/downloadazcopy'
         DependsOn = 'Posh-SSH'
     }
-    
-    # Ugly bootstrap install for azcopy to illustrate 'command' type
-    # Thanks to https://github.com/Microsoft/PartsUnlimited/blob/master/env/PartsUnlimited.Environment/PartsUnlimited.Environment/Scripts/Install-AzCopy.ps1
+
     'AzCopy_Install' = @{
         DependencyType = 'Command'
         Source = '$DepFolder = "$DependencyFolder\Dependencies"',
@@ -69,73 +63,68 @@ Set-Content C:\MyModule\Requirements.psd1 -Value @'
 '@
 ```
 
-We're ready to go! Let's look at the folder before we start:
+## Run It
 
-## Fun With Dependencies
-
-```
-PS C:\> dir C:\MyModule -Recurse | Select FullName
-
-FullName                     
---------                     
-C:\MyModule\MyModule.psd1    
-C:\MyModule\MyModule.psm1    
-C:\MyModule\Requirements.psd1 
-```
-
-Awesome, so I have a module, and a requirements file that it kicks off on load.  Let's load it up and see what happens!
+Starting from a clean module folder:
 
 ```
-PS C:\> Measure-Command {Import-Module C:\MyModule}
+PS C:\> Get-ChildItem C:\MyModule -Recurse | Select-Object FullName
+
+FullName
+--------
+C:\MyModule\MyModule.psd1
+C:\MyModule\MyModule.psm1
+C:\MyModule\Requirements.psd1
+```
+
+Import the module — PSDepend resolves all dependencies on first load:
+
+```
+PS C:\> Measure-Command { Import-Module C:\MyModule }
 
 ...
-Seconds           : 11
+Seconds : 11
+```
 
-PS C:\> Get-ChildItem C:\MyModule\Dependencies -Recurse -Directory -Depth 1 | Select FUllname
+Initial load time depends on bandwidth. Subsequent imports are fast because PSDepend skips dependencies that are already present:
 
-FullName                     
---------     
+```
+PS C:\> Measure-Command { Import-Module C:\MyModule -Force }
+
+...
+Seconds : 3
+```
+
+Confirm the dependencies were installed:
+
+```
+PS C:\> Get-ChildItem C:\MyModule\Dependencies -Recurse -Directory -Depth 1 | Select-Object FullName
+
+FullName
+--------
 C:\MyModule\Dependencies\AzCopy
 C:\MyModule\Dependencies\Posh-SSH
-C:\MyModule\Dependencies\PowerShell
+C:\MyModule\Dependencies\PSDepend
 C:\MyModule\Dependencies\Posh-SSH\1.7.6
-C:\MyModule\Dependencies\PowerShell\.build
-C:\MyModule\Dependencies\PowerShell\Images
-C:\MyModule\Dependencies\PowerShell\Tests
+C:\MyModule\Dependencies\PSDepend\.build
 ```
 
-Not bad!  This really depends on bandwidth, I ended up between 11 and 30 seconds for initial runs.  What if we import the module again?
+Confirm the modules loaded from the local dependencies folder:
 
 ```
-PS C:\> Measure-Command {Import-Module C:\MyModule -force}
+PS C:\> Test-PSDependExample
 
-...
-Seconds           : 3
-
-```
-
-That's it!  Every time the module is imported, we see the dependencies and skip their installs.  If we move to another system, the initial launch will pull down our dependencies.
-
-Oh, and to show that we imported those modules, we can run the dummy function from the module that lists their commands:
-
-```
-PS C:\Windows\system32> Test-PSDependExample
-
-# Filtered out some output by hand for readability
 C:\MyModule\Dependencies\AzCopy
 C:\MyModule\Dependencies\Posh-SSH
-C:\MyModule\Dependencies\PowerShell
+C:\MyModule\Dependencies\PSDepend
 C:\MyModule\Dependencies\azcopy.msi
 C:\MyModule\Dependencies\AzCopy\AzCopy.exe
-Name                            Path                                                                             
-----                            ----                                                                             
-MyModule                        C:\MyModule\MyModule.psm1                                                        
-Posh-SSH                        C:\Program Files\WindowsPowerShell\Modules\Posh-SSH\1.7.5\Posh-SSH.psd1          
+
+Name      Path
+----      ----
+MyModule  C:\MyModule\MyModule.psm1
+Posh-SSH  C:\MyModule\Dependencies\Posh-SSH\1.7.6\Posh-SSH.psd1
 ...
 ```
 
-So!  If you need a re-usable, functional, self-documenting way to pull in module dependencies, and performance isn't a top concern, PSDepend might fit the bill.
-
-Huge thanks to Mike Walker for the idea : )
-
-Cheers!
+This pattern gives you a self-contained, repeatable module that pulls its own dependencies on first use — useful for build scripts, CI pipelines, or any module you want to work reliably across machines without a separate setup step.

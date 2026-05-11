@@ -1,94 +1,87 @@
-# Creating a Virtual Environment of Sorts
+# Creating a Virtual Environment
 
-This is a quick demo illustrating a "virtual-environment-light" scenario.
+This walkthrough demonstrates a "virtual environment" scenario — pulling down dependencies into a project folder and importing them directly, independent of any other versions installed on the system.
 
-We pull down some dependencies and import them directly, regardless of whether we have different versions elsewhere on the system
-
-## Set Up A Demo "Project"
+## Set Up a Demo Project
 
 ```powershell
-# Set up a project folder, and a requirements.psd1
-mkdir C:\ProjectX -force
+mkdir C:\ProjectX -Force
 Set-Content C:\ProjectX\Requirements.psd1 -Value @'
 @{
     PSDependOptions = @{
-        Target = '$DependencyFolder' # I want all my dependencies installed here
-        AddToPath = $True            # I want to prepend project to $ENV:Path and $ENV:PSModulePath
+        Target = '$DependencyFolder' # Install all dependencies here
+        AddToPath = $True            # Prepend project folder to $ENV:Path and $ENV:PSModulePath
     }
 
-    # Grab some modules
-    PSSlack = 'latest'
+    # Gallery modules
+    PSSlack     = 'latest'
     ImportExcel = 'latest'
-    'Posh-SSH' = 'latest'
+    'Posh-SSH'  = 'latest'
 
     # Clone a git repo
-    'ramblingcookiemonster/PowerShell' = 'master'
+    'PowerShellOrg/PSDepend' = 'master'
 
     # Download a file
-    'psrabbitmq.dll' = @{
+    'RabbitMQ.Client.dll' = @{
         DependencyType = 'FileDownload'
-        Source = 'https://github.com/RamblingCookieMonster/PSRabbitMq/raw/master/PSRabbitMq/lib/RabbitMQ.Client.dll'
+        Source = 'https://github.com/PowerShellOrg/PSDepend/raw/master/PSDepend/PSDepend.psd1'
     }
 }
 '@
 ```
 
-We're ready to go!
-
-## Test and Create the Virtual Environment
+## Test and Install
 
 ```powershell
 Import-Module PSDepend
 
-# Do I have my dependencies already? Nope
-Invoke-PSDepend -Path C:\ProjectX -Test | Select Dependency*
+# Check whether dependencies are already in place
+Invoke-PSDepend -Path C:\ProjectX -Test | Select-Object Dependency*
 <#
-    DependencyFile                DependencyName                   DependencyType  DependencyExists
-    --------------                --------------                   --------------  ----------------
-    C:\ProjectX\Requirements.psd1 ImportExcel                      PSGalleryModule            False
-    C:\ProjectX\Requirements.psd1 Posh-SSH                         PSGalleryModule            False
-    C:\ProjectX\Requirements.psd1 PSSlack                          PSGalleryModule            False
-    C:\ProjectX\Requirements.psd1 ramblingcookiemonster/PowerShell Git                        False
-    C:\ProjectX\Requirements.psd1 psrabbitmq.dll                   FileDownload               False
+    DependencyFile                DependencyName           DependencyType  DependencyExists
+    --------------                --------------           --------------  ----------------
+    C:\ProjectX\Requirements.psd1 ImportExcel              PSGalleryModule            False
+    C:\ProjectX\Requirements.psd1 Posh-SSH                 PSGalleryModule            False
+    C:\ProjectX\Requirements.psd1 PSSlack                  PSGalleryModule            False
+    C:\ProjectX\Requirements.psd1 PowerShellOrg/PSDepend   Git                        False
+    C:\ProjectX\Requirements.psd1 RabbitMQ.Client.dll      FileDownload               False
 #>
 
-# Install them...
+# Install all dependencies
 Invoke-PSDepend -Path C:\ProjectX -Force
 
-# Test again, this time just get a true or false:
-Invoke-PSDepend -Path C:\ProjectX\requirements.psd1 -Test -Quiet
+# Verify
+Invoke-PSDepend -Path C:\ProjectX\Requirements.psd1 -Test -Quiet
 # True
 
-# Just to be sure...
-dir C:\ProjectX
-<#  Yep!
-    Mode                LastWriteTime         Length Name                                                                                                        
-    ----                -------------         ------ ----                                                                                                        
-    d-----        8/30/2016  10:48 AM                ImportExcel                                                                                                 
-    d-----        8/30/2016  10:48 AM                Posh-SSH                                                                                                    
-    d-----        8/30/2016  10:48 AM                PowerShell                                                                                                  
-    d-----        8/30/2016  10:48 AM                PSSlack                                                                                                     
-    -a----        8/30/2016  10:48 AM         248320 RabbitMQ.Client.dll                                                                                         
-    -a----        8/30/2016  10:48 AM            627 Requirements.psd1  
-#>
-
-# Oh, let's import them
-Invoke-PSDepend -Path C:\ProjectX\requirements.psd1 -Import -Force
-
-# Did they import?
-Get-Module PSSlack, ImportExcel, Posh-SSH | Select Name, Path
+# Confirm files are present
+Get-ChildItem C:\ProjectX
 <#
-    Name        Path                                          
-    ----        ----                                          
-    ImportExcel C:\ProjectX\ImportExcel\2.2.7\ImportExcel.psm1
-    Posh-SSH    C:\ProjectX\Posh-SSH\1.7.6\Posh-SSH.psd1      
-    PSSlack     C:\ProjectX\PSSlack\0.0.15\PSSlack.psm1 
+    Mode                LastWriteTime         Length Name
+    ----                -------------         ------ ----
+    d-----        8/30/2016  10:48 AM                ImportExcel
+    d-----        8/30/2016  10:48 AM                Posh-SSH
+    d-----        8/30/2016  10:48 AM                PSDepend
+    d-----        8/30/2016  10:48 AM                PSSlack
+    -a----        8/30/2016  10:48 AM         248320 RabbitMQ.Client.dll
+    -a----        8/30/2016  10:48 AM            627 Requirements.psd1
 #>
 
+# Import all dependencies
+Invoke-PSDepend -Path C:\ProjectX\Requirements.psd1 -Import -Force
 
-# Lastly, did our PSModulePath and Path get updated?
+# Confirm modules loaded from the project folder
+Get-Module PSSlack, ImportExcel, Posh-SSH | Select-Object Name, Path
+<#
+    Name        Path
+    ----        ----
+    ImportExcel C:\ProjectX\ImportExcel\2.2.7\ImportExcel.psm1
+    Posh-SSH    C:\ProjectX\Posh-SSH\1.7.6\Posh-SSH.psd1
+    PSSlack     C:\ProjectX\PSSlack\0.0.15\PSSlack.psm1
+#>
+
+# Confirm $env:Path and $env:PSModulePath were updated
 $env:Path -split ';'
-
 <#
     C:\ProjectX
     C:\Windows\system32
@@ -96,13 +89,11 @@ $env:Path -split ';'
 #>
 
 $env:PSModulePath -split ';'
-
 <#
     C:\ProjectX
-    C:\Users\wframe\Documents\WindowsPowerShell\Modules
+    C:\Users\<username>\Documents\WindowsPowerShell\Modules
+    ...
 #>
 ```
 
-That's about it!  You could use code similar to this to set up a virtual environment of sorts, with certain modules pre-loaded, and certain paths and psmodulepaths taking precedence for the current session.
-
-Yes, I know this isn't really a virtual environment, just seemed like the quickest way to get the idea across : )
+This pattern lets you set up an isolated dependency folder for a project, with those paths taking precedence over system-wide installations for the current session.

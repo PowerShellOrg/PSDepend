@@ -30,22 +30,7 @@ Function Import-Dependency {
         Get dependencies from C:\requirements.psd1 and import them
 
     .LINK
-        about_PSDepend
-
-    .LINK
-        about_PSDepend_Definitions
-
-    .LINK
-        Get-Dependency
-
-    .LINK
-        Get-PSDependType
-
-    .LINK
-        Invoke-PSDepend
-
-    .LINK
-        https://github.com/RamblingCookieMonster/PSDepend
+        https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding()]
     Param(
