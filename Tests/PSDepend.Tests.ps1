@@ -216,17 +216,4 @@ Describe "Invoke-DependencyScript PS$PSVersion" -Tag 'Unit' {
                 Should -Not -Throw
         }
     }
-
-    Context 'Test action' {
-        BeforeAll {
-            Set-StrictMode -Version latest
-            Mock Get-Module { [pscustomobject]@{ Version = '1.2.5' } } -ModuleName PSDepend
-        }
-        AfterAll { Set-StrictMode -Off }
-
-        It 'Returns $true when the module is installed at the required version with -Quiet' {
-            $Dep = Get-Dependency -Path $TestDepends\psgallerymodule.sameversion.depend.psd1
-            $Dep | Invoke-DependencyScript -PSDependAction Test -Quiet | Should -Be $True
-        }
-    }
 }

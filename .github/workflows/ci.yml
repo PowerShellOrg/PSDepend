@@ -54,7 +54,7 @@ jobs:
         run: ./build.ps1 -Bootstrap -Task Init
       - name: Test
         shell: powershell
-        run: ./build.ps1 -Task Test-PS51
+        run: ./build.ps1 -Task Test
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
