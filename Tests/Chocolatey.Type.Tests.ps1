@@ -22,7 +22,7 @@ Describe 'Chocolatey script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
     BeforeAll {
         InModuleScope PSDepend {
             # Pretend choco.exe is present so we skip the bootstrap branch
-            Mock Get-Command { [pscustomobject]@{ Name = 'choco.exe' } } -ParameterFilter { $Name -eq 'choco.exe' }
+            Mock Get-Command { [PSCustomObject]@{ Name = 'choco.exe' } } -ParameterFilter { $Name -eq 'choco.exe' }
             # All choco invocations return empty CSV (no packages installed, none found upstream)
             Mock Invoke-ExternalCommand { }
             Mock Invoke-WebRequest { }

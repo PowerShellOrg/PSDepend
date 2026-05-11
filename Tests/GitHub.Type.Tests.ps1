@@ -38,7 +38,7 @@ Describe 'GitHub script' {
         It 'Returns $true when local version matches requested numeric version' {
             InModuleScope PSDepend {
                 Mock Get-Module {
-                    [pscustomobject]@{ Name = 'somerepo'; Version = [version]'1.2.3' }
+                    [PSCustomObject]@{ Name = 'somerepo'; Version = [version]'1.2.3' }
                 } -ParameterFilter { $ListAvailable }
             }
             $targetDir = (New-Item 'TestDrive:/gh-match' -ItemType Directory -Force).FullName

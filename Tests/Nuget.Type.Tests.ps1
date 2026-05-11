@@ -17,9 +17,9 @@ Describe 'Nuget script' {
     BeforeAll {
         InModuleScope PSDepend {
             Mock Invoke-ExternalCommand { }
-            Mock Find-NugetPackage { [pscustomobject]@{ Version = '1.0.0' } }
+            Mock Find-NugetPackage { [PSCustomObject]@{ Version = '1.0.0' } }
             # Pretend nuget.exe is available so we don't trigger the missing-tool Write-Error
-            Mock Get-Command { [pscustomobject]@{ Name = 'nuget' } } -ParameterFilter { $Name -eq 'Nuget' }
+            Mock Get-Command { [PSCustomObject]@{ Name = 'nuget' } } -ParameterFilter { $Name -eq 'Nuget' }
         }
     }
 

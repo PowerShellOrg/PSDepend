@@ -8,11 +8,11 @@ function New-PSDependFixture {
         [AllowNull()][object]$Target = $null,
         [AllowNull()][object]$Source = $null,
         [hashtable]$Parameters = @{},
-        [pscredential]$Credential,
+        [PSCredential]$Credential,
         [switch]$AddToPath
     )
 
-    [pscustomobject]@{
+    [PSCustomObject]@{
         PSTypeName     = 'PSDepend.Dependency'
         DependencyFile = $null
         DependencyName = $DependencyName
@@ -33,36 +33,63 @@ function New-PSDependFixture {
 }
 
 function New-TestCredential {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSAvoidUsingPlainTextForPassword',
+        '',
+        Justification = 'Dummy credential for testing.'
+    )]
     [CmdletBinding()]
     param(
         [string]$UserName = 'testUser',
         [string]$Password = 'testPassword'
     )
 
-    [pscredential]::new($UserName, (ConvertTo-SecureString $Password -AsPlainText -Force))
+    [PSCredential]::new(
+        $UserName,
+        (ConvertTo-SecureString $Password -AsPlainText -Force)
+    )
 }
 
 function Test-PSDependTypeSupportedHere {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$DependencyType,
-        [string]$MapPath = (Join-Path $PSScriptRoot '..' '..' 'PSDepend' 'PSDependMap.psd1')
+        [string]$MapPath = (
+            # Use Path::Combine because Join-Path was stupid long
+            [System.IO.Path]::Combine(
+                $PSScriptRoot,
+                '..',
+                '..',
+                'PSDepend',
+                'PSDependMap.psd1'
+            )
+        )
     )
 
     $map = Import-PowerShellDataFile -Path $MapPath
-    if (-not $map.ContainsKey($DependencyType)) { return $false }
+    if (-not $map.ContainsKey($DependencyType)) {
+        return $false 
+    }
     $support = @($map[$DependencyType].Supports)
 
     if ($PSVersionTable.PSEdition -eq 'Core') {
         $windowsCoreOk = $IsWindows -and ($support -contains 'windows')
-        if (-not $windowsCoreOk -and $support -notcontains 'core') { return $false }
+        if (-not $windowsCoreOk -and $support -notcontains 'core') {
+            return $false
+        }
     } elseif ($support -notcontains 'windows') {
         return $false
     }
 
-    if ($IsLinux  -and $support -notcontains 'linux')   { return $false }
-    if ($IsMacOS  -and $support -notcontains 'macos')   { return $false }
-    if ($IsWindows -and $support -notcontains 'windows'){ return $false }
+    if ($IsLinux  -and $support -notcontains 'linux') {
+        return $false
+    }
+    if ($IsMacOS  -and $support -notcontains 'macos') {
+        return $false
+    }
+    if ($IsWindows -and $support -notcontains 'windows') {
+        return $false
+    }
     $true
 }
 

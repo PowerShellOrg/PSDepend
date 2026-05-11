@@ -24,10 +24,10 @@ Describe 'PSGalleryModule script' {
 
     BeforeAll {
         InModuleScope PSDepend {
-            Mock Get-PackageProvider { [pscustomobject]@{ Name = 'NuGet' } }
-            Mock Get-PSRepository    { [pscustomobject]@{ Name = 'PSGallery' } }
+            Mock Get-PackageProvider { [PSCustomObject]@{ Name = 'NuGet' } }
+            Mock Get-PSRepository    { [PSCustomObject]@{ Name = 'PSGallery' } }
             Mock Get-Module          { } -ParameterFilter { $ListAvailable }
-            Mock Find-Module         { [pscustomobject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } }
+            Mock Find-Module         { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } }
             Mock Install-Module      { }
             Mock Save-Module         { }
             Mock Import-PSDependModule     { }
@@ -91,7 +91,7 @@ Describe 'PSGalleryModule script' {
 
         It 'Returns $true when installed version matches requested version' {
             InModuleScope PSDepend {
-                Mock Get-Module { [pscustomobject]@{ Name = 'TestModule'; Version = [version]'1.2.3' } } -ParameterFilter { $ListAvailable }
+                Mock Get-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'1.2.3' } } -ParameterFilter { $ListAvailable }
             }
             $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '1.2.3'
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
@@ -105,7 +105,7 @@ Describe 'PSGalleryModule script' {
     Context 'PSDependAction = Test,Install short-circuits when satisfied' {
         BeforeAll {
             InModuleScope PSDepend {
-                Mock Get-Module { [pscustomobject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } } -ParameterFilter { $ListAvailable }
+                Mock Get-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } } -ParameterFilter { $ListAvailable }
             }
         }
 

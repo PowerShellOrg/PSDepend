@@ -235,7 +235,7 @@ function Get-Dependency {
                 $Dependency -match '::' -and
                 ($Dependency -split '::').count -eq 2
             ) {
-                [pscustomobject]@{
+                [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
                     DependencyName = ($Dependency -split '::')[1]
@@ -260,7 +260,7 @@ function Get-Dependency {
                 $Dependency -notmatch '/' -and
                 -not $DependencyType -or
                 $DependencyType -eq 'PSGalleryModule') {
-                [pscustomobject]@{
+                [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
                     DependencyName = $Dependency
@@ -286,7 +286,7 @@ function Get-Dependency {
                 $Dependency.split('/').count -eq 2 -and
                 -not $DependencyType -or
                 $DependencyType -eq 'GitHub') {
-                [pscustomobject]@{
+                [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
                     DependencyName = $Dependency
@@ -310,7 +310,7 @@ function Get-Dependency {
                 $Dependency -match '/' -and
                 -not $DependencyType -or
                 $DependencyType -eq 'Git' ) {
-                [pscustomobject]@{
+                [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
                     DependencyName = $Dependency
@@ -362,7 +362,7 @@ function Get-Dependency {
                 }
 
                 $CredentialName = Get-GlobalOption -Name Credential -Prefer $DependencyHash.Credential
-                [pscustomobject]@{
+                [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
                     DependencyName = $Dependency

@@ -27,10 +27,10 @@ Describe 'Package script' {
 
     BeforeAll {
         InModuleScope PSDepend {
-            Mock Get-PackageSource   { [pscustomobject]@{ Name = 'nuget.org'; ProviderName = 'Nuget' } }
-            Mock Get-PackageProvider { @( [pscustomobject]@{ Name = 'Nuget' }, [pscustomobject]@{ Name = 'PowerShellGet' } ) }
+            Mock Get-PackageSource   { [PSCustomObject]@{ Name = 'nuget.org'; ProviderName = 'Nuget' } }
+            Mock Get-PackageProvider { @( [PSCustomObject]@{ Name = 'Nuget' }, [PSCustomObject]@{ Name = 'PowerShellGet' } ) }
             Mock Get-Package         { }
-            Mock Find-Package        { [pscustomobject]@{ Name = 'jquery'; Version = '1.0.0' } }
+            Mock Find-Package        { [PSCustomObject]@{ Name = 'jquery'; Version = '1.0.0' } }
             Mock Install-Package     { }
         }
     }
