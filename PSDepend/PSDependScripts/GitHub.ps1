@@ -351,9 +351,9 @@ if($ShouldInstall)
             {
                 foreach($GitHubTag in $GitHubTags)
                 {
-                    if($GitHubTag.name -match "^\d+(?:\.\d+)+$" -and ($DependencyVersion -match "^\d+(?:\.\d+)+$" -or $DependencyVersion -eq "latest"))
+                    if($GitHubTag.name -match "^v?\d+(?:\.\d+)+$" -and ($DependencyVersion -match "^\d+(?:\.\d+)+$" -or $DependencyVersion -eq "latest"))
                     {
-                        $GitHubVersion = New-Object "System.Version" $GitHubTag.name
+                        $GitHubVersion = New-Object "System.Version" ($GitHubTag.name -replace '^v','')
 
                         if($DependencyVersion -Eq "latest")
                         {
