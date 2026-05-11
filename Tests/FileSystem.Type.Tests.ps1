@@ -1,5 +1,10 @@
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
+BeforeDiscovery {
+    Import-Module (Join-Path $PSScriptRoot 'Shared/TestHelpers.psm1') -Force
+    $script:SkipUnsupported = -not (Test-PSDependTypeSupportedHere -DependencyType 'FileSystem')
+}
+
 BeforeAll {
     if (-not $env:BHProjectPath) {
         Set-BuildEnvironment -Path "$PSScriptRoot/.." -Force
@@ -12,7 +17,7 @@ BeforeAll {
     $script:ScriptPath = Join-Path $env:BHProjectPath 'PSDepend/PSDependScripts/FileSystem.ps1'
 }
 
-Describe 'FileSystem script' {
+Describe 'FileSystem script' -Skip:$SkipUnsupported {
 
     BeforeAll {
         InModuleScope PSDepend {

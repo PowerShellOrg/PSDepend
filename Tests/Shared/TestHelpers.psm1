@@ -42,4 +42,28 @@ function New-TestCredential {
     [pscredential]::new($UserName, (ConvertTo-SecureString $Password -AsPlainText -Force))
 }
 
-Export-ModuleMember -Function New-PSDependFixture, New-TestCredential
+function Test-PSDependTypeSupportedHere {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$DependencyType,
+        [string]$MapPath = (Join-Path $PSScriptRoot '..' '..' 'PSDepend' 'PSDependMap.psd1')
+    )
+
+    $map = Import-PowerShellDataFile -Path $MapPath
+    if (-not $map.ContainsKey($DependencyType)) { return $false }
+    $support = @($map[$DependencyType].Supports)
+
+    if ($PSVersionTable.PSEdition -eq 'Core') {
+        $windowsCoreOk = $IsWindows -and ($support -contains 'windows')
+        if (-not $windowsCoreOk -and $support -notcontains 'core') { return $false }
+    } elseif ($support -notcontains 'windows') {
+        return $false
+    }
+
+    if ($IsLinux  -and $support -notcontains 'linux')   { return $false }
+    if ($IsMacOS  -and $support -notcontains 'macos')   { return $false }
+    if ($IsWindows -and $support -notcontains 'windows'){ return $false }
+    $true
+}
+
+Export-ModuleMember -Function New-PSDependFixture, New-TestCredential, Test-PSDependTypeSupportedHere

@@ -187,6 +187,8 @@ Describe "Install-Dependency PS$PSVersion" -Tag 'Unit' {
         BeforeAll {
             Set-StrictMode -Version latest
             Mock Install-Module {} -ModuleName PSDepend
+            Mock Get-PackageProvider { [pscustomobject]@{ Name = 'NuGet' } } -ModuleName PSDepend
+            Mock Install-PackageProvider {} -ModuleName PSDepend
         }
         AfterAll { Set-StrictMode -Off }
 

@@ -1,5 +1,10 @@
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
+BeforeDiscovery {
+    Import-Module (Join-Path $PSScriptRoot 'Shared/TestHelpers.psm1') -Force
+    $script:SkipUnsupported = -not (Test-PSDependTypeSupportedHere -DependencyType 'FileDownload')
+}
+
 BeforeAll {
     if (-not $env:BHProjectPath) {
         Set-BuildEnvironment -Path "$PSScriptRoot/.." -Force
@@ -12,7 +17,7 @@ BeforeAll {
     $script:ScriptPath = Join-Path $env:BHProjectPath 'PSDepend/PSDependScripts/FileDownload.ps1'
 }
 
-Describe 'FileDownload script' {
+Describe 'FileDownload script' -Skip:$SkipUnsupported {
 
     BeforeAll {
         InModuleScope PSDepend {
