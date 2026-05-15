@@ -119,6 +119,21 @@ Describe 'PSGalleryModule script' {
         }
     }
 
+    Context 'Latest version comparison' {
+        It 'Installs when installed version 2.8.0 is behind gallery version 2.10.0' {
+            InModuleScope PSDepend {
+                Mock Get-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.8.0' } } -ParameterFilter { $ListAvailable }
+                Mock Find-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.10.0' } }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version 'latest'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep
+            }
+
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 1
+        }
+    }
+
     Context 'Target as path uses Save-Module instead of Install-Module' {
         It 'Calls Save-Module with the target path' {
             $savePath = (New-Item 'TestDrive:/save' -ItemType Directory -Force).FullName
