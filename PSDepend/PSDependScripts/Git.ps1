@@ -93,15 +93,14 @@ if($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction 
 }
 else
 {
-if ($Force) {
-            New-Item -ItemType Directory -Name (Split-Path $Dependency.Target -Leaf) -Force | Out-Null
-            Write-Debug "Target folder $($Dependency.Target) created as -Force switch was specified"
-            $Target = Join-Path $PWD "$(Split-Path $Dependency.Target -Leaf)"
-            }
+    if ($Dependency.Target) {
+        $Target = $Dependency.Target
+        Write-Debug "Target $($Dependency.Target) does not exist yet, will be created"
+    }
     else {
         $Target = $PWD.Path
         Write-Debug "Target defaulted to current dir: $Target"
-        }
+    }
 }
 $RepoPath = Join-Path $Target $GitName
 $GottaInstall = $True

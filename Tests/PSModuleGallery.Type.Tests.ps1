@@ -512,6 +512,24 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             }
         }
 
+        Context 'Creates non-existent Target directory using full path' {
+            BeforeAll {
+                Mock Invoke-ExternalCommand {} -ModuleName PSDepend -ParameterFilter { $Arguments -contains 'checkout' -or $Arguments -contains 'clone' }
+                Mock Push-Location {} -ModuleName PSDepend
+                Mock Pop-Location {} -ModuleName PSDepend
+                Mock Set-Location {} -ModuleName PSDepend
+                Mock Test-Path { return $False } -ModuleName PSDepend
+                Mock New-Item { [pscustomobject]@{ FullName = $Path } } -ModuleName PSDepend
+                $null = Invoke-PSDepend @Verbose -Path "$TestDepends\git.depend.psd1" -Force
+            }
+
+            It 'Calls New-Item with the full Dependency.Target path, not just the leaf joined to $PWD' {
+                Should -Invoke New-Item -Times 1 -Exactly -Scope Context -ModuleName PSDepend -ParameterFilter {
+                    $Path -eq 'TestDrive:/PSDependPesterTest\buildhelpers'
+                }
+            }
+        }
+
         Context 'Tests dependency' {
             BeforeAll {
                 Mock New-Item { return $true } -ModuleName PSDepend
