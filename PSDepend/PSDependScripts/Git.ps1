@@ -94,7 +94,7 @@ if($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction 
 else
 {
     if ($Dependency.Target) {
-        $Target = $Dependency.Target
+        $Target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Dependency.Target)
         Write-Debug "Target $($Dependency.Target) does not exist yet, will be created"
     }
     else {
