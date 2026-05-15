@@ -124,11 +124,13 @@ If($ThisProvider -eq 'PowerShellGet')
     if(-not $Dependency.Target)
     {
         $Scope = 'AllUsers'
-        $InstallParam.Add('Scope', $Scope)
     }
-    elseif($ValidScope -contains $Scope)
+    else
     {
         $Scope = $Dependency.Target
+    }
+    if($ValidScope -contains $Scope)
+    {
         $InstallParam.Add('Scope', $Scope)
     }
 }
