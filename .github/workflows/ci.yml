@@ -28,7 +28,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Bootstrap
         shell: pwsh
         run: ./build.ps1 -Bootstrap -Task Init
@@ -37,7 +37,7 @@ jobs:
         run: ./build.ps1 -Task Test
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: testResults-${{ matrix.os }}
           path: ./Tests/out/testResults.xml
@@ -48,7 +48,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Bootstrap
         shell: powershell
         run: ./build.ps1 -Bootstrap -Task Init
@@ -57,7 +57,7 @@ jobs:
         run: ./build.ps1 -Task Test
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: testResults-ps51
           path: ./Tests/out/testResults.xml
@@ -72,7 +72,7 @@ jobs:
       pull-requests: write
     if: ${{ !cancelled() }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
       - uses: EnricoMi/publish-unit-test-result-action@v2
