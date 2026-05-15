@@ -258,8 +258,8 @@ function Get-Dependency {
             # It doesn't look like a git repo, and simple syntax: PSGalleryModule
             elseif( $DependencyHash -is [string] -and
                 $Dependency -notmatch '/' -and
-                -not $DependencyType -or
-                $DependencyType -eq 'PSGalleryModule') {
+                (-not $DependencyType -or
+                $DependencyType -eq 'PSGalleryModule')) {
                 [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
@@ -284,8 +284,8 @@ function Get-Dependency {
             elseif($DependencyHash -is [string] -and
                 $Dependency -match '/' -and
                 $Dependency.split('/').count -eq 2 -and
-                -not $DependencyType -or
-                $DependencyType -eq 'GitHub') {
+                (-not $DependencyType -or
+                $DependencyType -eq 'GitHub')) {
                 [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
@@ -308,8 +308,8 @@ function Get-Dependency {
             # It looks like a git repo, and simple syntax: Git
             elseif($DependencyHash -is [string] -and
                 $Dependency -match '/' -and
-                -not $DependencyType -or
-                $DependencyType -eq 'Git' ) {
+                (-not $DependencyType -or
+                $DependencyType -eq 'Git')) {
                 [PSCustomObject]@{
                     PSTypeName = 'PSDepend.Dependency'
                     DependencyFile = $DependencyFile
