@@ -93,8 +93,14 @@ if($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction 
 }
 else
 {
-    $Target = $PWD.Path
-    Write-Debug "Target defaulted to current dir: $Target"
+    if ($Dependency.Target) {
+        $Target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Dependency.Target)
+        Write-Debug "Target $($Dependency.Target) does not exist yet, will be created"
+    }
+    else {
+        $Target = $PWD.Path
+        Write-Debug "Target defaulted to current dir: $Target"
+    }
 }
 $RepoPath = Join-Path $Target $GitName
 $GottaInstall = $True
