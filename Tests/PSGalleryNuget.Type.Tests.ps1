@@ -2,7 +2,7 @@
 
 BeforeAll {
     if (-not $env:BHProjectPath) {
-        Set-BuildEnvironment -Path "$PSScriptRoot/.." -Force
+        & "$PSScriptRoot\..\build.ps1" -Task 'Build'
     }
     Remove-Module $env:BHProjectName -ErrorAction SilentlyContinue
     Import-Module (Join-Path $env:BHProjectPath $env:BHProjectName) -Force
