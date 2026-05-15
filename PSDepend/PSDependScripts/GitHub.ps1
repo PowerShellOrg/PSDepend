@@ -180,7 +180,7 @@ Write-Verbose -Message "Am I on Windows? [$script:IsWindows]! Am I PS Core? [$sc
 $DependencyID = $Dependency.DependencyName
 $DependencyVersion = $Dependency.Version
 $DependencyTarget = $Dependency.Target
-$DependencyName = $DependencyID.Split("/")[1]
+$DependencyName = if ($Dependency.Name) {$Dependency.Name} Else {$DependencyID.Split("/")[1]}
 
 # Translate "" to "latest"
 if($DependencyVersion -eq "")
