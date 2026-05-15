@@ -445,7 +445,10 @@ if(($PSDependAction -contains 'Install') -and $ShouldInstall)
     $OutPath = Join-Path ([System.IO.Path]::GetTempPath()) ([guid]::NewGuid().guid)
     New-Item -ItemType Directory -Path $OutPath -Force | Out-Null
     $OutFile = Join-Path $OutPath "$DependencyVersion.zip"
+    $PreviousProgressPreference=$ProgressPreference
+    $ProgressPreference='SilentlyContinue'
     Invoke-RestMethod -Uri $URL -OutFile $OutFile
+    $ProgressPreference=$PreviousProgressPreference
 
     if(-not (Test-Path $OutFile))
     {
