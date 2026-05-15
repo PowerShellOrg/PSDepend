@@ -187,6 +187,8 @@ Describe "Install-Dependency PS$PSVersion" -Tag 'Unit' {
         BeforeAll {
             Set-StrictMode -Version latest
             Mock Install-Module {} -ModuleName PSDepend
+            Mock Get-PackageProvider { [PSCustomObject]@{ Name = 'NuGet' } } -ModuleName PSDepend
+            Mock Install-PackageProvider {} -ModuleName PSDepend
         }
         AfterAll { Set-StrictMode -Off }
 
@@ -212,19 +214,6 @@ Describe "Invoke-DependencyScript PS$PSVersion" -Tag 'Unit' {
             $Dep = Get-Dependency -Path $TestDepends\psgallerymodule.depend.psd1 | Select-Object -First 1
             { $Dep | Invoke-DependencyScript -PSDependAction 'NonExistentAction' -WarningAction SilentlyContinue } |
                 Should -Not -Throw
-        }
-    }
-
-    Context 'Test action' {
-        BeforeAll {
-            Set-StrictMode -Version latest
-            Mock Get-Module { [pscustomobject]@{ Version = '1.2.5' } } -ModuleName PSDepend
-        }
-        AfterAll { Set-StrictMode -Off }
-
-        It 'Returns $true when the module is installed at the required version with -Quiet' {
-            $Dep = Get-Dependency -Path $TestDepends\psgallerymodule.sameversion.depend.psd1
-            $Dep | Invoke-DependencyScript -PSDependAction Test -Quiet | Should -Be $True
         }
     }
 }

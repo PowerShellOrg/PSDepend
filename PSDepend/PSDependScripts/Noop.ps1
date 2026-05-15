@@ -25,7 +25,7 @@ param (
 
 Write-Verbose "Starting noop run with $($Dependency.count) sources"
 
-[pscustomobject]@{
+[PSCustomObject]@{
     PSBoundParameters = $PSBoundParameters
     Dependency= $Dependency
     DependencyParameters = $Dependency.Parameters

@@ -95,7 +95,7 @@ Function Get-PSDependType {
         else
         {
             $Support = @($DependencyDefinitions.$Type.Supports)
-            [pscustomobject]@{
+            [PSCustomObject]@{
                 DependencyType = $Type
                 Supports = $Support
                 Supported = Test-PlatformSupport -Type $Type -Support $Support

@@ -135,7 +135,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             BeforeAll {
                 Mock Install-Module {} -ModuleName PSDepend
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -155,7 +155,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             BeforeAll {
                 Mock Install-Module {} -ModuleName PSDepend
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0002'
                     }
                 } -ModuleName PSDepend
@@ -175,12 +175,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             BeforeAll {
                 Mock Install-Module {} -ModuleName PSDepend
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -199,12 +199,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             BeforeAll {
                 Mock Install-Module {} -ModuleName PSDepend
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0002'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0002'
                     }
                 } -ModuleName PSDepend
@@ -228,7 +228,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $true when it finds an existing module (Version)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -240,7 +240,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $true when it finds an existing module (SemVersion)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0002'
                     }
                 } -ModuleName PSDepend
@@ -252,12 +252,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $true when it finds an existing latest module (Version)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -269,12 +269,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $true when it finds an existing latest module (SemVersion)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0002'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0002'
                     }
                 } -ModuleName PSDepend
@@ -302,7 +302,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It "Returns `$false when it finds an existing module with a lower version (Version)" {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.4'
                     }
                 } -ModuleName PSDepend
@@ -314,7 +314,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $false when it finds an existing module with a lower version (SemVersion)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0001'
                     }
                 } -ModuleName PSDepend
@@ -326,7 +326,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $false when it finds an existing module with a lower version (SemVersion-Version)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.4'
                     }
                 } -ModuleName PSDepend
@@ -338,12 +338,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $false when it finds an existing module with a lower version than latest (Version)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.4'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -355,12 +355,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $false when it finds an existing module with a lower version than latest (SemVersion)' {
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0001'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5-preview0002'
                     }
                 } -ModuleName PSDepend
@@ -416,12 +416,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Install-Module -ModuleName PSDepend
                 Mock Import-Module -ModuleName PSDepend
                 Mock Get-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Module {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -485,7 +485,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Installs Module' {
             BeforeAll {
                 Mock Invoke-ExternalCommand {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         PSB = $PSBoundParameters
                         Arg = $Args
                     }
@@ -546,7 +546,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Installs dependency' {
             BeforeAll {
                 Mock Get-WebFile {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         PSB = $PSBoundParameters
                         Arg = $Args
                     }
@@ -623,7 +623,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Test-Path { return $True } -ModuleName PSDepend -ParameterFilter { $Path -match 'jenkins' }
                 Mock Invoke-ExternalCommand {} -ModuleName PSDepend
                 Mock Import-LocalizedData {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
@@ -644,12 +644,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Test-Path { return $True } -ModuleName PSDepend -ParameterFilter { $Path -match 'jenkins' }
                 Mock Invoke-ExternalCommand {} -ModuleName PSDepend
                 Mock Import-LocalizedData {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
                 Mock Find-NugetPackage {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -674,7 +674,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $true when it finds an existing module' {
                 Mock Import-LocalizedData {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
@@ -686,12 +686,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $true when it finds an existing latest module' {
                 Mock Import-LocalizedData {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
                 Mock Find-NugetPackage {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -711,7 +711,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It "Returns `$false when it finds an existing module with a lower version" {
                 Mock Import-LocalizedData {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         ModuleVersion = '1.2.4'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
@@ -724,12 +724,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It "Returns `$false when it finds an existing module with a lower version than latest" {
                 Mock Import-LocalizedData {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         ModuleVersion = '1.2.4'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
                 Mock Find-NugetPackage {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -788,12 +788,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Invoke-ExternalCommand {} -ModuleName PSDepend
                 Mock Import-Module -ModuleName PSDepend
                 Mock Import-LocalizedData {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'imaginary.psd1' }
                 Mock Find-NugetPackage {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.2.5'
                     }
                 } -ModuleName PSDepend
@@ -898,7 +898,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Installs Packages' {
             BeforeAll {
-                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
                 Mock Get-Package -ModuleName PSDepend
                 Mock Install-Package { $True } -ModuleName PSDepend
                 $script:Results = Invoke-PSDepend @Verbose -Path "$TestDepends\package.depend.psd1" -Force
@@ -926,10 +926,10 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Same package version exists' {
             BeforeAll {
-                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
                 Mock Install-Package -ModuleName PSDepend
                 Mock Get-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.1'
                     }
                 } -ModuleName PSDepend
@@ -947,15 +947,15 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Latest package required, and already installed' {
             BeforeAll {
-                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
                 Mock Install-Package -ModuleName PSDepend
                 Mock Get-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.1'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.1'
                     }
                 } -ModuleName PSDepend
@@ -972,14 +972,14 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Test-Dependency' {
             BeforeEach {
-                Mock Get-PackageSource { @([pscustomobject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
                 Mock Install-Package {} -ModuleName PSDepend
                 Mock Find-Package {} -ModuleName PSDepend
             }
 
             It 'Returns $true when it finds an existing module' {
                 Mock Get-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.1'
                     }
                 } -ModuleName PSDepend
@@ -991,12 +991,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It 'Returns $true when it finds an existing latest module' {
                 Mock Get-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.1'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.1'
                     }
                 } -ModuleName PSDepend
@@ -1016,7 +1016,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It "Returns `$false when it finds an existing module with a lower version" {
                 Mock Get-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.0'
                     }
                 } -ModuleName PSDepend
@@ -1028,12 +1028,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             It "Returns `$false when it finds an existing module with a lower version than latest" {
                 Mock Get-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.0'
                     }
                 } -ModuleName PSDepend
                 Mock Find-Package {
-                    [pscustomobject]@{
+                    [PSCustomObject]@{
                         Version = '1.1'
                     }
                 } -ModuleName PSDepend
@@ -1113,12 +1113,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             }
 
             It 'Returns $true if the module is installed' {
-                Mock Get-NodeModule { return [pscustomobject]@{
+                Mock Get-NodeModule { return [PSCustomObject]@{
                         'gitbook-cli' = @{
                             version = '2.3.0'
                         }
                     } } -ParameterFilter { $Global -eq $true } -ModuleName PSDepend
-                Mock Get-NodeModule { return [pscustomobject]@{
+                Mock Get-NodeModule { return [PSCustomObject]@{
                         'gitbook-summary' = @{
                             version = '1.2.3'
                         }
@@ -1227,7 +1227,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             $script:SavePath = (New-Item 'TestDrive:/PSDependPesterTest' -ItemType Directory -Force).FullName
 
             # Simulate choco.exe being present so tests don't hit the install-chocolatey branch by default
-            Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { [pscustomobject]@{Name = 'choco.exe'} } -ModuleName PSDepend
+            Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { [PSCustomObject]@{Name = 'choco.exe'} } -ModuleName PSDepend
             # Default catch-all for Invoke-ExternalCommand; individual tests register specific ParameterFilter mocks
             Mock Invoke-ExternalCommand -ModuleName PSDepend
         }

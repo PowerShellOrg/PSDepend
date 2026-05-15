@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
       - "PSDepend/**"
       - "Tests/**"
@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  test_pwsh:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     permissions:
@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macOS-latest ]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap
@@ -42,9 +42,30 @@ jobs:
           name: testResults-${{ matrix.os }}
           path: ./Tests/out/testResults.xml
 
+  test_ps51:
+    name: Test (Windows PowerShell 5.1)
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap
+        shell: powershell
+        run: ./build.ps1 -Bootstrap -Task Init
+      - name: Test
+        shell: powershell
+        run: ./build.ps1 -Task Test
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testResults-ps51
+          path: ./Tests/out/testResults.xml
   publish-test-results:
     name: Publish Test Results
-    needs: test
+    needs:
+      - test_pwsh
+      - test_ps51
     runs-on: ubuntu-latest
     permissions:
       checks: write
