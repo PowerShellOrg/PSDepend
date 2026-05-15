@@ -184,10 +184,29 @@ if($Existing)
         return $null
     }
     
+    $SourceVersion = (& $GetSourceVersion)
+    [System.Version]$parsedExistingVersion = $null
+    [System.Version]$parsedSourceVersion = $null
+    [System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersion = $null
+    [System.Management.Automation.SemanticVersion]$parsedSourceSemanticVersion = $null
+    $isSourceVersionLessEquals = if (
+        [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedExistingSemanticVersion) -and
+        [System.Management.Automation.SemanticVersion]::TryParse([string]$SourceVersion, [ref]$parsedSourceSemanticVersion)
+    ) {
+        $parsedSourceSemanticVersion -le $parsedExistingSemanticVersion
+    } elseif (
+        [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedExistingVersion) -and
+        [System.Version]::TryParse([string]$SourceVersion, [ref]$parsedSourceVersion)
+    ) {
+        $parsedSourceVersion -le $parsedExistingVersion
+    } else {
+        $false
+    }
+
     # latest, and we have latest
     if( $Version -and
         ($Version -eq 'latest' -or $Version -like '') -and
-        ($SourceVersion = (& $GetSourceVersion)) -le $ExistingVersion
+        $isSourceVersionLessEquals
     )
     {
         Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and package source version [$SourceVersion]"

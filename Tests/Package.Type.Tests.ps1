@@ -63,4 +63,19 @@ Describe 'Package script' {
             }
         } | Should -Throw -ExpectedMessage '*Nuget*Target*'
     }
+
+    It 'Installs when installed version 2.8.0 is behind source version 2.10.0 and latest is requested' {
+        $targetDir = (New-Item 'TestDrive:/pkg3' -ItemType Directory -Force).FullName
+        InModuleScope PSDepend {
+            Mock Get-Package  { [PSCustomObject]@{ Name = 'jquery'; Version = [version]'2.8.0' } }
+            Mock Find-Package { [PSCustomObject]@{ Name = 'jquery'; Version = [version]'2.10.0' } }
+        }
+
+        $dep = New-PSDependFixture -DependencyName 'jquery' -DependencyType 'Package' -Target $targetDir -Source 'nuget.org' -Version 'latest'
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+            & $ScriptPath -Dependency $Dep
+        }
+
+        Should -Invoke -CommandName Install-Package -ModuleName PSDepend -Times 1
+    }
 }

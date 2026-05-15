@@ -251,16 +251,22 @@ if($Existing) {
     }
 
     $GalleryVersion = Find-Module @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
-    [System.Version]$parsedVersion = $null
-    [System.Management.Automation.SemanticVersion]$parsedSemanticVersion = $null
-    [System.Management.Automation.SemanticVersion]$parsedTempSemanticVersion = $null
+    [System.Version]$parsedExistingVersion = $null
+    [System.Version]$parsedGalleryVersion = $null
+    [System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersion = $null
+    [System.Management.Automation.SemanticVersion]$parsedGallerySemanticVersion = $null
     $isGalleryVersionLessEquals = if (
-        [System.Management.Automation.SemanticVersion]::TryParse($ExistingVersion, [ref]$parsedSemanticVersion) -and
-        [System.Management.Automation.SemanticVersion]::TryParse($GalleryVersion, [ref]$parsedTempSemanticVersion)
+        [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedExistingSemanticVersion) -and
+        [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedGallerySemanticVersion)
     ) {
-        $GalleryVersion -le $parsedSemanticVersion
-    } elseif ([System.Version]::TryParse($ExistingVersion, [ref]$parsedVersion)) {
-        $GalleryVersion -le $parsedVersion
+        $parsedGallerySemanticVersion -le $parsedExistingSemanticVersion
+    } elseif (
+        [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedExistingVersion) -and
+        [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
+    ) {
+        $parsedGalleryVersion -le $parsedExistingVersion
+    } else {
+        $false
     }
 
     # latest, and we have latest
