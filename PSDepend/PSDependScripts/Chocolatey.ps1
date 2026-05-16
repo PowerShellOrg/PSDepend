@@ -86,7 +86,7 @@ function Get-ChocoInstalledPackage {
     $invokeExternalCommandSplat = @{
         Command = 'choco.exe'
         Arguments = $chocoParams
-        PassThru = -PassThru
+        PassThru = $true
     }
     $convertFromCsvSplat = @{
         Header = 'Name', 'Version'
@@ -259,7 +259,7 @@ $repoParams = @{
     Source = $Source
 }
 if ($Credential) {
-    $repoParams.Credential = Get-Credential
+    $repoParams.Credential = $Credential
 }
 
 Write-Verbose "Getting latest package [$Name] version from source [$Source]."
