@@ -29,7 +29,7 @@ DETAILED DESCRIPTION
             Version:        Version to install and check for.  The dependency script author is responsible for testing whether this version already exists and installing it if not.
             Parameters:     Optional parameters if the dependency type's script takes parameters.  For example, the PSGalleryModule has an optional 'Repository' parameter.
             Source:         Optional source.  For example, a FileDownload source is a URL
-            Target:         Optional target.  For example, a PSGalleryModule can target a path (uses Save-Module), or a scope like AllUsers (uses Install-Module)
+            Target:         Optional target.  For example, a PSGalleryModule can target a path (uses Save-Module), or a scope like AllUsers (uses Install-Module).  When the requested version is already present, reruns skip the install/save step.
             AddToPath:      Optional flag to specify whether to add the installed dependency to the PATH (or PSModulePath, or comparable setting)
             Tags:           Optional tags to categorize and filter dependencies
             DependsOn:      Dependency that this Dependency depends upon.  Uses DependencyName for reference.
