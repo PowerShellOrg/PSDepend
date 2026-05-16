@@ -144,7 +144,11 @@ if ($PSDependAction -contains 'Install') {
         $Type = 'WindowsCapability'
     }
     
-    if ($null -eq $RSAT_MODULE_MAP[$ModuleName][$type]) {        
+    if (-not $RSAT_MODULE_MAP.ContainsKey($ModuleName)) {
+        throw "Unknown Module $ModuleName"
+    }
+
+    if ($null -eq $RSAT_MODULE_MAP[$ModuleName][$type]) {
         throw "Unknown Module $ModuleName"
     }
     
