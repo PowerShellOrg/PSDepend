@@ -1176,10 +1176,13 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             }
 
             It 'Installs the .NET Core SDK to the specified directory' {
-                Mock Test-Dotnet { return $false } -ModuleName PSDepend
+                Mock Test-Dotnet    { return $false } -ModuleName PSDepend
+                Mock Install-Dotnet {               } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\dotnetsdk.complex.depend.psd1" -Force
-                Test-Path $script:SavePath | Should -BeTrue
+                Should -Invoke Install-Dotnet -Times 1 -Exactly -ModuleName PSDepend -ParameterFilter {
+                    $InstallDir -eq $script:SavePath
+                }
             }
 
             It 'Does nothing if the .NET Core SDK is found' {
