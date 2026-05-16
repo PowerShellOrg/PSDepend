@@ -172,22 +172,7 @@ if($Existing)
 
     if($Version -and $Version -ne 'latest')
     {
-        [System.Version]$parsedRequestedVersion = $null
-        [System.Management.Automation.SemanticVersion]$parsedRequestedSemanticVersion = $null
-        $matchedInstall = if ([System.Version]::TryParse($Version, [ref]$parsedRequestedVersion)) {
-            $Existing | Where-Object {
-                [System.Version]$v = $null
-                [System.Version]::TryParse($_.Version, [ref]$v) -and $v -eq $parsedRequestedVersion
-            } | Select-Object -First 1
-        } elseif ([System.Management.Automation.SemanticVersion]::TryParse($Version, [ref]$parsedRequestedSemanticVersion)) {
-            $Existing | Where-Object {
-                [System.Management.Automation.SemanticVersion]$sv = $null
-                [System.Management.Automation.SemanticVersion]::TryParse($_.Version, [ref]$sv) -and $sv -eq $parsedRequestedSemanticVersion
-            } | Select-Object -First 1
-        } else {
-            $Existing | Where-Object { $_.Version -eq $Version } | Select-Object -First 1
-        }
-
+        $matchedInstall = $Existing | Where-Object { Test-VersionEquality $Version $_.Version } | Select-Object -First 1
         if ($matchedInstall)
         {
             Write-Verbose "You have the requested version [$Version] of [$Name]"

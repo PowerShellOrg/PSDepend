@@ -135,25 +135,7 @@ if(Test-Path $ModulePath)
     # Version string, and equal to current
     if($Version -and $Version -ne 'latest')
     {
-        [System.Version]$parsedRequestedVersion = $null
-        [System.Version]$parsedExistingVersionCheck = $null
-        [System.Management.Automation.SemanticVersion]$parsedRequestedSemanticVersion = $null
-        [System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersionCheck = $null
-        $versionMatches = if (
-            [System.Version]::TryParse($Version, [ref]$parsedRequestedVersion) -and
-            [System.Version]::TryParse($ExistingVersion, [ref]$parsedExistingVersionCheck)
-        ) {
-            $parsedRequestedVersion -eq $parsedExistingVersionCheck
-        } elseif (
-            [System.Management.Automation.SemanticVersion]::TryParse($Version, [ref]$parsedRequestedSemanticVersion) -and
-            [System.Management.Automation.SemanticVersion]::TryParse($ExistingVersion, [ref]$parsedExistingSemanticVersionCheck)
-        ) {
-            $parsedRequestedSemanticVersion -eq $parsedExistingSemanticVersionCheck
-        } else {
-            $Version -eq $ExistingVersion
-        }
-
-        if($versionMatches)
+        if(Test-VersionEquality $Version $ExistingVersion)
         {
             Write-Verbose "You have the requested version [$Version] of [$Name]"
             # Conditional import
