@@ -93,7 +93,7 @@ DETAILED DESCRIPTION
         Relevant Dependency metadata:
             Name: The name for this module
             Version: Used to identify existing installs meeting this criteria, and as RequiredVersion for installation.  Defaults to 'latest'
-            Target: Used as 'Scope' for Install-Module.  If this is a path, we use Save-Module with this path.  Defaults to 'AllUsers'
+            Target: Used as 'Scope' for Install-Module.  If this is a path, we use Save-Module with this path.  On reruns, PSDepend checks existing modules first and skips reinstalling when the requested version is already present.  Defaults to 'AllUsers'
 
     Lastly, DependencyType specific parameters should be included as parameters
     for Dependency scripts. For example, we can see the Repository parameter for PSGalleryModule:
