@@ -18,7 +18,7 @@ BeforeDiscovery {
 BeforeAll {
     $script:TestDepends = Join-Path $ENV:BHProjectPath Tests\DependFiles
     $script:Verbose = @{}
-    if($ENV:BHBranchName -notlike "master" -or $env:BHCommitMessage -match "!verbose") {
+    if($ENV:BHBranchName -notlike "main" -or $env:BHCommitMessage -match "!verbose") {
         $script:Verbose.add("Verbose",$True)
     }
 }

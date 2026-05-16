@@ -39,7 +39,7 @@ Store dependencies in a PowerShell data file named `*.depend.psd1` or `requireme
     BuildHelpers = '0.0.20'
     PSDeploy     = '0.1.21'
 
-    'PowerShellOrg/PSDepend' = 'master'
+    'PowerShellOrg/PSDepend' = 'main'
 }
 ```
 
@@ -51,7 +51,7 @@ DependencyName          DependencyType  Version Tags
 psake                   PSGalleryModule latest
 BuildHelpers            PSGalleryModule 0.0.20
 Pester                  PSGalleryModule latest
-PowerShellOrg/PSDepend  GitHub          master
+PowerShellOrg/PSDepend  GitHub          main
 PSDeploy                PSGalleryModule 0.1.21
 ```
 
@@ -60,7 +60,7 @@ You can also specify the dependency type explicitly:
 ```powershell
 @{
     'PSGalleryModule::InvokeBuild'       = 'latest'
-    'GitHub::PowerShellOrg/PSDepend'     = 'master'
+    'GitHub::PowerShellOrg/PSDepend'     = 'main'
 }
 ```
 
@@ -182,7 +182,7 @@ Get-Help Get-Dependency -Full
 
 ## Extending PSDepend
 
-PSDepend is extensible. To add a new dependency type, create a script in the [PSDependScripts folder](https://github.com/PowerShellOrg/PSDepend/tree/master/PSDepend/PSDependScripts) and register it in [PSDependMap.psd1](https://github.com/PowerShellOrg/PSDepend/blob/master/PSDepend/PSDependMap.psd1).
+PSDepend is extensible. To add a new dependency type, create a script in the [PSDependScripts folder](https://github.com/PowerShellOrg/PSDepend/tree/main/PSDepend/PSDependScripts) and register it in [PSDependMap.psd1](https://github.com/PowerShellOrg/PSDepend/blob/main/PSDepend/PSDependMap.psd1).
 
 Your script must:
 
@@ -190,7 +190,7 @@ Your script must:
 - Accept a `PSDependAction` parameter with values `Install`, `Test`, and/or `Import`
 - Implement the expected behavior for each action (`Install` installs, `Test` returns a boolean, `Import` loads the dependency)
 
-See [Git.ps1](https://github.com/PowerShellOrg/PSDepend/blob/master/PSDepend/PSDependScripts/Git.ps1) and [PSGalleryModule.ps1](https://github.com/PowerShellOrg/PSDepend/blob/master/PSDepend/PSDependScripts/PSGalleryModule.ps1) for reference implementations.
+See [Git.ps1](https://github.com/PowerShellOrg/PSDepend/blob/main/PSDepend/PSDependScripts/Git.ps1) and [PSGalleryModule.ps1](https://github.com/PowerShellOrg/PSDepend/blob/main/PSDepend/PSDependScripts/PSGalleryModule.ps1) for reference implementations.
 
 ## Examples
 

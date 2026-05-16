@@ -1,4 +1,4 @@
 ﻿@{
     'PSGalleryModule::psake'                = 'latest'
-    'GitHub::RamblingCookieMonster/PSNeo4j' = 'master'
+    'GitHub::RamblingCookieMonster/PSNeo4j' = 'main'
 }

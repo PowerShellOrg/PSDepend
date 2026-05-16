@@ -25,7 +25,7 @@ Describe 'GitHub script' {
     Context 'PSDependAction = Test only' {
         It 'Returns $false when module is not installed locally' {
             $targetDir = (New-Item 'TestDrive:/gh-test' -ItemType Directory -Force).FullName
-            $dep = New-PSDependFixture -DependencyName 'someuser/somerepo' -DependencyType 'GitHub' -Target $targetDir -Version 'master'
+            $dep = New-PSDependFixture -DependencyName 'someuser/somerepo' -DependencyType 'GitHub' -Target $targetDir -Version 'main'
 
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Test -WarningAction SilentlyContinue

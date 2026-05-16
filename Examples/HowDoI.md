@@ -64,7 +64,7 @@ All modules install to `C:\MyProject` except `Pester`, which installs to `C:\sc`
     }
 
     PSDeploy = 'latest'
-    'PowerShellOrg/PSDepend' = 'master'
+    'PowerShellOrg/PSDepend' = 'main'
 }
 ```
 
@@ -81,6 +81,6 @@ All modules install to `C:\MyProject` except `Pester`, which installs to `C:\sc`
     PSJira = @{
         Target = 'C:\OtherTarget'
     }
-    'PowerShellOrg/PSDepend' = 'master'
+    'PowerShellOrg/PSDepend' = 'main'
 }
 ```

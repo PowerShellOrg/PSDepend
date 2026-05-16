@@ -21,14 +21,14 @@
     .EXAMPLE
         sqllite_dll = @{
             DependencyType = 'FileDownload'
-            Source = 'https://github.com/RamblingCookieMonster/PSSQLite/blob/master/PSSQLite/x64/System.Data.SQLite.dll?raw=true'
+            Source = 'https://github.com/RamblingCookieMonster/PSSQLite/blob/main/PSSQLite/x64/System.Data.SQLite.dll?raw=true'
             Target = 'C:\temp'
         }
 
         # Downloads System.Data.SQLite.dll to C:\temp
 
     .EXAMPLE
-        'https://github.com/RamblingCookieMonster/PSSQLite/blob/master/PSSQLite/x64/System.Data.SQLite.dll?raw=true' = @{
+        'https://github.com/RamblingCookieMonster/PSSQLite/blob/main/PSSQLite/x64/System.Data.SQLite.dll?raw=true' = @{
             DependencyType = 'FileDownload'
             Target = 'C:\temp\sqlite.dll'
         }

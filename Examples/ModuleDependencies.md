@@ -39,7 +39,7 @@ Set-Content C:\MyModule\Requirements.psd1 -Value @'
 
     'Posh-SSH' = 'latest'
 
-    'PowerShellOrg/PSDepend' = 'master'
+    'PowerShellOrg/PSDepend' = 'main'
 
     'AzCopy_Download' = @{
         Name = 'azcopy.msi'

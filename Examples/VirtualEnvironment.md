@@ -19,12 +19,12 @@ Set-Content C:\ProjectX\Requirements.psd1 -Value @'
     'Posh-SSH'  = 'latest'
 
     # Clone a git repo
-    'PowerShellOrg/PSDepend' = 'master'
+    'PowerShellOrg/PSDepend' = 'main'
 
     # Download a file
     'RabbitMQ.Client.dll' = @{
         DependencyType = 'FileDownload'
-        Source = 'https://github.com/PowerShellOrg/PSDepend/raw/master/PSDepend/PSDepend.psd1'
+        Source = 'https://github.com/PowerShellOrg/PSDepend/raw/main/PSDepend/PSDepend.psd1'
     }
 }
 '@

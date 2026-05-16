@@ -1,4 +1,4 @@
-# Taken with love from @juneb_get_help (https://raw.githubusercontent.com/juneb/PesterTDD/master/Module.Help.Tests.ps1)
+# Taken with love from @juneb_get_help (https://raw.githubusercontent.com/juneb/PesterTDD/main/Module.Help.Tests.ps1)
 
 BeforeDiscovery {
     if ($null -eq $env:BHPSModuleManifest) {

@@ -19,7 +19,7 @@ function Install-Dotnet {
 
     $IsWindowsEnv = !$PSVersionTable.Platform -or $PSVersionTable.Platform -eq "Win32NT"
 
-    $obtainUrl = "https://raw.githubusercontent.com/dotnet/cli/master/scripts/obtain"
+    $obtainUrl = "https://raw.githubusercontent.com/dotnet/cli/main/scripts/obtain"
 
     try {
         # remove the old folder, download, and run the dotnet-install script for the correct platform

@@ -34,7 +34,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         }
 
         $script:Verbose = @{}
-        if($ENV:BHBranchName -notlike "master" -or $env:BHCommitMessage -match "!verbose") {
+        if($ENV:BHBranchName -notlike "main" -or $env:BHCommitMessage -match "!verbose") {
             $script:Verbose.add("Verbose",$True)
         }
     }
@@ -504,7 +504,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 $script:Dependencies.count | Should -Be 3
                 ( $script:Dependencies | Where-Object { $_.DependencyType -eq 'Git' } ).Count | Should -Be 3
                 ( $script:Dependencies | Where-Object { $_.DependencyName -like '*nightroman/Invoke-Build' }).Version | Should -Be 'ac54571010d8ca5107fc8fa1a69278102c9aa077'
-                ( $script:Dependencies | Where-Object { $_.DependencyName -like '*ramblingcookiemonster/PSDeploy' }).Version | Should -Be 'master'
+                ( $script:Dependencies | Where-Object { $_.DependencyName -like '*ramblingcookiemonster/PSDeploy' }).Version | Should -Be 'main'
             }
 
             It 'Invokes the Git dependency type' {

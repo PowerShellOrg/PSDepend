@@ -12,7 +12,7 @@
                 You can override this with the 'Name'.
                 If you specify only an Account/Repository, we assume GitHub is the source
             Name: Optional override for the Git URL, same rules as DependencyName (key)
-            Version: Used with git checkout.  Specify a branch name, commit hash, or tags/<tag name>, for example.  Defaults to master
+            Version: Used with git checkout.  Specify a branch name, commit hash, or tags/<tag name>, for example.  Defaults to main
             Target: Path to clone this repository.  e.g C:\Temp would result in C:\Temp\RepoName.  Defaults to nothing (current path/repo name)
             AddToPath: Prepend the Target to ENV:PATH and ENV:PSModulePath
 
@@ -47,7 +47,7 @@
     .EXAMPLE
 
         @{
-            'https://github.com/RamblingCookieMonster/PSDeploy.git' = 'master'
+            'https://github.com/RamblingCookieMonster/PSDeploy.git' = 'main'
             'https://internal.gitlab.fqdn/jdoe/BuildHelpers.git' = 'd32a9495c39046c851ceccfb7b1a85b17d5be051'
         }
 
@@ -132,7 +132,7 @@ if(-not (Get-Command git -ErrorAction SilentlyContinue))
 $Version = $Dependency.Version
 if(-not $Version)
 {
-    $Version = 'master'
+    $Version = 'main'
 }
 
 if($GottaTest)

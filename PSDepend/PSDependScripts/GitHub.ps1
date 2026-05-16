@@ -83,9 +83,9 @@
         This downloads version 0.1.0 to "powershell-lib\0.1.0"
 
         @{
-            'Dargmuesli/powershell-lib' = 'master'
+            'Dargmuesli/powershell-lib' = 'main'
         }
-        This downloads branch "master" (most recent commit version) to "powershell-lib"
+        This downloads branch "main" (most recent commit version) to "powershell-lib"
 
     .EXAMPLE
         Imagine a GitHub repository containing a PowerShell module with no git tags.
@@ -97,9 +97,9 @@
             'Dargmuesli/powershell-lib' = ''
         }
         @{
-            'Dargmuesli/powershell-lib' = 'master'
+            'Dargmuesli/powershell-lib' = 'main'
         }
-        These download branch "master" (most recent commit version) to "powershell-lib"
+        These download branch "main" (most recent commit version) to "powershell-lib"
 
         @{
             'Dargmuesli/powershell-lib' = @{
@@ -118,13 +118,13 @@
         }
         @{
             'Dargmuesli/powershell-lib' = @{
-                Version = 'master'
+                Version = 'main'
                 Parameters @{
                     TargetType = 'Parallel'
                 }
             }
         }
-        These download branch "master" (most recent commit version) to "powershell-lib\master\powershell-lib"
+        These download branch "main" (most recent commit version) to "powershell-lib\main\powershell-lib"
 
         @{
             'Dargmuesli/powershell-lib' = @{
@@ -421,10 +421,10 @@ if($ShouldInstall)
     else
     {
         Write-Verbose "[$DependencyID] has no tags on GitHub or [$DependencyVersion] is a branchname"
-        # Translate version "latest" to "master"
+        # Translate version "latest" to "main"
         if($DependencyVersion -eq "latest")
         {
-            $DependencyVersion = "master"
+            $DependencyVersion = "main"
         }
 
         # Link for a .zip archive of the repository's branch
