@@ -97,7 +97,7 @@ param(
 
 if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
 {
-    if(Test-PlatformSupport -Support 'windows','core')
+    if(Test-PlatformSupport -Type 'PSGalleryNuget' -Support 'windows','core')
     {
         BootStrap-Nuget -NugetPath $NuGetPath
     }
