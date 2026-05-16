@@ -109,7 +109,15 @@ param(
 
 if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
 {
-    Write-Error "Nuget requires Nuget.exe.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's NugetPath.  Skipping [$DependencyName]"
+    if(Test-PlatformSupport -Type 'Nuget' -Support 'windows','core')
+    {
+        BootStrap-Nuget -NugetPath $NuGetPath
+    }
+    if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
+    {
+        Write-Error "Nuget requires Nuget.exe.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's NugetPath.  Skipping [$DependencyName]"
+        return
+    }
 }
 
 Write-Verbose -Message "Getting dependency [$DependencyName] from Nuget source [$Source]"

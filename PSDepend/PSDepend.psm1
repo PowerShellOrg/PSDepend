@@ -16,7 +16,7 @@
         }
     }
 
-#Get nuget dependecy file if we don't have it
+#Read PSDepend.Config path variables
     Get-Content $ModuleRoot\PSDepend.Config |
         Where-Object {$_ -and $_ -notmatch "^\s*#"} |
         Foreach-Object {
@@ -27,8 +27,5 @@
             $Value = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Value)
             Set-Variable -Name $Name -Value $Value
         }
-    if(Test-PlatformSupport -Support 'windows','core') {
-        BootStrap-Nuget -NugetPath $NuGetPath
-    }
 
 Export-ModuleMember -Function $Public.Basename
