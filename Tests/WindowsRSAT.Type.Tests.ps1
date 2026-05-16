@@ -16,17 +16,18 @@ BeforeAll {
 
     $script:ScriptPath = Join-Path $env:BHProjectPath 'PSDepend/PSDependScripts/WindowsRSAT.ps1'
 
-    # Install-WindowsFeature ships only on Windows Server (ServerManager module),
-    # and Add-WindowsCapability requires Windows. Inject stubs into the PSDepend
-    # module scope so Mock has a command to attach to on hosts that don't ship
-    # the real cmdlets (e.g. Windows client when testing the Server dispatch path).
+    # Inject stub functions for the install-side cmdlets into the PSDepend
+    # module scope so Pester's Mock attaches to a regular PowerShell function
+    # rather than to the underlying CDXML/binary cmdlets. PowerShell resolves
+    # functions before cmdlets in the same scope, so on hosts where the real
+    # cmdlets exist (Windows Server PS 5.1 with ServerManager, Windows client
+    # with DISM) the stub still wins. Mocking the real CDXML cmdlets has been
+    # observed to silently not intercept on Windows PowerShell 5.1 -- the
+    # stub-function approach makes mocking work consistently across PS 5.1,
+    # PS 7, and all platforms.
     InModuleScope PSDepend {
-        if (-not (Get-Command -Name Install-WindowsFeature -ErrorAction SilentlyContinue)) {
-            function script:Install-WindowsFeature { [CmdletBinding()] param([string]$Name) }
-        }
-        if (-not (Get-Command -Name Add-WindowsCapability -ErrorAction SilentlyContinue)) {
-            function script:Add-WindowsCapability  { [CmdletBinding()] param([switch]$Online, [string]$Name) }
-        }
+        function script:Install-WindowsFeature { [CmdletBinding()] param([string]$Name) }
+        function script:Add-WindowsCapability  { [CmdletBinding()] param([switch]$Online, [string]$Name) }
     }
 }
 
