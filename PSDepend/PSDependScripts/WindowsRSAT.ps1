@@ -95,7 +95,7 @@ $RSAT_MODULE_MAP = @{
         #'WindowsCapability' = 'Rsat.FileServices.Tools'
     }
     'GroupPolicy'               = @{
-        'WindowsFeature'    = 'RSAT'
+        'WindowsFeature'    = 'GPMC'
         'WindowsCapability' = 'Rsat.GroupPolicy.Management.Tools'
     }
     'Hyper-V'                   = @{
