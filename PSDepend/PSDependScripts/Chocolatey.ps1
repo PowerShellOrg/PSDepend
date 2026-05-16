@@ -1,69 +1,66 @@
 <#
     .SYNOPSIS
-        Installs a Chocolatey package a repository.
+    Installs a Chocolatey package a repository.
 
     .DESCRIPTION
-        Installs a package from a Chocolatey repository like Chocolatey.org.
+    Installs a package from a Chocolatey repository like Chocolatey.org.
 
-        Relevant Dependency metadata:
-            Name: The name of the package
-            Version: Used to identify existing installs meeting this criteria. Defaults to 'latest'
-            Source: Source Uri. Defaults to https://chocolatey.org/api/v2/
+    Relevant Dependency metadata:
+        Name: The name of the package
+        Version: Used to identify existing installs meeting this criteria. Defaults to 'latest'
+        Source: Source Uri. Defaults to https://chocolatey.org/api/v2/
 
     .PARAMETER Force
-        If specified and the package is already installed, force the install again.
+    If specified and the package is already installed, force the install again.
 
     .PARAMETER PSDependAction
-        Test, or Install the package. Defaults to Install
+    Test, or Install the package. Defaults to Install
 
-        Test: Return true or false on whether the dependency is in place
-        Install: Install the dependency
-
-    .EXAMPLE
-
-        @{
-            'git' = @{
-                DependencyType = 'Chocolatey'
-                Version = '2.0.2'
-            }
-        }
-
-        # Install version 2.0.2 of git via Chocolatey.org
+    Test: Return true or false on whether the dependency is in place
+    Install: Install the dependency
 
     .EXAMPLE
-
-        @{
-            'git' = @{
-                DependencyType = 'Chocolatey'
-                Source = 'https://feed.mycompany.com'
-            }
+    @{
+        'git' = @{
+            DependencyType = 'Chocolatey'
+            Version = '2.0.2'
         }
+    }
 
-        # Install the latest version of git from the Chocolatey feed at https://feed.mycompany.com
+    # Install version 2.0.2 of git via Chocolatey.org
 
     .EXAMPLE
-
-        @{
-            PSDependOptions = @{
-                DependencyType = 'Chocolatey'
-            }
-            'git.portable' = @{
-                Version = 'latest'
-                Parameters = @{
-                    Force = $true
-                }
-            }
-            'lessmsi' = 'latest'
-            'putty' = 'latest'
+    @{
+        'git' = @{
+            DependencyType = 'Chocolatey'
+            Source = 'https://feed.mycompany.com'
         }
+    }
 
-        # Installs the list of Chocolatey packages from Chocolatey.org using the Global PSDependOptions to limit repetition.
+    # Install the latest version of git from the Chocolatey feed at https://feed.mycompany.com
+
+    .EXAMPLE
+    @{
+        PSDependOptions = @{
+            DependencyType = 'Chocolatey'
+        }
+        'git.portable' = @{
+            Version = 'latest'
+            Parameters = @{
+                Force = $true
+            }
+        }
+        'lessmsi' = 'latest'
+        'putty' = 'latest'
+    }
+
+    # Installs the list of Chocolatey packages from Chocolatey.org using the Global PSDependOptions to limit repetition.
 
 #>
 [CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [switch]$Force,
 
@@ -73,19 +70,32 @@ param(
     [string[]]$PSDependAction = @('Install')
 )
 
-function Get-ChocoInstalledPackage
-{
+function Get-ChocoInstalledPackage {
     [CmdletBinding()]
     param (
         [string]$Name
     )
 
-    $chocoParams = @('list', "$Name", '--limit-output', '--exact', '--local-only')
-    Invoke-ExternalCommand -Command 'choco.exe' -Arguments $chocoParams -PassThru | ConvertFrom-Csv -Header 'Name', 'Version' -Delimiter "|"
+    $chocoParams = @(
+        'list',
+        "$Name",
+        '--limit-output',
+        '--exact',
+        '--local-only'
+    )
+    $invokeExternalCommandSplat = @{
+        Command = 'choco.exe'
+        Arguments = $chocoParams
+        PassThru = $true
+    }
+    $convertFromCsvSplat = @{
+        Header = 'Name', 'Version'
+        Delimiter = "|"
+    }
+    Invoke-ExternalCommand @invokeExternalCommandSplat | ConvertFrom-Csv @convertFromCsvSplat
 }
 
-function Get-ChocoLatestPackage
-{
+function Get-ChocoLatestPackage {
     [CmdletBinding()]
     param (
         [string]$Name,
@@ -96,24 +106,30 @@ function Get-ChocoLatestPackage
     )
 
     $chocoParams = @('list', "$Name", '--limit-output', '--exact')
-    if ($Source)
-    {
+    if ($Source) {
         $chocoParams += "--source='$Source'"
     }
 
-    if ($Credential)
-    {
+    if ($Credential) {
         $username = $credential.UserName
         $password = $credential.GetNetworkCredential().Password
         $chocoParams += "--username='$username'"
         $chocoParams += "--password='$password'"
     }
 
-    Invoke-ExternalCommand -Command 'choco.exe' -Arguments $chocoParams -PassThru | ConvertFrom-Csv -Header 'Name', 'Version' -Delimiter "|"
+    $invokeExternalCommandSplat = @{
+        Command = 'choco.exe'
+        Arguments = $chocoParams
+        PassThru = $true
+    }
+    $convertFromCsvSplat = @{
+        Header = 'Name', 'Version'
+        Delimiter = "|"
+    }
+    Invoke-ExternalCommand @invokeExternalCommandSplat | ConvertFrom-Csv @convertFromCsvSplat
 }
 
-function Invoke-ChocoInstallPackage
-{
+function Invoke-ChocoInstallPackage {
     [CmdletBinding()]
     param (
         [string]$Name,
@@ -127,49 +143,54 @@ function Invoke-ChocoInstallPackage
         [Management.Automation.PSCredential]$Credential
     )
 
-    $chocoParams = @('upgrade', "$Name", '--limit-output', '--exact', '--no-progress', '--allow-downgrade')
-    if ($Force.IsPresent)
-    {
+    $chocoParams = @(
+        'upgrade',
+        "$Name",
+        '--limit-output',
+        '--exact',
+        '--no-progress',
+        '--allow-downgrade',
+        '--yes' # Ensure that we do not get prompted to confirm the install
+    )
+    if ($Force.IsPresent) {
         $chocoParams += "--force"
     }
 
-    if ($Source)
-    {
+    if ($Source) {
         $chocoParams += "--source='$Source'"
     }
 
-    if ($Version -and $Version -ne 'latest' -and $Version -ne '')
-    {
+    if ($Version -and $Version -ne 'latest' -and $Version -ne '') {
         $chocoParams += "--version='$Version'"
     }
 
-    if ($Credential)
-    {
+    if ($Credential) {
         $username = $credential.UserName
         $password = $credential.GetNetworkCredential().Password
         $chocoParams += "--username='$username'"
         $chocoParams += "--password='$password'"
     }
 
-    Invoke-ExternalCommand -Command 'choco.exe' -Arguments $chocoParams
+    $invokeExternalCommandSplat = @{
+        Command = 'choco.exe'
+        Arguments = $chocoParams
+    }
+    Invoke-ExternalCommand @invokeExternalCommandSplat
 }
 
 # Extract data from Dependency
 $Name = $Dependency.Name
-if (-not $Name)
-{
+if (-not $Name) {
     $Name = $Dependency.DependencyName
 }
 
 $Version = $Dependency.Version
-if (-not $Dependency.Version -or $Version -eq '')
-{
+if (-not $Dependency.Version -or $Version -eq '') {
     $Version = 'latest'
 }
 
 $Source = $Dependency.Source
-if (-not $Dependency.Source -or $Source -eq '')
-{
+if (-not $Dependency.Source -or $Source -eq '') {
     $Source = 'https://chocolatey.org/api/v2/'
 }
 
@@ -181,25 +202,21 @@ if (-not (Get-Command -Name 'choco.exe' -ErrorAction SilentlyContinue)) {
     # Add TLS 1.2 support
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-    do
-    {
+    do {
         $scriptPath = Join-Path -Path $env:TEMP -ChildPath ("{0}.ps1" -f [GUID]::NewGuid().ToString())
     } while (Test-Path -Path $scriptPath)
 
-    try
-    {
+    try {
         Invoke-WebRequest -UseBasicParsing -Uri $ChocoInstallScriptUrl -OutFile $scriptPath
         & $scriptPath
-    }
-    catch
-    {
+    } catch {
         throw "Unable to install Chocolatey from '$scriptUrl'."
     }
 }
 
-# if this is a forced install we don't need to check anything, just install the package version requested
-if ($Force.IsPresent -and $PSDependAction -contains 'Install')
-{
+# If this is a forced install we don't need to check anything,
+# just install the package version requested
+if ($Force.IsPresent -and $PSDependAction -contains 'Install') {
     $params = @{
         Name    = $Name
         Version = $Version
@@ -207,8 +224,7 @@ if ($Force.IsPresent -and $PSDependAction -contains 'Install')
         Force   = $Force.IsPresent
     }
 
-    if ($Credential)
-    {
+    if ($Credential) {
         $params.Credential = $Credential
     }
 
@@ -221,20 +237,16 @@ if ($Force.IsPresent -and $PSDependAction -contains 'Install')
 # get the package if it is installed
 Write-Verbose "Getting package [$Name] version, if it is installed."
 $existingVersion = (Get-ChocoInstalledPackage -Name $Name).Version
-if ($existingVersion)
-{
-    Write-Verbose "Found package [$Name] installed with version [$Version]."
-}
-else {
+if ($existingVersion) {
+    Write-Verbose "Found package [$Name] installed with version [$existingVersion]."
+} else {
     Write-Verbose "Package [$Name] not installed."
 }
 
 # Version latest requested, and equal to current
-if ($Version -ne 'latest' -and $Version -eq $existingVersion)
-{
+if ($Version -ne 'latest' -and $Version -eq $existingVersion) {
     Write-Verbose "You have the requested version [$Version] of [$Name]"
-    if($PSDependAction -contains 'Test')
-    {
+    if($PSDependAction -contains 'Test') {
         return $true
     }
 
@@ -246,39 +258,36 @@ $repoParams = @{
     Name   = $Name
     Source = $Source
 }
-if ($Credential)
-{
-    $repoParams.Credential = Credential
+if ($Credential) {
+    $repoParams.Credential = $Credential
 }
 
-Write-verbose "Getting latest package [$Name] version from source [$Source]."
+Write-Verbose "Getting latest package [$Name] version from source [$Source]."
 $repositoryVersion = (Get-ChocoLatestPackage @repoParams).Version
-if ($repositoryVersion)
-{
-    Write-Verbose "Found package [$Name] version [$Version] on source [$Source]."
-}
-else
-{
+if ($repositoryVersion) {
+    Write-Verbose "Found package [$Name] version [$repositoryVersion] on source [$Source]."
+} else {
     Write-Verbose "Package [$Name] not found on source [$Source]. Nothing more can be done."
     return  # cannot continue
 }
 
 # If the version in the remote repository is less than or equal to the version installed, then we have the latest already
-if ($Version -eq 'latest' -and ([System.Version]$repositoryVersion -le [System.Version]$existingVersion))
-{
+if (
+    $Version -eq 'latest' -and
+    ([System.Version]$repositoryVersion -le [System.Version]$existingVersion)
+) {
     Write-Verbose "You have the latest version of [$Name], with installed version [$existingVersion] and Source version [$repositoryVersion]"
-    if($PSDependAction -contains 'Test')
-    {
+    if($PSDependAction -contains 'Test') {
         return $true
     }
 
     return
 }
 
-# if we get here then we do not have the latest version installed and that is what has been requested
+# if we get here then we do not have the latest version installed and that is
+# what has been requested
 Write-Verbose "You do not have the version requested of [$Name]: Requested version [$Version], existing version [$existingVersion], available version [$repositoryVersion]."
-if ($PSDependAction -contains 'Install')
-{
+if ($PSDependAction -contains 'Install') {
     $params = @{
         Name    = $Name
         Version = $Version
@@ -286,14 +295,11 @@ if ($PSDependAction -contains 'Install')
         Force   = $Force.IsPresent
     }
 
-    if ($Credential)
-    {
+    if ($Credential) {
         $params.Credential = $Credential
     }
 
     Invoke-ChocoInstallPackage @params
-}
-elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-{
+} elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $false
 }

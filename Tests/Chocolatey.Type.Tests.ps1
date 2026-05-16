@@ -39,6 +39,16 @@ Describe 'Chocolatey script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
         }
     }
 
+    It 'Passes --yes to choco upgrade to suppress interactive prompts' {
+        $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '2.0.2'
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+            & $ScriptPath -Dependency $Dep -Force
+        }
+        Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+            $Arguments -contains 'upgrade' -and $Arguments -contains '--yes'
+        }
+    }
+
     It 'Invokes choco upgrade with -Force when -Force switch is set' {
         $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '2.0.2'
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
