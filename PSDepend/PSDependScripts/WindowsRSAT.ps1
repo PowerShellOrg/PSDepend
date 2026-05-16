@@ -62,10 +62,6 @@ $RSAT_MODULE_MAP = @{
         'WindowsFeature'    = 'RSAT-Feature-Tools-BitLocker-RemoteAdminTool'
         'WindowsCapability' = 'Rsat.BitLocker.Recovery.Tools'
     }
-    'BitsTransfer'              = @{
-        'WindowsFeature' = 'RSAT-Bits-Server'
-        #'WindowsCapability' = 'Rsat.BitLocker.Recovery.Tools'
-    }
     'DFSN'                      = @{
         'WindowsFeature' = 'RSAT-DFS-Mgmt-Con'
         #'WindowsCapability' = 'Rsat.BitLocker.Recovery.Tools'
