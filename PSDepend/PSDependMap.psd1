@@ -78,6 +78,12 @@
         Supports = 'windows', 'core', 'macos', 'linux'
     }
 
+    PSGalleryScript = @{
+        Script= 'PSGalleryScript.ps1'
+        Description = 'Install a PowerShell script from the PowerShell Gallery'
+        Supports = 'windows', 'core', 'macos', 'linux'
+    }
+
     PSGalleryNuget = @{
         Script = 'PSGalleryNuget.ps1'
         Description = 'Install a PowerShell module from the PowerShell Gallery without the PowerShellGet dependency'
