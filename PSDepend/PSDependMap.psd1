@@ -89,4 +89,10 @@
         Description = 'Support dependencies by handling simple tasks'
         Supports = 'windows', 'core', 'macos', 'linux'
     }
+    
+    WindowsRSAT = @{
+        Script = 'WindowsRSAT.ps1'
+        Description = 'Install a WindowsRSAT PowerShell module using Add-WindowsCapability or Install-WindowsFeature, depending on OS'
+        Supports = 'windows'
+    }
 }
