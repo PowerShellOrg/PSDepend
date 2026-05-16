@@ -120,7 +120,7 @@ function Get-ChocoLatestPackage {
     $invokeExternalCommandSplat = @{
         Command = 'choco.exe'
         Arguments = $chocoParams
-        PassThru = -PassThru
+        PassThru = $true
     }
     $convertFromCsvSplat = @{
         Header = 'Name', 'Version'
@@ -238,7 +238,7 @@ if ($Force.IsPresent -and $PSDependAction -contains 'Install') {
 Write-Verbose "Getting package [$Name] version, if it is installed."
 $existingVersion = (Get-ChocoInstalledPackage -Name $Name).Version
 if ($existingVersion) {
-    Write-Verbose "Found package [$Name] installed with version [$Version]."
+    Write-Verbose "Found package [$Name] installed with version [$existingVersion]."
 } else {
     Write-Verbose "Package [$Name] not installed."
 }
@@ -265,7 +265,7 @@ if ($Credential) {
 Write-Verbose "Getting latest package [$Name] version from source [$Source]."
 $repositoryVersion = (Get-ChocoLatestPackage @repoParams).Version
 if ($repositoryVersion) {
-    Write-Verbose "Found package [$Name] version [$Version] on source [$Source]."
+    Write-Verbose "Found package [$Name] version [$repositoryVersion] on source [$Source]."
 } else {
     Write-Verbose "Package [$Name] not found on source [$Source]. Nothing more can be done."
     return  # cannot continue
