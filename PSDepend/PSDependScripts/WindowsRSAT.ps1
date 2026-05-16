@@ -59,7 +59,7 @@ $RSAT_MODULE_MAP = @{
         #'WindowsCapability' = 'Rsat.CertificateServices.Tools'
     }
     'BitLocker'                 = @{
-        'WindowsFeature'    = 'RSAT-Feature-Tools-BitLocket-RemoteAdminTool'
+        'WindowsFeature'    = 'RSAT-Feature-Tools-BitLocker-RemoteAdminTool'
         'WindowsCapability' = 'Rsat.BitLocker.Recovery.Tools'
     }
     'BitsTransfer'              = @{
@@ -99,7 +99,7 @@ $RSAT_MODULE_MAP = @{
         'WindowsCapability' = 'Rsat.GroupPolicy.Management.Tools'
     }
     'Hyper-V'                   = @{
-        'WindowsFeature' = 'RSAT-Huper-V-Tools'
+        'WindowsFeature' = 'RSAT-Hyper-V-Tools'
         #'WindowsCapability' = 'Rsat.GroupPolicy.Management.Tools'
     }
     'IISAdministration'         = @{
