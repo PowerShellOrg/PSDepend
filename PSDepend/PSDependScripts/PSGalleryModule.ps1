@@ -225,6 +225,17 @@ $Existing = Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyCon
 
 if($Existing) {
     Write-Verbose "Found existing module [$Name]"
+
+    if($Version -and $Version -ne 'latest') {
+        $matchedInstall = $Existing | Where-Object { Test-VersionEquality $Version $_.Version.ToString() } | Select-Object -First 1
+        if ($matchedInstall) {
+            Write-Verbose "You have the requested version [$Version] of [$Name]"
+            Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $matchedInstall.Version
+            if($PSDependAction -contains 'Test') { return $true }
+            return $null
+        }
+    }
+
     # Thanks to Brandon Padgett!
     $ExistingVersion = $Existing | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
     $FindModuleParams = @{Name = $Name }
@@ -236,18 +247,6 @@ if($Existing) {
     }
     if($AllowPrerelease) {
         $FindModuleParams.Add('AllowPrerelease', $AllowPrerelease)
-    }
-
-    # Version string, and equal to current
-    if($Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion) {
-        Write-Verbose "You have the requested version [$Version] of [$Name]"
-        # Conditional import
-        Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $ExistingVersion
-
-        if($PSDependAction -contains 'Test') {
-            return $true
-        }
-        return $null
     }
 
     $GalleryVersion = Find-Module @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum

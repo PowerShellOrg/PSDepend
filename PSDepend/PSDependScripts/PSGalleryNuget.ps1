@@ -133,16 +133,19 @@ if(Test-Path $ModulePath)
     $GetGalleryVersion = { (Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential -IsLatest).Version }
 
     # Version string, and equal to current
-    if( $Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
+    if($Version -and $Version -ne 'latest')
     {
-        Write-Verbose "You have the requested version [$Version] of [$Name]"
-        # Conditional import
-        Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
-        if($PSDependAction -contains 'Test')
+        if(Test-VersionEquality $Version $ExistingVersion)
         {
-            return $True
+            Write-Verbose "You have the requested version [$Version] of [$Name]"
+            # Conditional import
+            Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
+            if($PSDependAction -contains 'Test')
+            {
+                return $True
+            }
+            return $null
         }
-        return $null
     }
 
     # latest, and we have latest
