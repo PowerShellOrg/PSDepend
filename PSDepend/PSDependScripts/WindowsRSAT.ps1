@@ -133,7 +133,7 @@ if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
 
 if ($PSDependAction -contains 'Install') {
     
-    if (-not ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
+    if (-not (Test-Administrator)) {
         throw "Must be an admin to install RSAT modules"
     }
 
