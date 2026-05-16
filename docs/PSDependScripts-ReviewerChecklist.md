@@ -64,7 +64,23 @@ Resolve the inputs once into locals before the main body runs:
 - `AddToPath` consistently prepends to `$env:PATH` and/or `$env:PSModulePath`
   via `Add-ToItemCollection`.
 
-### 7. Logging discipline
+### 7. Local-first resolution for explicit versions
+
+When a Dependency declares an explicit version (not `'latest'` or `''`):
+
+1. Check **all** locally installed versions against the requested version before
+   making any remote call.
+2. Use typed comparison (`[System.Version]` → `[SemanticVersion]` → string
+   equality) rather than string comparison — `"1.0"` and `"1.0.0.0"` are the
+   same version.
+3. Only fall through to the remote registry if no local match is found.
+4. The `'latest'` path legitimately requires a remote call to confirm currency;
+   the explicit-version path does not.
+
+This keeps air-gapped and CI environments fast, avoids unnecessary network cost,
+and is consistent with the principle that PSDepend should be idempotent.
+
+### 8. Logging discipline
 
 - `Write-Verbose` for normal progress on each decision branch.
 - `Write-Error` (not `throw`) for recoverable failures.
@@ -119,10 +135,14 @@ Use this as a PR review checklist when adding or modifying a script under
 
 ### Version comparison (for installers)
 
-- [ ] Both `[SemanticVersion]::TryParse` and `[Version]::TryParse` are
-      attempted before comparing (see `PSGalleryModule.ps1` lines 262–273).
+- [ ] When an explicit version is requested, **all locally installed versions
+      are checked before any remote call is made** — the check must not be
+      limited to the maximum installed version (see `PSGalleryModule.ps1`).
+- [ ] Version comparison uses `[System.Version]::TryParse`, falling back to
+      `[System.Management.Automation.SemanticVersion]::TryParse`, then string
+      equality — never raw string equality alone (handles `"1.0"` vs `"1.0.0.0"`).
 - [ ] `'latest'` vs explicit-version paths each produce a defensible
-      early-return.
+      early-return; only the `'latest'` path is allowed to hit a remote registry.
 
 ### Security / hygiene
 

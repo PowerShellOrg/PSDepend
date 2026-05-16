@@ -133,16 +133,37 @@ if(Test-Path $ModulePath)
     $GetGalleryVersion = { (Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential -IsLatest).Version }
 
     # Version string, and equal to current
-    if( $Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
+    if($Version -and $Version -ne 'latest')
     {
-        Write-Verbose "You have the requested version [$Version] of [$Name]"
-        # Conditional import
-        Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
-        if($PSDependAction -contains 'Test')
-        {
-            return $True
+        [System.Version]$parsedRequestedVersion = $null
+        [System.Version]$parsedExistingVersionCheck = $null
+        [System.Management.Automation.SemanticVersion]$parsedRequestedSemanticVersion = $null
+        [System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersionCheck = $null
+        $versionMatches = if (
+            [System.Version]::TryParse($Version, [ref]$parsedRequestedVersion) -and
+            [System.Version]::TryParse($ExistingVersion, [ref]$parsedExistingVersionCheck)
+        ) {
+            $parsedRequestedVersion -eq $parsedExistingVersionCheck
+        } elseif (
+            [System.Management.Automation.SemanticVersion]::TryParse($Version, [ref]$parsedRequestedSemanticVersion) -and
+            [System.Management.Automation.SemanticVersion]::TryParse($ExistingVersion, [ref]$parsedExistingSemanticVersionCheck)
+        ) {
+            $parsedRequestedSemanticVersion -eq $parsedExistingSemanticVersionCheck
+        } else {
+            $Version -eq $ExistingVersion
         }
-        return $null
+
+        if($versionMatches)
+        {
+            Write-Verbose "You have the requested version [$Version] of [$Name]"
+            # Conditional import
+            Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
+            if($PSDependAction -contains 'Test')
+            {
+                return $True
+            }
+            return $null
+        }
     }
 
     # latest, and we have latest
