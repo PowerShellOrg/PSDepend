@@ -52,4 +52,44 @@ Describe 'Nuget script' {
             $Arguments -contains '-version' -and $Arguments -contains '12.0.2'
         }
     }
+
+    Context 'NuGet bootstrap' {
+        BeforeAll {
+            InModuleScope PSDepend {
+                Mock Get-Command { $null } -ParameterFilter { $Name -eq 'Nuget' }
+                Mock BootStrap-Nuget { }
+                Mock Test-PlatformSupport { $true }
+            }
+        }
+
+        It 'Calls BootStrap-Nuget when nuget.exe is missing on a supported platform' {
+            $targetDir = (New-Item 'TestDrive:/nuget-bootstrap' -ItemType Directory -Force).FullName
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget' -Target $targetDir
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName BootStrap-Nuget -ModuleName PSDepend -Times 1
+        }
+
+        It 'Does not invoke nuget install when nuget.exe is still missing after bootstrap' {
+            $targetDir = (New-Item 'TestDrive:/nuget-bootstrap-fail' -ItemType Directory -Force).FullName
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget' -Target $targetDir
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+        }
+
+        It 'Does not call BootStrap-Nuget on an unsupported platform' {
+            InModuleScope PSDepend {
+                Mock Test-PlatformSupport { $false }
+            }
+            $targetDir = (New-Item 'TestDrive:/nuget-bootstrap-noplatform' -ItemType Directory -Force).FullName
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget' -Target $targetDir
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName BootStrap-Nuget -ModuleName PSDepend -Times 0
+        }
+    }
 }
