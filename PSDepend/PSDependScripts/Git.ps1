@@ -12,7 +12,7 @@
                 You can override this with the 'Name'.
                 If you specify only an Account/Repository, we assume GitHub is the source
             Name: Optional override for the Git URL, same rules as DependencyName (key)
-            Version: Used with git checkout.  Specify a branch name, commit hash, or tags/<tag name>, for example.  Defaults to master
+            Version: Used with git checkout.  Specify a branch name, commit hash, or tags/<tag name>, for example.  Defaults to main
             Target: Path to clone this repository.  e.g C:\Temp would result in C:\Temp\RepoName.  Defaults to nothing (current path/repo name)
             AddToPath: Prepend the Target to ENV:PATH and ENV:PSModulePath
 
@@ -47,7 +47,7 @@
     .EXAMPLE
 
         @{
-            'https://github.com/RamblingCookieMonster/PSDeploy.git' = 'master'
+            'https://github.com/RamblingCookieMonster/PSDeploy.git' = 'main'
             'https://internal.gitlab.fqdn/jdoe/BuildHelpers.git' = 'd32a9495c39046c851ceccfb7b1a85b17d5be051'
         }
 
@@ -93,8 +93,14 @@ if($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction 
 }
 else
 {
-    $Target = $PWD.Path
-    Write-Debug "Target defaulted to current dir: $Target"
+    if ($Dependency.Target) {
+        $Target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Dependency.Target)
+        Write-Debug "Target $($Dependency.Target) does not exist yet, will be created"
+    }
+    else {
+        $Target = $PWD.Path
+        Write-Debug "Target defaulted to current dir: $Target"
+    }
 }
 $RepoPath = Join-Path $Target $GitName
 $GottaInstall = $True
@@ -126,7 +132,7 @@ if(-not (Get-Command git -ErrorAction SilentlyContinue))
 $Version = $Dependency.Version
 if(-not $Version)
 {
-    $Version = 'master'
+    $Version = 'main'
 }
 
 if($GottaTest)

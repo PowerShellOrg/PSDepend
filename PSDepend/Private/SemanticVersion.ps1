@@ -687,6 +687,6 @@ namespace System.Management.Automation
 }
 '@
 
-if ($PSVersionTable.PSVersion.Major -lt 6) {
-  Add-Type -TypeDefinition $code
+if ($PSVersionTable.PSVersion.Major -lt 6 -and -not ('System.Management.Automation.SemanticVersion' -as [type])) {
+    Add-Type -TypeDefinition $code
 }

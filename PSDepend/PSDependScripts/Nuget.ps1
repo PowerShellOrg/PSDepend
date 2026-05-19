@@ -109,7 +109,15 @@ param(
 
 if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
 {
-    Write-Error "Nuget requires Nuget.exe.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's NugetPath.  Skipping [$DependencyName]"
+    if(Test-PlatformSupport -Type 'Nuget' -Support 'windows','core')
+    {
+        BootStrap-Nuget -NugetPath $NuGetPath
+    }
+    if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
+    {
+        Write-Error "Nuget requires Nuget.exe.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's NugetPath.  Skipping [$DependencyName]"
+        return
+    }
 }
 
 Write-Verbose -Message "Getting dependency [$DependencyName] from Nuget source [$Source]"
@@ -141,14 +149,17 @@ if(Test-Path $PackagePath)
     $GetGalleryVersion = { (Find-NugetPackage -Name $DependencyName -PackageSourceUrl $Source -Credential $Credential -IsLatest).Version }
 
     # Version string, and equal to current
-    if( $Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
+    if($Version -and $Version -ne 'latest')
     {
-        Write-Verbose "You have the requested version [$Version] of [$DependencyName]"
-        if($PSDependAction -contains 'Test')
+        if(Test-VersionEquality $Version $ExistingVersion)
         {
-            return $True
+            Write-Verbose "You have the requested version [$Version] of [$DependencyName]"
+            if($PSDependAction -contains 'Test')
+            {
+                return $True
+            }
+            return $null
         }
-        return $null
     }
 
     # latest, and we have latest

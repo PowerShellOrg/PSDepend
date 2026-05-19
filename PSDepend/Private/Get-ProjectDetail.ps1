@@ -47,7 +47,7 @@ function Get-ProjectDetail {
             $RelativePath = '\',
             $Name
         )
-        [pscustomobject]@{
+        [PSCustomObject]@{
             Name = $Name
             Path = Resolve-Path (Join-Path $Path $RelativePath)
         }

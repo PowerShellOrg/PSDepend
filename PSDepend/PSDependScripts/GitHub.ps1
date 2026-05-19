@@ -83,9 +83,9 @@
         This downloads version 0.1.0 to "powershell-lib\0.1.0"
 
         @{
-            'Dargmuesli/powershell-lib' = 'master'
+            'Dargmuesli/powershell-lib' = 'main'
         }
-        This downloads branch "master" (most recent commit version) to "powershell-lib"
+        This downloads branch "main" (most recent commit version) to "powershell-lib"
 
     .EXAMPLE
         Imagine a GitHub repository containing a PowerShell module with no git tags.
@@ -97,9 +97,9 @@
             'Dargmuesli/powershell-lib' = ''
         }
         @{
-            'Dargmuesli/powershell-lib' = 'master'
+            'Dargmuesli/powershell-lib' = 'main'
         }
-        These download branch "master" (most recent commit version) to "powershell-lib"
+        These download branch "main" (most recent commit version) to "powershell-lib"
 
         @{
             'Dargmuesli/powershell-lib' = @{
@@ -118,13 +118,13 @@
         }
         @{
             'Dargmuesli/powershell-lib' = @{
-                Version = 'master'
+                Version = 'main'
                 Parameters @{
                     TargetType = 'Parallel'
                 }
             }
         }
-        These download branch "master" (most recent commit version) to "powershell-lib\master\powershell-lib"
+        These download branch "main" (most recent commit version) to "powershell-lib\main\powershell-lib"
 
         @{
             'Dargmuesli/powershell-lib' = @{
@@ -180,7 +180,7 @@ Write-Verbose -Message "Am I on Windows? [$script:IsWindows]! Am I PS Core? [$sc
 $DependencyID = $Dependency.DependencyName
 $DependencyVersion = $Dependency.Version
 $DependencyTarget = $Dependency.Target
-$DependencyName = $DependencyID.Split("/")[1]
+$DependencyName = if ($Dependency.Name) {$Dependency.Name} Else {$DependencyID.Split("/")[1]}
 
 # Translate "" to "latest"
 if($DependencyVersion -eq "")
@@ -351,9 +351,9 @@ if($ShouldInstall)
             {
                 foreach($GitHubTag in $GitHubTags)
                 {
-                    if($GitHubTag.name -match "^\d+(?:\.\d+)+$" -and ($DependencyVersion -match "^\d+(?:\.\d+)+$" -or $DependencyVersion -eq "latest"))
+                    if($GitHubTag.name -match "^v?\d+(?:\.\d+)+$" -and ($DependencyVersion -match "^\d+(?:\.\d+)+$" -or $DependencyVersion -eq "latest"))
                     {
-                        $GitHubVersion = New-Object "System.Version" $GitHubTag.name
+                        $GitHubVersion = New-Object "System.Version" ($GitHubTag.name -replace '^v','')
 
                         if($DependencyVersion -Eq "latest")
                         {
@@ -421,10 +421,10 @@ if($ShouldInstall)
     else
     {
         Write-Verbose "[$DependencyID] has no tags on GitHub or [$DependencyVersion] is a branchname"
-        # Translate version "latest" to "master"
+        # Translate version "latest" to "main"
         if($DependencyVersion -eq "latest")
         {
-            $DependencyVersion = "master"
+            $DependencyVersion = "main"
         }
 
         # Link for a .zip archive of the repository's branch
@@ -445,7 +445,10 @@ if(($PSDependAction -contains 'Install') -and $ShouldInstall)
     $OutPath = Join-Path ([System.IO.Path]::GetTempPath()) ([guid]::NewGuid().guid)
     New-Item -ItemType Directory -Path $OutPath -Force | Out-Null
     $OutFile = Join-Path $OutPath "$DependencyVersion.zip"
+    $PreviousProgressPreference=$ProgressPreference
+    $ProgressPreference='SilentlyContinue'
     Invoke-RestMethod -Uri $URL -OutFile $OutFile
+    $ProgressPreference=$PreviousProgressPreference
 
     if(-not (Test-Path $OutFile))
     {

@@ -1,0 +1,80 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - "PSDepend/**"
+      - "Tests/**"
+      - "build.ps1"
+      - "psakeFile.ps1"
+      - "requirements.psd1"
+  pull_request:
+    paths:
+      - "PSDepend/**"
+      - "Tests/**"
+      - "build.ps1"
+      - "psakeFile.ps1"
+      - "requirements.psd1"
+  workflow_dispatch:
+
+jobs:
+  test_pwsh:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Bootstrap
+        shell: pwsh
+        run: ./build.ps1 -Bootstrap -Task Init
+      - name: Test
+        shell: pwsh
+        run: ./build.ps1 -Task Test
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: testResults-${{ matrix.os }}
+          path: ./Tests/out/testResults.xml
+
+  test_ps51:
+    name: Test (Windows PowerShell 5.1)
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Bootstrap
+        shell: powershell
+        run: ./build.ps1 -Bootstrap -Task Init
+      - name: Test
+        shell: powershell
+        run: ./build.ps1 -Task Test
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: testResults-ps51
+          path: ./Tests/out/testResults.xml
+  publish-test-results:
+    name: Publish Test Results
+    needs:
+      - test_pwsh
+      - test_ps51
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    if: ${{ !cancelled() }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+      - uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: artifacts/**/*.xml
