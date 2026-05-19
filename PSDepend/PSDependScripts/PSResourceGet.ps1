@@ -274,11 +274,15 @@ if ($Existing)
         $FindModuleParams.Add('Prerelease', $true)
     }
 
-    # Version string, and equal to current
-    if ($Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
+    # Version string, and that version is already installed (may not be the maximum)
+    $matchedExisting = if ($Version -and $Version -ne 'latest')
+    {
+        $Existing | Where-Object { [string]$_.Version -eq $Version } | Select-Object -First 1
+    }
+    if ($matchedExisting)
     {
         Write-Verbose "You have the requested version [$Version] of [$Name]"
-        Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $ExistingVersion
+        Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $matchedExisting.Version
 
         if ($PSDependAction -contains 'Test')
         {
@@ -290,18 +294,26 @@ if ($Existing)
     $GalleryVersion = Find-PSResource @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
     # Compare using SemanticVersion first (PSResourceGet uses SemVer); fall back to System.Version
     [System.Version]$parsedVersion = $null
+    [System.Version]$parsedGalleryVersion = $null
     [System.Management.Automation.SemanticVersion]$parsedSemanticVersion = $null
     [System.Management.Automation.SemanticVersion]$parsedTempSemanticVersion = $null
     $existingIsUpToDate = if (
-        [System.Management.Automation.SemanticVersion]::TryParse($ExistingVersion, [ref]$parsedSemanticVersion) -and
-        [System.Management.Automation.SemanticVersion]::TryParse($GalleryVersion, [ref]$parsedTempSemanticVersion)
+        [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedSemanticVersion) -and
+        [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedTempSemanticVersion)
     )
     {
-        $GalleryVersion -le $parsedSemanticVersion
+        $parsedTempSemanticVersion -le $parsedSemanticVersion
     }
-    elseif ([System.Version]::TryParse($ExistingVersion, [ref]$parsedVersion))
+    elseif (
+        [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedVersion) -and
+        [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
+    )
     {
-        $GalleryVersion -le $parsedVersion
+        $parsedGalleryVersion -le $parsedVersion
+    }
+    else
+    {
+        $false
     }
 
     # latest, and we have latest
@@ -344,6 +356,12 @@ if ($PSDependAction -contains 'Install')
     }
 }
 
-# Conditional import
+# Conditional import — params['Version'] may be a NuGet range; resolve to a concrete installed version
 $importVs = $params['Version']
+if ($importVs -and $importVs -match '[\[\](,]')
+{
+    $importVs = Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue |
+        Measure-Object -Property Version -Maximum |
+        Select-Object -ExpandProperty Maximum
+}
 Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $importVs
