@@ -74,7 +74,7 @@
 
     PSGalleryModule = @{
         Script      = 'PSGalleryModule.ps1'
-        Description = 'Install a PowerShell module from the PowerShell Gallery'
+        Description = 'Install a PowerShell module from the PowerShell Gallery (legacy, PowerShellGet v2 - prefer PSResourceGet for new projects)'
         Supports    = 'windows', 'core', 'macos', 'linux'
     }
 
@@ -84,9 +84,9 @@
         Supports    = 'windows', 'core', 'macos', 'linux'
     }
 
-    PsResourceGet  = @{
+    PSResourceGet   = @{
         Script      = 'PSResourceGet.ps1'
-        Description = 'Installs a PowerShell resource from a PowerShell repository using PSResourceGet'
+        Description = 'Install a PowerShell module from a PowerShell repository using PSResourceGet (preferred over PSGalleryModule)'
         Supports    = 'windows', 'core', 'macos', 'linux'
     }
 

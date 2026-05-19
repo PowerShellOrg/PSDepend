@@ -4,35 +4,40 @@
 
     .DESCRIPTION
         Installs a PowerShell module from a PowerShell repository (such as the PowerShell Gallery)
-        using the PSResourceGet module, which replaces the deprecated PowerShellGet module.
+        using PSResourceGet (Microsoft.PowerShell.PSResourceGet), the successor to the deprecated
+        PowerShellGet v2 module. PSResourceGet must be installed before using this provider.
+
+        Prefer this provider over PSGalleryModule for new projects. PSGalleryModule targets
+        PowerShellGet v2 (Install-Module); this provider targets PSResourceGet v3 (Install-PSResource).
 
         Relevant Dependency metadata:
-            Name: The name of the module to install
-            Version: Used to identify existing installs meeting this criteria, and as RequiredVersion
-                     for installation. Defaults to 'latest'
-            Target: Used as 'Scope' for Install-PSResource.
-                    If this is a filesystem path, Save-PSResource is used instead.
-                    Defaults to 'CurrentUser'
-            AddToPath: If Target is used as a path, prepend that path to $ENV:PSModulePath
-            Credential: The username and password used to authenticate against a private repository
+            Name:       The name of the module to install
+            Version:    Used to identify existing installs and as -Version for installation.
+                        Supports NuGet range syntax (e.g. '[1.0.0, ]'). Defaults to 'latest'.
+            Target:     Used as -Scope for Install-PSResource (CurrentUser or AllUsers).
+                        If this is a filesystem path, Save-PSResource is used instead.
+                        Defaults to 'CurrentUser'.
+            AddToPath:  If Target is a filesystem path, prepend that path to $env:PSModulePath.
+            Credential: A [PSCredential] for authenticating against a private repository.
+                        Use Get-Credential or [PSCredential]::new() to construct one.
 
-        This provider relies on PSResourceGet cmdlets such as:
+        This provider calls the following PSResourceGet cmdlets:
             - Find-PSResource
             - Install-PSResource
             - Save-PSResource
 
-        If PSResourceGet is not available, it must be installed prior to using this provider.
+    .PARAMETER Dependency
+        The PSDepend.Dependency object passed by Invoke-PSDepend. Not supplied directly by the caller.
 
     .PARAMETER Repository
         PSResource repository to download from.
         Defaults to PSGallery.
 
     .PARAMETER NoClobber
-        Allow installation of modules that overwrite existing commands.
-        Defaults to $false.
+        Prevents installation if the module would overwrite commands already present on the system.
 
     .PARAMETER AcceptLicense
-        Accepts the license agreement during installation.
+        Suppresses the license acceptance prompt during installation.
 
     .PARAMETER Prerelease
         If specified, allows installation of prerelease versions.
@@ -44,62 +49,68 @@
         (e.g. alpha < beta < rc).
 
     .PARAMETER Import
-        If specified, imports the module into the global scope.
+        If specified, imports the module into the global scope after installation.
 
-        Deprecated. Moving to PSDependAction.
+        Deprecated. Use PSDependAction = 'Import' instead. This parameter may be
+        removed in a future release.
 
     .PARAMETER PSDependAction
         Test, Install, or Import the module.
         Defaults to Install.
 
-        Test:   Returns true or false depending on whether the dependency is present
+        Test:    Returns $true or $false depending on whether the dependency is present
         Install: Installs the dependency
-        Import: Imports the dependency
-
-    .EXAMPLE
-        @{
-            BuildHelpers = 'latest'
-            PSDeploy     = ''
-            InvokeBuild  = '3.2.1'
-        }
-
-        # From the PSGallery repository...
-        # Install the latest BuildHelpers and PSDeploy
-        # Install version 3.2.1 of InvokeBuild
+        Import:  Imports the dependency
 
     .EXAMPLE
         @{
             BuildHelpers = @{
-                Target = 'C:\Build'
+                DependencyType = 'PSResourceGet'
+                Version        = 'latest'
+            }
+            InvokeBuild = @{
+                DependencyType = 'PSResourceGet'
+                Version        = '3.2.1'
             }
         }
 
-        # Install the latest BuildHelpers module from PSGallery to C:\Build
+        # Install the latest BuildHelpers and version 3.2.1 of InvokeBuild from PSGallery.
+        # Omitting Version, or setting it to '', also resolves to latest.
+
+    .EXAMPLE
+        @{
+            BuildHelpers = @{
+                DependencyType = 'PSResourceGet'
+                Target         = 'C:\Build'
+            }
+        }
+
+        # Save the latest BuildHelpers module from PSGallery to C:\Build
         # (i.e. C:\Build\BuildHelpers will be the module folder)
 
     .EXAMPLE
         @{
             BuildHelpers = @{
-                Parameters = @{
+                DependencyType = 'PSResourceGet'
+                Parameters     = @{
                     Repository = 'PSPrivateGallery'
-                    SkipPublisherCheck = $true
                 }
             }
         }
 
-        # Install the latest BuildHelpers module from a custom registered repository
-        # and bypass the catalog signing check.
-
+        # Install the latest BuildHelpers from a registered private repository.
+        # Register the repository first with Register-PSResourceRepository.
+        #
         # Examples of private repositories include:
-        # - PSPrivateGallery
         # - Artifactory
         # - ProGet
-        # - Gitlab
+        # - GitLab Package Registry
 
     .EXAMPLE
         @{
             'vmware.powercli' = @{
-                Parameters = @{
+                DependencyType = 'PSResourceGet'
+                Parameters     = @{
                     Prerelease = $true
                 }
             }
@@ -108,19 +119,19 @@
         # Install the latest version of PowerCLI, allowing prerelease versions.
 #>
 
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
     [psobject[]]$Dependency,
 
     [AllowNull()]
-    [string]$Repository = 'PSGallery', # From Parameters...
+    [string]$Repository = 'PSGallery',
 
-    [bool]$NoClobber = $false,
+    [switch]$NoClobber,
 
-    [bool]$AcceptLicense,
+    [switch]$AcceptLicense,
 
-    [bool]$Prerelease,
+    [switch]$Prerelease,
 
     [switch]$Import,
 
@@ -128,22 +139,28 @@ param(
     [string[]]$PSDependAction = @('Install')
 )
 
+if (-not (Get-Command -Name Install-PSResource -ErrorAction SilentlyContinue))
+{
+    Write-Error "PSResourceGet (Microsoft.PowerShell.PSResourceGet) is required but not available. Install it before using the PSResourceGet dependency type."
+    return
+}
+
 # Extract data from Dependency
 $DependencyName = $Dependency.DependencyName
 $Name = $Dependency.Name
-if(-not $Name)
+if (-not $Name)
 {
     $Name = $DependencyName
 }
 
 $Version = $Dependency.Version
-if(-not $Version)
+if (-not $Version)
 {
     $Version = 'latest'
 }
 
-# We use target as a proxy for Scope
-if(-not $Dependency.Target)
+# Target doubles as Scope: AllUsers/CurrentUser = install scope; any other value = filesystem path
+if (-not $Dependency.Target)
 {
     $Scope = 'CurrentUser'
 }
@@ -154,7 +171,7 @@ else
 
 $Credential = $Dependency.Credential
 
-if('AllUsers', 'CurrentUser' -notcontains $Scope)
+if ('AllUsers', 'CurrentUser' -notcontains $Scope)
 {
     $command = 'save'
 }
@@ -163,124 +180,119 @@ else
     $command = 'install'
 }
 
-if(-not (Get-PackageProvider -Name Nuget))
-{
-    # Grab nuget bits.
-    $null = Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
-}
+Write-Verbose -Message "Getting dependency [$Name] from PowerShell repository [$Repository]"
 
-Write-Verbose -Message "Getting dependency [$name] from PowerShell repository [$Repository]"
-
-# Validate that $target has been setup as a valid PowerShell repository,
-#   but allow to rely on all PS repos registered.
-if($Repository)
+if ($Repository)
 {
     $validRepo = Get-PSResourceRepository -Name $Repository -Verbose:$false -ErrorAction SilentlyContinue
     if (-not $validRepo)
     {
-        Write-Error "[$Repository] has not been setup as a valid PowerShell repository."
+        Write-Error "[$Repository] has not been set up as a valid PowerShell repository."
         return
     }
 }
 
+# TrustRepository defaults to $true so unattended / CI installs do not hang on a trust prompt
 $params = @{
-    Name       = $Name
-    NoClobber  = $NoClobber
-    Verbose    = $VerbosePreference
+    Name            = $Name
+    TrustRepository = $true
 }
 
-if($PSBoundParameters.ContainsKey('Prerelease'))
+if ($PSBoundParameters.ContainsKey('NoClobber'))
+{
+    $params.Add('NoClobber', $NoClobber)
+}
+
+if ($PSBoundParameters.ContainsKey('Prerelease'))
 {
     $params.Add('Prerelease', $Prerelease)
 }
 
-if($PSBoundParameters.ContainsKey('AcceptLicense'))
+if ($PSBoundParameters.ContainsKey('AcceptLicense'))
 {
     $params.Add('AcceptLicense', $AcceptLicense)
 }
 
-if($Repository)
+if ($Repository)
 {
-    $params.Add('Repository',$Repository)
+    $params.Add('Repository', $Repository)
 }
 
-if($Version -and $Version -ne 'latest')
+if ($Version -and $Version -ne 'latest')
 {
-    $Params.add('RequiredVersion', $Version)
+    $params.Add('Version', $Version)
 }
 
-if($Credential)
+if ($Credential)
 {
-    $Params.add('Credential', $Credential)
+    $params.Add('Credential', $Credential)
 }
 
-# This code works for both install and save scenarios.
-if($command -eq 'Save')
+if ($command -eq 'save')
 {
-    $ModuleName =  Join-Path $Scope $Name
-    $Params.Remove('NoClobber')
+    $ModuleName = Join-Path $Scope $Name
 }
-elseif ($Command -eq 'Install')
+elseif ($command -eq 'install')
 {
     $ModuleName = $Name
 }
 
-$availableParameters = (Get-Command "Install-Module").Parameters
-$tempParams = $Params.Clone()
-foreach($thisParameter in $Params.Keys)
+# Filter params to only those accepted by the target command
+$targetCmd = if ($command -eq 'save') { 'Save-PSResource' } else { 'Install-PSResource' }
+$availableParameters = (Get-Command $targetCmd).Parameters
+$tempParams = $params.Clone()
+foreach ($thisParameter in $params.Keys)
 {
-    if(-Not ($availableParameters.ContainsKey($thisParameter)))
+    if (-not $availableParameters.ContainsKey($thisParameter))
     {
-        Write-Verbose -Message "Removing parameter [$thisParameter] from [Install-Module] as it is not available"
+        Write-Verbose -Message "Removing parameter [$thisParameter] from [$targetCmd] as it is not available"
         $tempParams.Remove($thisParameter)
     }
 }
-$Params = $tempParams.Clone()
+$params = $tempParams.Clone()
 
 Add-ToPsModulePathIfRequired -Dependency $Dependency -Action $PSDependAction
 
-$Existing = $null
 $Existing = Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue
 
-if($Existing)
+if ($Existing)
 {
     Write-Verbose "Found existing module [$Name]"
     # Thanks to Brandon Padgett!
     $ExistingVersion = $Existing | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
-    $FindModuleParams = @{Name = $Name }
-    if($Repository)
+    $FindModuleParams = @{ Name = $Name }
+    if ($Repository)
     {
         $FindModuleParams.Add('Repository', $Repository)
     }
-    if($Credential)
+    if ($Credential)
     {
         $FindModuleParams.Add('Credential', $Credential)
     }
-    if($Prerelease)
+    if ($Prerelease)
     {
-        $FindModuleParams.Add('Prerelease', $Prerelease)
+        $FindModuleParams.Add('Prerelease', $true)
     }
 
     # Version string, and equal to current
-    if($Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
+    if ($Version -and $Version -ne 'latest' -and $Version -eq $ExistingVersion)
     {
         Write-Verbose "You have the requested version [$Version] of [$Name]"
-        # Conditional import
         Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $ExistingVersion
 
-        if($PSDependAction -contains 'Test')
+        if ($PSDependAction -contains 'Test')
         {
             return $true
         }
         return $null
     }
 
-    Write-verbose "$($Repository)"
     $GalleryVersion = Find-PSResource @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
+    # Compare using SemanticVersion first (PSResourceGet uses SemVer); fall back to System.Version
     [System.Version]$parsedVersion = $null
     [System.Management.Automation.SemanticVersion]$parsedSemanticVersion = $null
     [System.Management.Automation.SemanticVersion]$parsedTempSemanticVersion = $null
-    $isGalleryVersionLessEquals = if (
+    $existingIsUpToDate = if (
         [System.Management.Automation.SemanticVersion]::TryParse($ExistingVersion, [ref]$parsedSemanticVersion) -and
         [System.Management.Automation.SemanticVersion]::TryParse($GalleryVersion, [ref]$parsedTempSemanticVersion)
     )
@@ -293,47 +305,45 @@ if($Existing)
     }
 
     # latest, and we have latest
-    if( $Version -and ($Version -eq 'latest' -or $Version -eq '') -and $isGalleryVersionLessEquals)
+    if ($Version -and ($Version -eq 'latest' -or $Version -eq '') -and $existingIsUpToDate)
     {
-        Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and PSGallery version [$GalleryVersion]"
-        # Conditional import
+        Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and repository version [$GalleryVersion]"
         Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $ExistingVersion
 
-        if($PSDependAction -contains 'Test')
+        if ($PSDependAction -contains 'Test')
         {
-            return $True
+            return $true
         }
         return $null
     }
-    Write-Verbose "Continuing to install [$Name]: Requested version [$version], existing version [$ExistingVersion]"
+    Write-Verbose "Continuing to install [$Name]: Requested version [$Version], existing version [$ExistingVersion]"
 }
 
-#No dependency found, return false if we're testing alone...
-if( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
+# No dependency found, return false if we're testing alone...
+if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
 {
-    return $False
+    return $false
 }
 
-if($PSDependAction -contains 'Install')
+if ($PSDependAction -contains 'Install')
 {
-    if('AllUsers', 'CurrentUser' -contains $Scope)
+    if ('AllUsers', 'CurrentUser' -contains $Scope)
     {
         Write-Verbose "Installing [$Name] with scope [$Scope]"
-        Write-verbose "$params"
-        Install-PSResource @params
+        Install-PSResource @params -Scope $Scope
     }
     else
     {
-        Write-Verbose "Saving [$Name] with path [$Scope]"
+        Write-Verbose "Saving [$Name] to path [$Scope]"
         Write-Verbose "Creating directory path to [$Scope]"
-        if(-not (Test-Path $Scope -ErrorAction SilentlyContinue))
+        if (-not (Test-Path $Scope -ErrorAction SilentlyContinue))
         {
-            $Null = New-Item -ItemType Directory -Path $Scope -Force -ErrorAction SilentlyContinue
+            $null = New-Item -ItemType Directory -Path $Scope -Force -ErrorAction SilentlyContinue
         }
         Save-PSResource @params -Path $Scope
     }
 }
 
 # Conditional import
-$importVs = $params['RequiredVersion']
+$importVs = $params['Version']
 Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $importVs
