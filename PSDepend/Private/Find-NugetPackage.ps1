@@ -23,7 +23,7 @@ function Find-NugetPackage {
         Write-Verbose "Searching for latest [$name] module"
         $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and IsLatestVersion"
     }
-    elseif ($PSBoundParameters.ContainsKey($Version)) {
+    elseif ($PSBoundParameters.ContainsKey('Version')) {
         Write-Verbose "Searching for version [$version] of [$name]"
         $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and Version eq '$Version'"
     }
