@@ -139,8 +139,7 @@ param(
     [string[]]$PSDependAction = @('Install')
 )
 
-if (-not (Get-Command -Name Install-PSResource -ErrorAction SilentlyContinue))
-{
+if (-not (Get-Command -Name Install-PSResource -ErrorAction SilentlyContinue)) {
     Write-Error "PSResourceGet (Microsoft.PowerShell.PSResourceGet) is required but not available. Install it before using the PSResourceGet dependency type."
     return
 }
@@ -148,45 +147,35 @@ if (-not (Get-Command -Name Install-PSResource -ErrorAction SilentlyContinue))
 # Extract data from Dependency
 $DependencyName = $Dependency.DependencyName
 $Name = $Dependency.Name
-if (-not $Name)
-{
+if (-not $Name) {
     $Name = $DependencyName
 }
 
 $Version = $Dependency.Version
-if (-not $Version)
-{
+if (-not $Version) {
     $Version = 'latest'
 }
 
 # Target doubles as Scope: AllUsers/CurrentUser = install scope; any other value = filesystem path
-if (-not $Dependency.Target)
-{
+if (-not $Dependency.Target) {
     $Scope = 'CurrentUser'
-}
-else
-{
+} else {
     $Scope = $Dependency.Target
 }
 
 $Credential = $Dependency.Credential
 
-if ('AllUsers', 'CurrentUser' -notcontains $Scope)
-{
+if ('AllUsers', 'CurrentUser' -notcontains $Scope) {
     $command = 'save'
-}
-else
-{
+} else {
     $command = 'install'
 }
 
 Write-Verbose -Message "Getting dependency [$Name] from PowerShell repository [$Repository]"
 
-if ($Repository)
-{
+if ($Repository) {
     $validRepo = Get-PSResourceRepository -Name $Repository -Verbose:$false -ErrorAction SilentlyContinue
-    if (-not $validRepo)
-    {
+    if (-not $validRepo) {
         Write-Error "[$Repository] has not been set up as a valid PowerShell repository."
         return
     }
@@ -198,53 +187,46 @@ $params = @{
     TrustRepository = $true
 }
 
-if ($PSBoundParameters.ContainsKey('NoClobber'))
-{
+if ($PSBoundParameters.ContainsKey('NoClobber')) {
     $params.Add('NoClobber', $NoClobber)
 }
 
-if ($PSBoundParameters.ContainsKey('Prerelease'))
-{
+if ($PSBoundParameters.ContainsKey('Prerelease')) {
     $params.Add('Prerelease', $Prerelease)
 }
 
-if ($PSBoundParameters.ContainsKey('AcceptLicense'))
-{
+if ($PSBoundParameters.ContainsKey('AcceptLicense')) {
     $params.Add('AcceptLicense', $AcceptLicense)
 }
 
-if ($Repository)
-{
+if ($Repository) {
     $params.Add('Repository', $Repository)
 }
 
-if ($Version -and $Version -ne 'latest')
-{
+if ($Version -and $Version -ne 'latest') {
     $params.Add('Version', $Version)
 }
 
-if ($Credential)
-{
+if ($Credential) {
     $params.Add('Credential', $Credential)
 }
 
-if ($command -eq 'save')
-{
+if ($command -eq 'save') {
     $ModuleName = Join-Path $Scope $Name
-}
-elseif ($command -eq 'install')
-{
+} elseif ($command -eq 'install') {
     $ModuleName = $Name
 }
 
 # Filter params to only those accepted by the target command
-$targetCmd = if ($command -eq 'save') { 'Save-PSResource' } else { 'Install-PSResource' }
+$targetCmd = if ($command -eq 'save') {
+    'Save-PSResource' 
+} else {
+    'Install-PSResource' 
+}
 $availableParameters = (Get-Command $targetCmd).Parameters
 $tempParams = $params.Clone()
-foreach ($thisParameter in $params.Keys)
-{
-    if (-not $availableParameters.ContainsKey($thisParameter))
-    {
+foreach ($thisParameter in $params.Keys) {
+    if (-not $availableParameters.ContainsKey($thisParameter)) {
         Write-Verbose -Message "Removing parameter [$thisParameter] from [$targetCmd] as it is not available"
         $tempParams.Remove($thisParameter)
     }
@@ -255,37 +237,32 @@ Add-ToPsModulePathIfRequired -Dependency $Dependency -Action $PSDependAction
 
 $Existing = Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue
 
-if ($Existing)
-{
+if ($Existing) {
     Write-Verbose "Found existing module [$Name]"
     # Thanks to Brandon Padgett!
     $ExistingVersion = $Existing | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
     $FindModuleParams = @{ Name = $Name }
-    if ($Repository)
-    {
+    if ($Repository) {
         $FindModuleParams.Add('Repository', $Repository)
     }
-    if ($Credential)
-    {
+    if ($Credential) {
         $FindModuleParams.Add('Credential', $Credential)
     }
-    if ($Prerelease)
-    {
+    if ($Prerelease) {
         $FindModuleParams.Add('Prerelease', $true)
     }
 
     # Version string, and that version is already installed (may not be the maximum)
-    $matchedExisting = if ($Version -and $Version -ne 'latest')
-    {
-        $Existing | Where-Object { [string]$_.Version -eq $Version } | Select-Object -First 1
+    $matchedExisting = if ($Version -and $Version -ne 'latest') {
+        $Existing | Where-Object {
+            Test-VersionEquality -ReferenceVersion $_.Version -DifferenceVersion $Version
+        } | Select-Object -First 1
     }
-    if ($matchedExisting)
-    {
+    if ($matchedExisting) {
         Write-Verbose "You have the requested version [$Version] of [$Name]"
         Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $matchedExisting.Version
 
-        if ($PSDependAction -contains 'Test')
-        {
+        if ($PSDependAction -contains 'Test') {
             return $true
         }
         return $null
@@ -300,30 +277,23 @@ if ($Existing)
     $existingIsUpToDate = if (
         [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedSemanticVersion) -and
         [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedTempSemanticVersion)
-    )
-    {
+    ) {
         $parsedTempSemanticVersion -le $parsedSemanticVersion
-    }
-    elseif (
+    } elseif (
         [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedVersion) -and
         [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
-    )
-    {
+    ) {
         $parsedGalleryVersion -le $parsedVersion
-    }
-    else
-    {
+    } else {
         $false
     }
 
     # latest, and we have latest
-    if ($Version -and ($Version -eq 'latest' -or $Version -eq '') -and $existingIsUpToDate)
-    {
+    if ($Version -and ($Version -eq 'latest' -or $Version -eq '') -and $existingIsUpToDate) {
         Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and repository version [$GalleryVersion]"
         Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $ExistingVersion
 
-        if ($PSDependAction -contains 'Test')
-        {
+        if ($PSDependAction -contains 'Test') {
             return $true
         }
         return $null
@@ -332,24 +302,18 @@ if ($Existing)
 }
 
 # No dependency found, return false if we're testing alone...
-if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-{
+if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $false
 }
 
-if ($PSDependAction -contains 'Install')
-{
-    if ('AllUsers', 'CurrentUser' -contains $Scope)
-    {
+if ($PSDependAction -contains 'Install') {
+    if ('AllUsers', 'CurrentUser' -contains $Scope) {
         Write-Verbose "Installing [$Name] with scope [$Scope]"
         Install-PSResource @params -Scope $Scope
-    }
-    else
-    {
+    } else {
         Write-Verbose "Saving [$Name] to path [$Scope]"
         Write-Verbose "Creating directory path to [$Scope]"
-        if (-not (Test-Path $Scope -ErrorAction SilentlyContinue))
-        {
+        if (-not (Test-Path $Scope -ErrorAction SilentlyContinue)) {
             $null = New-Item -ItemType Directory -Path $Scope -Force -ErrorAction SilentlyContinue
         }
         Save-PSResource @params -Path $Scope
@@ -358,8 +322,7 @@ if ($PSDependAction -contains 'Install')
 
 # Conditional import — params['Version'] may be a NuGet range; resolve to a concrete installed version
 $importVs = $params['Version']
-if ($importVs -and $importVs -match '[\[\](,]')
-{
+if ($importVs -and $importVs -match '[\[\](,]') {
     $importVs = Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue |
         Measure-Object -Property Version -Maximum |
         Select-Object -ExpandProperty Maximum

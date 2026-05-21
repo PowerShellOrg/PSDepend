@@ -54,11 +54,11 @@ Describe 'PSResourceGet script' {
             }
 
             Mock Get-PSResourceRepository { [PSCustomObject]@{ Name = 'PSGallery'; Trusted = $true } }
-            Mock Get-Module               { } -ParameterFilter { $ListAvailable }
-            Mock Find-PSResource          { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } }
-            Mock Install-PSResource       { }
-            Mock Save-PSResource          { }
-            Mock Import-PSDependModule    { }
+            Mock Get-Module { } -ParameterFilter { $ListAvailable }
+            Mock Find-PSResource { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } }
+            Mock Install-PSResource { }
+            Mock Save-PSResource { }
+            Mock Import-PSDependModule { }
             Mock Add-ToPsModulePathIfRequired { }
         }
     }
@@ -166,7 +166,7 @@ Describe 'PSResourceGet script' {
     Context 'Latest version comparison' {
         It 'Installs when installed version is behind the repository version' {
             InModuleScope PSDepend {
-                Mock Get-Module      { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.8.0' } } `
+                Mock Get-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.8.0' } } `
                     -ParameterFilter { $ListAvailable }
                 Mock Find-PSResource { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.10.0' } }
             }
