@@ -8,24 +8,24 @@
             "name": "PowerShell: Debug Tests",
             "type": "PowerShell",
             "request": "launch",
-            "script": "./build.ps1 -Task Test",
-            "args": [],
+            "script": "./build.ps1",
+            "args": ["-Task", "Test"],
             "createTemporaryIntegratedConsole": false
         },
         {
             "name": "PowerShell: Debug Tests (Temp Console)",
             "type": "PowerShell",
             "request": "launch",
-            "script": "./build.ps1 -Task Test",
-            "args": [],
+            "script": "./build.ps1",
+            "args": ["-Task", "Test"],
             "createTemporaryIntegratedConsole": true
         },
         {
             "name": "PowerShell: Load Source Module (Temp Console)",
             "type": "PowerShell",
             "request": "launch",
-            "script": "./build.ps1 -Task Init && Import-Module $env:BHPSModuleManifest",
-            "args": [],
+            "script": "./build.ps1",
+            "args": ["-Task", "Init"],
             "createTemporaryIntegratedConsole": true
         }
     ]
