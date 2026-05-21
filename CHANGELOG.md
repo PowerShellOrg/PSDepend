@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0-alpha] - 2026-05-21
+
 ### Added
 
 - `PSResourceGet` dependency type providing first-class support for
