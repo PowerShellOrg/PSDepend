@@ -56,21 +56,16 @@ param (
 
 Write-Verbose "Executing $($Dependency.count) tasks"
 
-foreach($Depend in $Dependency)
-{
-    foreach($Task in $Depend.Source)
-    {
-        if(Test-Path $Task -PathType Leaf)
-        {
+foreach ($Depend in $Dependency) {
+    foreach ($Task in $Depend.Source) {
+        if (Test-Path $Task -PathType Leaf) {
             $params = @{}
-            if($Depend.Parameters)
-            {
+            if ($Depend.Parameters) {
                 $params += $Depend.Parameters
             }
             . $Task @params
         }
-        else
-        {
+        else {
             Write-Warning "Could not find task file [$Task] from dependency [$($Depend.DependencyName)]"
         }
     }

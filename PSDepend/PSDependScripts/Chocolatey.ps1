@@ -84,12 +84,12 @@ function Get-ChocoInstalledPackage {
         '--local-only'
     )
     $invokeExternalCommandSplat = @{
-        Command = 'choco.exe'
+        Command   = 'choco.exe'
         Arguments = $chocoParams
-        PassThru = $true
+        PassThru  = $true
     }
     $convertFromCsvSplat = @{
-        Header = 'Name', 'Version'
+        Header    = 'Name', 'Version'
         Delimiter = "|"
     }
     Invoke-ExternalCommand @invokeExternalCommandSplat | ConvertFrom-Csv @convertFromCsvSplat
@@ -118,12 +118,12 @@ function Get-ChocoLatestPackage {
     }
 
     $invokeExternalCommandSplat = @{
-        Command = 'choco.exe'
+        Command   = 'choco.exe'
         Arguments = $chocoParams
-        PassThru = $true
+        PassThru  = $true
     }
     $convertFromCsvSplat = @{
-        Header = 'Name', 'Version'
+        Header    = 'Name', 'Version'
         Delimiter = "|"
     }
     Invoke-ExternalCommand @invokeExternalCommandSplat | ConvertFrom-Csv @convertFromCsvSplat
@@ -172,7 +172,7 @@ function Invoke-ChocoInstallPackage {
     }
 
     $invokeExternalCommandSplat = @{
-        Command = 'choco.exe'
+        Command   = 'choco.exe'
         Arguments = $chocoParams
     }
     Invoke-ExternalCommand @invokeExternalCommandSplat
@@ -209,7 +209,8 @@ if (-not (Get-Command -Name 'choco.exe' -ErrorAction SilentlyContinue)) {
     try {
         Invoke-WebRequest -UseBasicParsing -Uri $ChocoInstallScriptUrl -OutFile $scriptPath
         & $scriptPath
-    } catch {
+    }
+    catch {
         throw "Unable to install Chocolatey from '$scriptUrl'."
     }
 }
@@ -239,14 +240,15 @@ Write-Verbose "Getting package [$Name] version, if it is installed."
 $existingVersion = (Get-ChocoInstalledPackage -Name $Name).Version
 if ($existingVersion) {
     Write-Verbose "Found package [$Name] installed with version [$existingVersion]."
-} else {
+}
+else {
     Write-Verbose "Package [$Name] not installed."
 }
 
 # Version latest requested, and equal to current
 if ($Version -ne 'latest' -and $Version -eq $existingVersion) {
     Write-Verbose "You have the requested version [$Version] of [$Name]"
-    if($PSDependAction -contains 'Test') {
+    if ($PSDependAction -contains 'Test') {
         return $true
     }
 
@@ -266,7 +268,8 @@ Write-Verbose "Getting latest package [$Name] version from source [$Source]."
 $repositoryVersion = (Get-ChocoLatestPackage @repoParams).Version
 if ($repositoryVersion) {
     Write-Verbose "Found package [$Name] version [$repositoryVersion] on source [$Source]."
-} else {
+}
+else {
     Write-Verbose "Package [$Name] not found on source [$Source]. Nothing more can be done."
     return  # cannot continue
 }
@@ -277,7 +280,7 @@ if (
     ([System.Version]$repositoryVersion -le [System.Version]$existingVersion)
 ) {
     Write-Verbose "You have the latest version of [$Name], with installed version [$existingVersion] and Source version [$repositoryVersion]"
-    if($PSDependAction -contains 'Test') {
+    if ($PSDependAction -contains 'Test') {
         return $true
     }
 
@@ -300,6 +303,7 @@ if ($PSDependAction -contains 'Install') {
     }
 
     Invoke-ChocoInstallPackage @params
-} elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
+}
+elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $false
 }

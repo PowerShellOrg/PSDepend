@@ -10,7 +10,7 @@ BeforeAll {
     Import-Module (Join-Path $PSScriptRoot 'Shared/TestHelpers.psm1') -Force
 
     $script:ScriptPath = Join-Path $env:BHProjectPath 'PSDepend/PSDependScripts/PSResourceGet.ps1'
-    $script:TestCred   = New-TestCredential
+    $script:TestCred = New-TestCredential
     $script:OrigPSModulePath = $env:PSModulePath
 }
 

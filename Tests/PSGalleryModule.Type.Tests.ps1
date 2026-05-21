@@ -25,12 +25,12 @@ Describe 'PSGalleryModule script' {
     BeforeAll {
         InModuleScope PSDepend {
             Mock Get-PackageProvider { [PSCustomObject]@{ Name = 'NuGet' } }
-            Mock Get-PSRepository    { [PSCustomObject]@{ Name = 'PSGallery' } }
-            Mock Get-Module          { } -ParameterFilter { $ListAvailable }
-            Mock Find-Module         { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } }
-            Mock Install-Module      { }
-            Mock Save-Module         { }
-            Mock Import-PSDependModule     { }
+            Mock Get-PSRepository { [PSCustomObject]@{ Name = 'PSGallery' } }
+            Mock Get-Module { } -ParameterFilter { $ListAvailable }
+            Mock Find-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' } }
+            Mock Install-Module { }
+            Mock Save-Module { }
+            Mock Import-PSDependModule { }
             Mock Add-ToPsModulePathIfRequired { }
         }
     }

@@ -75,24 +75,20 @@ param(
 # Extract data from Dependency
 $DependencyName = $Dependency.DependencyName
 $Name = $Dependency.Name
-if(-not $Name)
-{
+if (-not $Name) {
     $Name = $DependencyName
 }
 
 #Name is in account/repo format, default to GitHub as source
 #This likely needs work, and will need to change if GitHub changes valid characters for usernames
-if($Name -match "^[a-zA-Z0-9]+/[a-zA-Z0-9_-]+$")
-{
+if ($Name -match "^[a-zA-Z0-9]+/[a-zA-Z0-9_-]+$") {
     $Name = "https://github.com/$Name.git"
 }
 $GitName = $Name.trimend('/').split('/')[-1] -replace "\.git$", ''
-if($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction SilentlyContinue).FullName))
-{
+if ($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction SilentlyContinue).FullName)) {
     Write-Debug "Target resolved to $Target"
 }
-else
-{
+else {
     if ($Dependency.Target) {
         $Target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Dependency.Target)
         Write-Debug "Target $($Dependency.Target) does not exist yet, will be created"
@@ -105,71 +101,58 @@ else
 $RepoPath = Join-Path $Target $GitName
 $GottaInstall = $True
 
-if(-not (Test-Path $Target) -and $PSDependAction -contains 'Install')
-{
+if (-not (Test-Path $Target) -and $PSDependAction -contains 'Install') {
     Write-Verbose "Creating folder [$Target] for git dependency [$Name]"
     $null = New-Item $Target -ItemType Directory -Force
 }
 
-if(-not (Test-Path $RepoPath))
-{
+if (-not (Test-Path $RepoPath)) {
     # Nothing found, return test output
-    if( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-    {
+    if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
         return $False
     }
 }
-else # Target exists
-{
+else { # Target exists
     $GottaTest = $True
 }
 
-if(-not (Get-Command git -ErrorAction SilentlyContinue))
-{
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Error "Git dependency type requires git.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's GitPath.  Skipping [$DependencyName]"
 }
 
 $Version = $Dependency.Version
-if(-not $Version)
-{
+if (-not $Version) {
     $Version = 'main'
 }
 
-if($GottaTest)
-{
+if ($GottaTest) {
     Push-Location
     Set-Location $RepoPath
     $Branch = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse --abbrev-ref HEAD) -Passthru
     $Commit = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse HEAD) -Passthru
     Pop-Location
-    if($Version -eq $Branch -or $Version -eq $Commit)
-    {
+    if ($Version -eq $Branch -or $Version -eq $Commit) {
         Write-Verbose "[$RepoPath] exists and is already at version [$Version]"
-        if($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-        {
+        if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
             return $true
         }
         $GottaInstall = $False
     }
-    elseif($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-    {
+    elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
         Write-Verbose "[$RepoPath] exists and is at branch [$Branch], commit [$Commit].`nWe don't currently support moving to the requested version [$Version]"
         return $false
     }
-    else
-    {
+    else {
         Write-Verbose "[$RepoPath] exists and is at branch [$Branch], commit [$Commit].`nWe don't currently support moving to the requested version [$Version]"
         $GottaInstall = $False
     }
 }
 
-if($PSDependAction -notcontains 'Install')
-{
+if ($PSDependAction -notcontains 'Install') {
     return
 }
 
-if($GottaInstall -and !$ExtractProject)
-{
+if ($GottaInstall -and !$ExtractProject) {
     Push-Location
     Set-Location $Target
     Write-Verbose -Message "Cloning dependency [$Name] with git from [$($Target)]"
@@ -181,7 +164,7 @@ if($GottaInstall -and !$ExtractProject)
     Invoke-ExternalCommand git 'checkout', $Version
     Pop-Location
 }
-elseif($GottaInstall -and $ExtractProject) {
+elseif ($GottaInstall -and $ExtractProject) {
     $OutPath = Join-Path ([System.IO.Path]::GetTempPath()) ([guid]::NewGuid().guid)
     $RepoFolder = Join-Path -Path $OutPath -ChildPath $GitName
 
@@ -202,20 +185,17 @@ elseif($GottaInstall -and $ExtractProject) {
     Pop-Location
 
     #TODO: Implement test and import PSDependActions.
-    if(-not (Test-Path $Target))
-    {
+    if (-not (Test-Path $Target)) {
         $null = New-Item -ItemType Directory -Path $Target -Force
     }
-    foreach($Item in $ToCopy)
-    {
+    foreach ($Item in $ToCopy) {
         Write-Verbose "Copy From: $ToCopy To: $Target"
         Copy-Item -Path $Item -Destination $Target -Force -Confirm:$False -Recurse
     }
     Remove-Item $OutPath -Force -Recurse
 }
 
-if($Dependency.AddToPath)
-{
+if ($Dependency.AddToPath) {
     Write-Verbose "Setting PSModulePath to`n$($Target, $env:PSModulePath -join ';' | Out-String)"
     Add-ToItemCollection -Reference Env:\PSModulePath -Item (Get-Item $Target).FullName
     
@@ -224,8 +204,7 @@ if($Dependency.AddToPath)
 }
 
 $ToImport = $Target
-if($ImportPath)
-{
+if ($ImportPath) {
     $ToImport = $ImportPath
 }
 Import-PSDependModule $ToImport

@@ -11,12 +11,12 @@ Properties {
     # Test configuration
     $PSBPreference.Help.DefaultLocale = 'en-US'
     $PSBPreference.Test.OutputFile = 'out/testResults.xml'
-    $PSBPreference.Test.OutputFormat                            = 'JUnitXml'
-    $PSBPreference.Test.ScriptAnalysis.Enabled                  = $true
+    $PSBPreference.Test.OutputFormat = 'JUnitXml'
+    $PSBPreference.Test.ScriptAnalysis.Enabled = $true
     $PSBPreference.Test.ScriptAnalysis.FailBuildOnSeverityLevel = 'Error'
-    $PSBPreference.Test.CodeCoverage.Enabled                    = $false
+    $PSBPreference.Test.CodeCoverage.Enabled = $false
     # Explicit casing required for Linux (case-sensitive filesystem)
-    $PSBPreference.Test.RootDir                                 = Join-Path $ENV:BHProjectPath 'Tests'
+    $PSBPreference.Test.RootDir = Join-Path $ENV:BHProjectPath 'Tests'
 
     # Exclude Windows-only tests on non-Windows runners
     if (-not $IsWindows) {
@@ -33,15 +33,15 @@ $PSBBuildDependency = @('StageFiles')
 Task InstallLocal -Depends StageFiles {
     $label = if ($PreReleaseLabel) { $PreReleaseLabel } else { "pre-$(git rev-parse --short HEAD)" }
 
-    $moduleName   = $PSBPreference.General.ModuleName
-    $stagedDir    = $PSBPreference.Build.ModuleOutDir
+    $moduleName = $PSBPreference.General.ModuleName
+    $stagedDir = $PSBPreference.Build.ModuleOutDir
     $manifestPath = Join-Path $stagedDir "$moduleName.psd1"
-    $version      = (Import-PowerShellDataFile $manifestPath).ModuleVersion
+    $version = (Import-PowerShellDataFile $manifestPath).ModuleVersion
 
     Update-Metadata -Path $manifestPath -PropertyName Prerelease -Value $label
 
     $destRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell\Modules\PSDepend'
-    $destDir  = Join-Path $destRoot "$version-$label"
+    $destDir = Join-Path $destRoot "$version-$label"
 
     if (Test-Path $destDir) {
         Remove-Item $destDir -Recurse -Force

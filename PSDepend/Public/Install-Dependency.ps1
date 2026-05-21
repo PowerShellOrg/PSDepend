@@ -36,22 +36,21 @@ Function Install-Dependency {
         https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding( SupportsShouldProcess = $True,
-                    ConfirmImpact='High' )]
+        ConfirmImpact = 'High' )]
     Param(
         [parameter( ValueFromPipeline = $True,
-                    Mandatory = $True)]
+            Mandatory = $True)]
         [PSTypeName('PSDepend.Dependency')]
         [psobject[]]$Dependency,
 
-        [validatescript({Test-Path -Path $_ -PathType Leaf -ErrorAction Stop})]
+        [validatescript( { Test-Path -Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1),
 
         [string[]]$Tags,
 
         [switch]$Force
     )
-    Process
-    {
+    Process {
         $InvokeParams = @{} + $PSBoundParameters
         $null = $InvokeParams.Remove('Force')
         Invoke-DependencyScript @InvokeParams -PSDependAction Install

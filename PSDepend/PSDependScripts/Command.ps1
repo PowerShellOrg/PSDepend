@@ -46,24 +46,18 @@ param (
 
 Write-Verbose "Executing $($Dependency.count) commands"
 
-foreach($Depend in $Dependency)
-{
-    foreach($Command in $Depend.Source)
-    {
+foreach ($Depend in $Dependency) {
+    foreach ($Command in $Depend.Source) {
         Write-Verbose "Invoking command [$($Dependency.DependencyName)]:`n$Command"
         $ScriptBlock = [ScriptBlock]::Create($Command)
-        Try
-        {
+        Try {
             . $ScriptBlock
         }
-        Catch
-        {
-            if($FailOnError)
-            {
+        Catch {
+            if ($FailOnError) {
                 throw $_
             }
-            else
-            {
+            else {
                 Write-Error $_
                 continue
             }

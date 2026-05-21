@@ -1,17 +1,15 @@
-﻿function Import-PSDependModule {
+function Import-PSDependModule {
     [cmdletbinding()]
     param (
         [string[]]$Name = $ModulePath,
         $Action = $PSDependAction,
         [string] $Version
     )
-    if($PSDependAction -contains 'Import')
-    {
-        foreach($Mod in $Name)
-        {
+    if ($PSDependAction -contains 'Import') {
+        foreach ($Mod in $Name) {
             Write-Verbose "Importing [$Mod]"
             $importParams = @{
-                Name = $Mod
+                Name  = $Mod
                 Scope = 'Global'
                 Force = $true
             }
@@ -19,7 +17,7 @@
                 # Sanitize version string. The RequiredVersion parameter is a System.Version and
                 # doesn't know anything about pre-release tags.
                 $BaseVersion = ($Version -split '-')[0]
-                $importParams.add('RequiredVersion',$BaseVersion)
+                $importParams.add('RequiredVersion', $BaseVersion)
             }
             Import-Module @importParams
         }

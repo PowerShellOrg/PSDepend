@@ -5,5 +5,5 @@ Function Install-NodeModule {
         [switch]$Global,
         [string]$PackageName
     )
-    npm install --silent $(If($Global -eq $true){'--global'}) $PackageName$(If(![string]::IsNullOrEmpty($Version)){"@$Version"})
+    npm install --silent $(If ($Global -eq $true) { '--global' }) $PackageName$(If(![string]::IsNullOrEmpty($Version)){"@$Version"})
 }

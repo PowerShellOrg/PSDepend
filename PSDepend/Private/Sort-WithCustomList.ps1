@@ -1,11 +1,11 @@
 # Thanks to https://gallery.technet.microsoft.com/scriptcenter/Sort-With-Custom-List-07b1d93a
 Function Sort-ObjectWithCustomList {
     Param (
-        [parameter(ValueFromPipeline=$true)]
+        [parameter(ValueFromPipeline = $true)]
         [PSObject]
         $InputObject,
 
-        [parameter(Position=1)]
+        [parameter(Position = 1)]
         [String]
         $Property,
 
@@ -13,8 +13,7 @@ Function Sort-ObjectWithCustomList {
         [Object[]]
         $CustomList
     )
-    Begin
-    {
+    Begin {
         # convert customList (array) to hash
         $hash = @{}
         $rank = 0
@@ -31,7 +30,8 @@ Function Sort-ObjectWithCustomList {
             $rank = $hash[$key]
             if ($rank -ne $null) {
                 $rank
-            } else {
+            }
+            else {
                 [System.Double]::PositiveInfinity
             }
         }
@@ -40,12 +40,10 @@ Function Sort-ObjectWithCustomList {
         # (I don't know how to match behavior of Sort's InputObject parameter)
         $objects = @()
     }
-    Process
-    {
+    Process {
         $objects += $InputObject
     }
-    End
-    {
+    End {
         $objects | Sort-Object -Property $sortOrder
     }
 }

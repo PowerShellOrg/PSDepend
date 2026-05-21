@@ -81,7 +81,8 @@ if ($PSDependAction -contains 'Install') {
         # If the InstallDir is not set, set it to the 'global' path
         if (!$InstallDir) {
             $InstallTo = $globalDotnetSdkLocation
-        } else {
+        }
+        else {
             $InstallTo = $InstallDir
         }
         Install-Dotnet -Channel $Channel -Version $Version -InstallDir $InstallTo
@@ -93,13 +94,15 @@ if ($PSDependAction -contains 'Import') {
     # If the InstallDir was specified and the .NET Core SDK exists in it, add it to the path
     if ($InstallDir -and (Test-Dotnet -Version $Version -InstallDir $InstallDir)) {
         $env:PATH = "$InstallDir$([IO.Path]::PathSeparator)$env:PATH"
-    } else {
+    }
+    else {
         # Test if it's in the path already and if it's not check if it's in the 'global' location
         $dotnetInPath = Get-Command 'dotnet' -ErrorAction SilentlyContinue
         if (!$dotnetInPath) {
             if (!(Test-Dotnet -Version $Version -InstallDir $globalDotnetSdkLocation)) {
                 throw ".NET SDK cannot be located. Try installing using PSDepend."
-            } else {
+            }
+            else {
                 $env:PATH = "$globalDotnetSdkLocation$([IO.Path]::PathSeparator)$env:PATH"
             }
         }

@@ -1,4 +1,4 @@
-﻿#function to extract properties
+#function to extract properties
 Function Get-PropertyOrder {
     <#
     .SYNOPSIS
@@ -20,9 +20,9 @@ Function Get-PropertyOrder {
         PowerShell Language
     #>
     [cmdletbinding()]
-     param(
-        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromRemainingArguments=$false)]
-            [PSObject]$InputObject,
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromRemainingArguments = $false)]
+        [PSObject]$InputObject,
 
         [validateset("AliasProperty", "CodeProperty", "Property", "NoteProperty", "ScriptProperty",
             "Properties", "PropertySet", "Method", "CodeMethod", "ScriptMethod", "Methods",
@@ -34,21 +34,21 @@ Function Get-PropertyOrder {
 
     begin {
 
-        if($PSBoundParameters.ContainsKey('inputObject')) {
+        if ($PSBoundParameters.ContainsKey('inputObject')) {
             $firstObject = $InputObject[0]
         }
     }
-    process{
+    process {
 
         #we only care about one object...
         $firstObject = $InputObject
     }
-    end{
+    end {
 
         #Get properties that meet specified parameters
         $firstObject.psobject.properties |
             Where-Object { $memberType -contains $_.memberType } |
             Select-Object -ExpandProperty Name |
-            Where-Object{ -not $excludeProperty -or $excludeProperty -notcontains $_ }
+            Where-Object { -not $excludeProperty -or $excludeProperty -notcontains $_ }
     }
 } #Get-PropertyOrder

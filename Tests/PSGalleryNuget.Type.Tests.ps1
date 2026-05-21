@@ -16,10 +16,10 @@ Describe 'PSGalleryNuget script' {
 
     BeforeAll {
         InModuleScope PSDepend {
-            Mock Invoke-ExternalCommand        { }
-            Mock Find-NugetPackage             { [PSCustomObject]@{ Version = '1.0.0' } }
-            Mock Add-ToPsModulePathIfRequired  { }
-            Mock Import-PSDependModule         { }
+            Mock Invoke-ExternalCommand { }
+            Mock Find-NugetPackage { [PSCustomObject]@{ Version = '1.0.0' } }
+            Mock Add-ToPsModulePathIfRequired { }
+            Mock Import-PSDependModule { }
             Mock Get-Command { [PSCustomObject]@{ Name = 'nuget' } } -ParameterFilter { $Name -eq 'Nuget' }
         }
     }

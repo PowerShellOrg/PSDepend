@@ -130,19 +130,19 @@ function Get-Dependency {
     #>
     [cmdletbinding(DefaultParameterSetName = 'File')]
     param(
-        [parameter(ParameterSetName='File')]
+        [parameter(ParameterSetName = 'File')]
         [string[]]$Path = $PWD.Path,
 
         [string[]]$Tags,
 
-        [parameter(ParameterSetName='File')]
+        [parameter(ParameterSetName = 'File')]
         [switch]$Recurse,
 
-        [parameter(ParameterSetName='Hashtable')]
+        [parameter(ParameterSetName = 'Hashtable')]
         [hashtable[]]$InputObject,
 
-        [parameter(ParameterSetName='File')]
-        [parameter(ParameterSetName='Hashtable')]
+        [parameter(ParameterSetName = 'File')]
+        [parameter(ParameterSetName = 'Hashtable')]
         [hashtable]$Credentials
     )
 
@@ -156,18 +156,20 @@ function Get-Dependency {
         )
         # Check for preferred value, otherwise try to get value from key, otherwise use default....
         $Output = $Default
-        if($Prefer) {
+        if ($Prefer) {
             $Output = $Prefer
-        } else {
+        }
+        else {
             try {
                 $Output = $Options[$Name]
-            } catch {
+            }
+            catch {
                 $Output = $Default
             }
         }
 
         # Inject variables
-        if( $Name -eq 'Target' -or
+        if ( $Name -eq 'Target' -or
             $Name -eq 'Source' -or
             $Name -eq 'PreScripts' -or
             $Name -eq 'PostScripts') {
@@ -180,7 +182,7 @@ function Get-Dependency {
         [cmdletbinding()]
         param( $Value )
         $Output = $Value
-        switch($Value) {
+        switch ($Value) {
             { $_ -match '^\.$|^\.\\|^\./' } {
                 $Output = $Output -replace '^\.', $PWD.Path
             }
@@ -219,171 +221,174 @@ function Get-Dependency {
 
         # Global settings....
         $PSDependOptions = $null
-        if($Dependencies.Containskey('PSDependOptions')) {
+        if ($Dependencies.Containskey('PSDependOptions')) {
             $PSDependOptions = $Dependencies.PSDependOptions
             $Dependencies.Remove('PSDependOptions')
         }
 
-        foreach($Dependency in $Dependencies.keys) {
+        foreach ($Dependency in $Dependencies.keys) {
             $DependencyHash = $Dependencies.$Dependency
             $DependencyType = Get-GlobalOption -Name DependencyType
 
             $CredentialName = Get-GlobalOption -Name Credential
 
             # Look simple syntax with helpers in the key first
-            if( $DependencyHash -is [string] -and
+            if ( $DependencyHash -is [string] -and
                 $Dependency -match '::' -and
                 ($Dependency -split '::').count -eq 2
             ) {
                 [PSCustomObject]@{
-                    PSTypeName = 'PSDepend.Dependency'
-                    DependencyFile = $DependencyFile
-                    DependencyName = ($Dependency -split '::')[1]
-                    DependencyType = ($Dependency -split '::')[0]
-                    Name = ($Dependency -split '::')[1]
-                    Version = $DependencyHash
-                    Parameters = Get-GlobalOption -Name Parameters
-                    Source = Get-GlobalOption -Name Source
-                    Target = Get-GlobalOption -Name Target
-                    AddToPath = Get-GlobalOption -Name AddToPath
-                    Tags = Get-GlobalOption -Name Tags
-                    DependsOn = Get-GlobalOption -Name DependsOn
-                    PreScripts =  Get-GlobalOption -Name PreScripts
-                    PostScripts =  Get-GlobalOption -Name PostScripts
+                    PSTypeName      = 'PSDepend.Dependency'
+                    DependencyFile  = $DependencyFile
+                    DependencyName  = ($Dependency -split '::')[1]
+                    DependencyType  = ($Dependency -split '::')[0]
+                    Name            = ($Dependency -split '::')[1]
+                    Version         = $DependencyHash
+                    Parameters      = Get-GlobalOption -Name Parameters
+                    Source          = Get-GlobalOption -Name Source
+                    Target          = Get-GlobalOption -Name Target
+                    AddToPath       = Get-GlobalOption -Name AddToPath
+                    Tags            = Get-GlobalOption -Name Tags
+                    DependsOn       = Get-GlobalOption -Name DependsOn
+                    PreScripts      = Get-GlobalOption -Name PreScripts
+                    PostScripts     = Get-GlobalOption -Name PostScripts
                     PSDependOptions = $PSDependOptions
-                    Raw = $null
+                    Raw             = $null
                 }
             }
             #Parse simple key=name, value=version format
             # It doesn't look like a git repo, and simple syntax: PSGalleryModule
-            elseif( $DependencyHash -is [string] -and
+            elseif ( $DependencyHash -is [string] -and
                 $Dependency -notmatch '/' -and
                 (-not $DependencyType -or
-                $DependencyType -eq 'PSGalleryModule')) {
+                    $DependencyType -eq 'PSGalleryModule')) {
                 [PSCustomObject]@{
-                    PSTypeName = 'PSDepend.Dependency'
-                    DependencyFile = $DependencyFile
-                    DependencyName = $Dependency
-                    DependencyType = 'PSGalleryModule'
-                    Name = $Dependency
-                    Version = $DependencyHash
-                    Parameters = Get-GlobalOption -Name Parameters
-                    Source = Get-GlobalOption -Name Source
-                    Target = Get-GlobalOption -Name Target
-                    AddToPath = Get-GlobalOption -Name AddToPath
-                    Tags = Get-GlobalOption -Name Tags
-                    DependsOn = Get-GlobalOption -Name DependsOn
-                    PreScripts =  Get-GlobalOption -Name PreScripts
-                    PostScripts =  Get-GlobalOption -Name PostScripts
-                    Credential = Resolve-Credential -Name $CredentialName
+                    PSTypeName      = 'PSDepend.Dependency'
+                    DependencyFile  = $DependencyFile
+                    DependencyName  = $Dependency
+                    DependencyType  = 'PSGalleryModule'
+                    Name            = $Dependency
+                    Version         = $DependencyHash
+                    Parameters      = Get-GlobalOption -Name Parameters
+                    Source          = Get-GlobalOption -Name Source
+                    Target          = Get-GlobalOption -Name Target
+                    AddToPath       = Get-GlobalOption -Name AddToPath
+                    Tags            = Get-GlobalOption -Name Tags
+                    DependsOn       = Get-GlobalOption -Name DependsOn
+                    PreScripts      = Get-GlobalOption -Name PreScripts
+                    PostScripts     = Get-GlobalOption -Name PostScripts
+                    Credential      = Resolve-Credential -Name $CredentialName
                     PSDependOptions = $PSDependOptions
-                    Raw = $null
+                    Raw             = $null
                 }
             }
             # It looks like a git repo, simple syntax, and not a full URI
-            elseif($DependencyHash -is [string] -and
+            elseif ($DependencyHash -is [string] -and
                 $Dependency -match '/' -and
                 $Dependency.split('/').count -eq 2 -and
                 (-not $DependencyType -or
-                $DependencyType -eq 'GitHub')) {
+                    $DependencyType -eq 'GitHub')) {
                 [PSCustomObject]@{
-                    PSTypeName = 'PSDepend.Dependency'
-                    DependencyFile = $DependencyFile
-                    DependencyName = $Dependency
-                    DependencyType = 'GitHub'
-                    Name = $Dependency
-                    Version = $DependencyHash
-                    Parameters = Get-GlobalOption -Name Parameters
-                    Source = Get-GlobalOption -Name Source
-                    Target = Get-GlobalOption -Name Target
-                    AddToPath = Get-GlobalOption -Name AddToPath
-                    Tags = Get-GlobalOption -Name Tags
-                    DependsOn = Get-GlobalOption -Name DependsOn
-                    PreScripts = Get-GlobalOption -Name PreScripts
-                    PostScripts = Get-GlobalOption -Name PostScripts
+                    PSTypeName      = 'PSDepend.Dependency'
+                    DependencyFile  = $DependencyFile
+                    DependencyName  = $Dependency
+                    DependencyType  = 'GitHub'
+                    Name            = $Dependency
+                    Version         = $DependencyHash
+                    Parameters      = Get-GlobalOption -Name Parameters
+                    Source          = Get-GlobalOption -Name Source
+                    Target          = Get-GlobalOption -Name Target
+                    AddToPath       = Get-GlobalOption -Name AddToPath
+                    Tags            = Get-GlobalOption -Name Tags
+                    DependsOn       = Get-GlobalOption -Name DependsOn
+                    PreScripts      = Get-GlobalOption -Name PreScripts
+                    PostScripts     = Get-GlobalOption -Name PostScripts
                     PSDependOptions = $PSDependOptions
-                    Raw = $null
+                    Raw             = $null
                 }
             }
             # It looks like a git repo, and simple syntax: Git
-            elseif($DependencyHash -is [string] -and
+            elseif ($DependencyHash -is [string] -and
                 $Dependency -match '/' -and
                 (-not $DependencyType -or
-                $DependencyType -eq 'Git')) {
+                    $DependencyType -eq 'Git')) {
                 [PSCustomObject]@{
-                    PSTypeName = 'PSDepend.Dependency'
-                    DependencyFile = $DependencyFile
-                    DependencyName = $Dependency
-                    DependencyType = 'Git'
-                    Name = $Dependency
-                    Version = $DependencyHash
-                    Parameters = Get-GlobalOption -Name Parameters
-                    Source = Get-GlobalOption -Name Source
-                    Target = Get-GlobalOption -Name Target
-                    AddToPath = Get-GlobalOption -Name AddToPath
-                    Tags = Get-GlobalOption -Name Tags
-                    DependsOn = Get-GlobalOption -Name DependsOn
-                    PreScripts = Get-GlobalOption -Name PreScripts
-                    PostScripts = Get-GlobalOption -Name PostScripts
+                    PSTypeName      = 'PSDepend.Dependency'
+                    DependencyFile  = $DependencyFile
+                    DependencyName  = $Dependency
+                    DependencyType  = 'Git'
+                    Name            = $Dependency
+                    Version         = $DependencyHash
+                    Parameters      = Get-GlobalOption -Name Parameters
+                    Source          = Get-GlobalOption -Name Source
+                    Target          = Get-GlobalOption -Name Target
+                    AddToPath       = Get-GlobalOption -Name AddToPath
+                    Tags            = Get-GlobalOption -Name Tags
+                    DependsOn       = Get-GlobalOption -Name DependsOn
+                    PreScripts      = Get-GlobalOption -Name PreScripts
+                    PostScripts     = Get-GlobalOption -Name PostScripts
                     PSDependOptions = $PSDependOptions
-                    Raw = $null
+                    Raw             = $null
                 }
-            } else {
+            }
+            else {
                 # Parse dependency hash format
                 # Default type is module, unless it's in a git-style format
-                if(-not $DependencyHash.DependencyType) {
+                if (-not $DependencyHash.DependencyType) {
                     # Is it a global option?
-                    if($DependencyType) {
+                    if ($DependencyType) {
                     }
                     # GitHub first
-                    elseif(
+                    elseif (
                         # Ugly right? Watch out for split called on hashtable...
                         ($Dependency -match '/' -and -not $Dependency.Name -and
-                        ($Dependency -is [string] -and $Dependency.split('/').count -eq 2)
+                            ($Dependency -is [string] -and $Dependency.split('/').count -eq 2)
                         ) -or
                         ($DependencyHash.Name -match '/' -and
-                        ($DependencyHash -is [string] -and $DependencyHash.split('/').count -eq 2)
+                            ($DependencyHash -is [string] -and $DependencyHash.split('/').count -eq 2)
                         )
                     ) {
                         $DependencyType = 'GitHub'
                     }
                     # Now git...
-                    elseif(
+                    elseif (
                         ($Dependency -match '/' -and -not $Dependency.Name) -or
                         $DependencyHash.Name -match '/'
                     ) {
                         $DependencyType = 'Git'
-                    } else {
+                    }
+                    else {
                         # finally, psgallerymodule
                         $DependencyType = 'PSGalleryModule'
                     }
-                } else {
+                }
+                else {
                     $DependencyType = $DependencyHash.DependencyType
                 }
 
                 $CredentialName = Get-GlobalOption -Name Credential -Prefer $DependencyHash.Credential
                 [PSCustomObject]@{
-                    PSTypeName = 'PSDepend.Dependency'
-                    DependencyFile = $DependencyFile
-                    DependencyName = $Dependency
-                    DependencyType = $DependencyType
-                    Name = $DependencyHash.Name
-                    Version = $DependencyHash.Version
-                    Parameters = Get-GlobalOption -Name Parameters -Prefer $DependencyHash.Parameters
-                    Source = Get-GlobalOption -Name Source -Prefer $DependencyHash.Source
-                    Target = Get-GlobalOption -Name Target -Prefer $DependencyHash.Target
-                    AddToPath = Get-GlobalOption -Name AddToPath -Prefer $DependencyHash.AddToPath
-                    Tags = Get-GlobalOption -Name Tags -Prefer $DependencyHash.Tags
-                    DependsOn = Get-GlobalOption -Name DependsOn -Prefer $DependencyHash.DependsOn
-                    PreScripts = Get-GlobalOption -Name PreScripts -Prefer $DependencyHash.PreScripts
-                    PostScripts = Get-GlobalOption -Name PostScripts -Prefer $DependencyHash.PostScripts
-                    Credential = Resolve-Credential -Name $CredentialName
+                    PSTypeName      = 'PSDepend.Dependency'
+                    DependencyFile  = $DependencyFile
+                    DependencyName  = $Dependency
+                    DependencyType  = $DependencyType
+                    Name            = $DependencyHash.Name
+                    Version         = $DependencyHash.Version
+                    Parameters      = Get-GlobalOption -Name Parameters -Prefer $DependencyHash.Parameters
+                    Source          = Get-GlobalOption -Name Source -Prefer $DependencyHash.Source
+                    Target          = Get-GlobalOption -Name Target -Prefer $DependencyHash.Target
+                    AddToPath       = Get-GlobalOption -Name AddToPath -Prefer $DependencyHash.AddToPath
+                    Tags            = Get-GlobalOption -Name Tags -Prefer $DependencyHash.Tags
+                    DependsOn       = Get-GlobalOption -Name DependsOn -Prefer $DependencyHash.DependsOn
+                    PreScripts      = Get-GlobalOption -Name PreScripts -Prefer $DependencyHash.PreScripts
+                    PostScripts     = Get-GlobalOption -Name PostScripts -Prefer $DependencyHash.PostScripts
+                    Credential      = Resolve-Credential -Name $CredentialName
                     PSDependOptions = $PSDependOptions
-                    Raw = $DependencyHash
+                    Raw             = $DependencyHash
                 }
             }
         }
-	}
+    }
 
     # Helper to retrieve the credential for a dependency
     function Resolve-Credential {
@@ -397,7 +402,8 @@ function Get-Dependency {
 
             if ($Credentials.ContainsKey($Name)) {
                 $credential = $Credentials[$Name]
-            } else {
+            }
+            else {
                 Write-Warning "No credential found for the specified name $Name. Was the dependency misconfigured?"
             }
         }
@@ -405,19 +411,20 @@ function Get-Dependency {
         return $credential
     }
 
-    if($PSCmdlet.ParameterSetName -eq 'File') {
-        $ParsedDependencies = foreach($DependencyPath in $Path) {
+    if ($PSCmdlet.ParameterSetName -eq 'File') {
+        $ParsedDependencies = foreach ($DependencyPath in $Path) {
             #Resolve relative paths... Thanks Oisin! http://stackoverflow.com/a/3040982/3067642
             $DependencyPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($DependencyPath)
 
-            if(Test-Path $DependencyPath -PathType Container) {
+            if (Test-Path $DependencyPath -PathType Container) {
                 $DependencyFiles = @( Resolve-DependScripts -Path $DependencyPath -Recurse $Recurse )
-            } else {
+            }
+            else {
                 $DependencyFiles = @( $DependencyPath )
             }
             $DependencyFiles = $DependencyFiles | Select-Object -Unique
 
-            foreach($DependencyFile in $DependencyFiles) {
+            foreach ($DependencyFile in $DependencyFiles) {
                 # Read the file
                 $Base = Split-Path $DependencyFile -Parent
                 $File = Split-Path $DependencyFile -Leaf
@@ -426,18 +433,19 @@ function Get-Dependency {
                 Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName
             }
         }
-    } elseif($PSCmdlet.ParameterSetName -eq 'Hashtable') {
+    }
+    elseif ($PSCmdlet.ParameterSetName -eq 'Hashtable') {
         $DependencyFile = 'Hashtable'
-        $ParsedDependencies = foreach($InputDependency in $InputObject) {
+        $ParsedDependencies = foreach ($InputDependency in $InputObject) {
             $Dependencies = $InputDependency
 
             Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName
         }
     }
 
-    if($PSBoundParameters.ContainsKey('Tags')) {
+    if ($PSBoundParameters.ContainsKey('Tags')) {
         $ParsedDependencies = Get-TaggedDependency -Dependency $ParsedDependencies -Tags $Tags
-        if(-not $ParsedDependencies) {
+        if (-not $ParsedDependencies) {
             Write-Warning "No dependencies found with tags '$tags'"
             return
         }

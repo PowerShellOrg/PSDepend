@@ -1,4 +1,4 @@
-﻿# Borrowed and tweaked from BuildHelpers.  TODO: Doc, commit back there
+# Borrowed and tweaked from BuildHelpers.  TODO: Doc, commit back there
 function Get-ProjectDetail {
     <#
     .SYNOPSIS
@@ -56,12 +56,10 @@ function Get-ProjectDetail {
     $CurrentFolder = Split-Path $Path -Leaf
     $ExpectedPath = Join-Path -Path $Path -ChildPath $CurrentFolder
     $ExpectedPsd1 = Join-Path -Path $ExpectedPath -ChildPath "$CurrentFolder.psd1"
-    if((Test-Path $ExpectedPath) -and (Test-Path $ExpectedPsd1))
-    {
+    if ((Test-Path $ExpectedPath) -and (Test-Path $ExpectedPsd1)) {
         Resolve-ProjectDetail -Path $Path -RelativePath $CurrentFolder -Name $CurrentFolder
     }
-    else
-    {
+    else {
         # Look for properly organized modules
         $ProjectPaths = Get-ChildItem $Path -Directory |
             Where-Object {
@@ -69,22 +67,18 @@ function Get-ProjectDetail {
             } |
             Select-Object -ExpandProperty Fullname
 
-        if( @($ProjectPaths).Count -gt 1 )
-        {
+        if ( @($ProjectPaths).Count -gt 1 ) {
             Write-Warning "Found more than one project path via subfolders with psd1 files: $(Split-Path $ProjectPaths -Leaf | Out-String)"
         }
-        elseif( @($ProjectPaths).Count -eq 1 )
-        {
+        elseif ( @($ProjectPaths).Count -eq 1 ) {
             $Name = Split-Path $ProjectPaths -Leaf
             Resolve-ProjectDetail -Path $Path -RelativePath $Name -Name $Name
         }
         #PSD1 in root of project - ick, but happens.
-        elseif( Test-Path "$ExpectedPath.psd1" )
-        {
+        elseif ( Test-Path "$ExpectedPath.psd1" ) {
             Resolve-ProjectDetail -Path $Path -Name $CurrentFolder
         }
-        else
-        {
+        else {
             Write-Verbose "Could not find a project from [$Path], using root"
             Resolve-ProjectDetail -Path $Path -Name $CurrentFolder
         }
