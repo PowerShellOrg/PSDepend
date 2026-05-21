@@ -5,5 +5,16 @@
     "powershell.codeFormatting.whitespaceAroundOperator": false,
     "powershell.codeFormatting.whitespaceBeforeOpenParen": false,
     "powershell.codeFormatting.preset": "OTBS",
-    "powershell.codeFormatting.trimWhitespaceAroundPipe": true
+    "powershell.codeFormatting.trimWhitespaceAroundPipe": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "**/.ruby-lsp": true,
+        "Output/**": true
+    }
 }

@@ -5,10 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "PowerShell: Debug Tests",
             "type": "PowerShell",
             "request": "launch",
-            "name": "PowerShell Interactive Session",
-            "cwd": ""
+            "script": "./build.ps1 -Task Test",
+            "args": [],
+            "createTemporaryIntegratedConsole": false
+        },
+        {
+            "name": "PowerShell: Debug Tests (Temp Console)",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "./build.ps1 -Task Test",
+            "args": [],
+            "createTemporaryIntegratedConsole": true
+        },
+        {
+            "name": "PowerShell: Load Source Module (Temp Console)",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "./build.ps1 -Task Init && Import-Module $env:BHPSModuleManifest",
+            "args": [],
+            "createTemporaryIntegratedConsole": true
         }
     ]
 }
