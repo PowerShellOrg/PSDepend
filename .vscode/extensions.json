@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "ms-vscode.powershell",
+    "pspester.pester-test",
+    "tylerleonhardt.vscode-inline-values-powershell",
+    "psake.psake-vscode",
+    "DavidAnson.vscode-markdownlint"
+  ]
+}

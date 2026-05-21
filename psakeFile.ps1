@@ -29,6 +29,27 @@ Properties {
 # and Build-PSBuildMarkdown has a Remove-Module scope bug specific to PSDepend.
 $PSBBuildDependency = @('StageFiles')
 
+# Override with: .\build.ps1 InstallLocal -Properties @{PreReleaseLabel='rc1'}
+Task InstallLocal -Depends StageFiles {
+    $label = if ($PreReleaseLabel) { $PreReleaseLabel } else { "pre-$(git rev-parse --short HEAD)" }
+
+    $moduleName   = $PSBPreference.General.ModuleName
+    $stagedDir    = $PSBPreference.Build.ModuleOutDir
+    $manifestPath = Join-Path $stagedDir "$moduleName.psd1"
+    $version      = (Import-PowerShellDataFile $manifestPath).ModuleVersion
+
+    Update-Metadata -Path $manifestPath -PropertyName Prerelease -Value $label
+
+    $destRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell\Modules\PSDepend'
+    $destDir  = Join-Path $destRoot "$version-$label"
+
+    if (Test-Path $destDir) {
+        Remove-Item $destDir -Recurse -Force
+    }
+    Copy-Item -Path $stagedDir -Destination $destDir -Recurse
+    Write-Host "Installed PSDepend $version-$label -> $destDir"
+}
+
 Task Default -Depends Test
 
 # PowerShellBuild adds the following tasks:
