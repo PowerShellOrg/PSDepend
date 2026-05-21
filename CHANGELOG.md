@@ -8,51 +8,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `PSResourceGet` dependency type for PowerShellGet v3 (#179).
-- `InstallLocal` psake task for local pre-release installs (#180).
-- Pester v5 unit tests for dependency scripts and reviewer checklist (#166).
-- `CONTEXT.md` domain lexicon for PSDepend.
-- Stale workflow for issues and PRs, with `workflow_dispatch` trigger.
-- `Chocolatey` provider and accompanying Pester tests.
-- SemVer / prerelease handling, including a PowerShell version constraint to avoid conflicts with the native `SemanticVersion` class in PS 6+.
-- `AcceptLicense` and `AllowPrerelease` parameters on `PSGalleryModule` (passed only when specified).
-- `AcceptLicense` for `PSRepositoryModule`.
-- `Nuget` dependency type for pulling packages from arbitrary NuGet feeds, with custom DLL name support and `exe` support.
-- Credential support across PSGallery scripts (`PSGalleryModule`, `PSGalleryNuget`) and `Invoke-PSDepend`; credentialed NuGet feed search; credential misconfiguration warning.
-- `Funding.yml`.
-- Core, macOS, and Linux support for `Nuget`.
+
+- `PSResourceGet` dependency type providing first-class support for
+  PowerShellGet v3 (`Microsoft.PowerShell.PSResourceGet`) alongside the
+  existing `PSGalleryModule` handler.
+- `InstallLocal` psake task that stages files and installs the module
+  to `CurrentUser` scope from `Output\`, useful for validating
+  pre-release bits locally without publishing.
+- `Chocolatey` dependency type with handler script and Pester
+  coverage, enabling Chocolatey packages alongside PowerShell modules
+  in `requirements.psd1`.
+- `Nuget` dependency type for arbitrary NuGet feeds (not just the
+  PowerShell Gallery), including custom DLL name support and the
+  ability to extract `.exe` payloads.
+- Credential support across `PSGalleryModule`, `PSGalleryNuget`, and
+  `Invoke-PSDepend`, including credentialed NuGet feed search and a
+  warning when credential configuration looks wrong.
+- Core, macOS, and Linux platform tags on `Nuget` in
+  `PSDependMap.psd1`, enabling cross-platform use.
+- SemVer / prerelease handling for module versions, with a PowerShell
+  version guard so PSDepend's `SemanticVersion` does not collide with
+  the native `System.Management.Automation.SemanticVersion` class in
+  PS 6+; falls back to `System.Version` when a version string is not
+  SemVer-compatible.
+- `AcceptLicense` parameter on `PSRepositoryModule` and matching
+  `AcceptLicense` + `AllowPrerelease` plumbing on `PSGalleryModule`,
+  splatted only when explicitly specified to preserve compatibility
+  with older PowerShellGet versions.
+- Stale workflow (`.github/workflows/stale.yml`) for issues and PRs,
+  with a `workflow_dispatch` trigger for on-demand sweeps.
+- `CONTEXT.md` documenting the PSDepend domain lexicon (Dependency,
+  DependencyType, Target, Scope, `PSDependAction`, etc.) for both
+  human and AI contributors.
 
 ### Changed
-- Migrated the Pester test suite from v4 to v5 (#164).
-- Modernized the build system to PowerShellBuild + GitHub Actions (#163); CI/CD actions updated (#168).
-- Updated test setup to use the build script (#171).
-- NuGet is now bootstrapped lazily, only when a `Nuget`/`PSGalleryNuget` dependency is used (#175).
-- Renamed default branch references from `master` to `main`.
-- Updated `README` and examples for `PowerShellOrg` ownership.
-- Allowed overriding the dependency name in the `Github` dependency type (#121).
-- Allowed GitHub version tags to match when using a `vX.Y.Z` tag instead of `X.Y.Z` (#123).
-- Allowed passing `$null` to `Repository` so PSDepend relies on registered repositories instead of requiring an explicit one.
-- Restored `SkipPublisherCheck` and `AllowClobber` handling that had been lost in a rebase.
-- Added a `Conditional` repo option for `Find-Module`.
+
+- Migrated the entire Pester test suite from v4 to v5, including new
+  Pester v5 unit tests for individual dependency-type handler scripts
+  and a reviewer checklist documenting the migration conventions.
+- Build system rewritten on top of `PowerShellBuild` with GitHub
+  Actions replacing the prior AppVeyor pipeline; CI workflow actions
+  were updated to current major versions across the board.
+- Test bootstrap now runs through `build.ps1` (`Bootstrap` / `StageFiles`
+  / `Test`) rather than ad-hoc setup, so tests always import from
+  `Output\` and not the source tree. See `CLAUDE.md` for the contract.
+- `FunctionsToExport` in `PSDepend.psd1` is now an explicit list of
+  the eight public commands instead of `*`, matching PowerShell module
+  guidance and improving discoverability.
+- NuGet command-line bootstrap is now lazy: it runs only when a
+  `Nuget` or `PSGalleryNuget` dependency is actually used, instead of
+  on every module import.
+- Default branch references updated from `master` to `main` across
+  `README`, examples, the manifest's `LicenseUri` / `ProjectUri` /
+  `ReleaseNotes` links, and build/CI scripts.
+- README and example dependency files updated to reflect the
+  `PowerShellOrg` ownership of the project.
+- `Github` dependency type now allows overriding the imported name
+  via the standard `Name` key, instead of always deriving it from the
+  `owner/repo` slug.
+- `Github` version matching now accepts a `vX.Y.Z` tag when the
+  dependency requests `X.Y.Z`, so dependencies written without the
+  `v` prefix resolve against the common GitHub release-tag convention.
+- `PSGalleryModule` may now be invoked without an explicit
+  `Repository`, in which case PSDepend defers to whatever repositories
+  are currently registered via `Get-PSRepository` rather than forcing
+  the PowerShell Gallery.
 
 ### Fixed
-- Check all locally installed versions before querying the remote when an explicit version is requested (#176).
-- Mock `Install-Dotnet` in the `DotnetSdk` install test (#178).
-- `Chocolatey`: pass `--yes` to install and improve readability (#174).
-- `Get-Dependency`: correct operator precedence bug when `DependencyType` is set via `PSDependOptions` (#131, #173).
-- `Import-PSDependModule`: sanitize the version string passed to `Import-Module` (#140).
-- `Git`: use the full `Dependency.Target` path when the target doesn't exist (#169).
-- `Git`: remove dependency on the `git.exe` extension for cross-platform support.
-- `Github`: speed up downloads by suppressing `Invoke-RestMethod` progress (#122).
-- `PowerShellGet`: pass `-Scope` correctly when `Target=CurrentUser` (#167).
-- Fix `'latest'` upgrade version-comparison logic in `PSGalleryModule` and `Package` scripts (#170).
-- Add a check for empty strings (in addition to `$null`) (#102).
-- Improve the error message when a `*.depend.psd1` file is missing (#126).
-- Explicitly cast versions for comparison (#66).
+
+- `Get-Dependency` operator-precedence bug when `DependencyType` is
+  set inside `PSDependOptions`: parenthesization was incorrect, so the
+  global default failed to apply to dependencies without an explicit
+  type. Resolves #131.
+- `Find-PSDependLocally` now consults *all* installed versions of a
+  module before querying the remote when an explicit version is
+  requested, rather than short-circuiting on the first non-matching
+  local copy and re-downloading unnecessarily.
+- `Import-PSDependModule` now sanitizes the version string before
+  passing it to `Import-Module`, preventing failures when prerelease
+  segments or `vX.Y.Z` tags appear in the resolved version.
+- `Chocolatey` install path now passes `--yes` to `choco install`
+  (previously the script contained the typo `--yess`), so installs
+  no longer hang waiting on confirmation, and the surrounding code
+  was tidied for readability.
+- `Git` handler now uses the full `Dependency.Target` path when the
+  target directory doesn't yet exist, fixing a regression where
+  relative targets would resolve against the wrong working directory.
+- `Git` handler no longer depends on the `.exe` extension when
+  invoking `git`, so it works on macOS / Linux installations where the
+  binary is just `git`.
+- `Github` downloads suppress `Invoke-RestMethod`'s progress stream,
+  yielding a measurable speed-up on large release-asset downloads.
+- `PowerShellGet` package handler now forwards `-Scope` correctly
+  when `Target=CurrentUser`, instead of silently installing to the
+  default scope.
+- Version comparison logic for `'latest'` upgrades in
+  `PSGalleryModule` and `Package` scripts now compares
+  `[System.Version]` values rather than strings, so `10.0.0` no longer
+  sorts below `9.0.0`.
+- Empty-string guard added alongside existing `$null` checks in
+  dependency-name handling, preventing silent skips when a malformed
+  `requirements.psd1` produces a zero-length name.
+- `Test-Dependency` and friends now emit a clearer error message
+  when `*.depend.psd1` is missing, instead of the previous opaque
+  parse failure.
+- `DotnetSdk` install test now mocks `Install-Dotnet` so the test
+  suite no longer attempts a real SDK install on CI runners.
 
 ### Docs
-- Add a note about rerunning saved modules (#177).
-- Credential help and credential misconfiguration warning.
+
+- Added a note that `Save-Module` may need to be rerun if a
+  dependency's `Target` directory was removed between invocations.
+- Credential help and a credential-misconfiguration warning added to
+  the relevant handler scripts and `Invoke-PSDepend` help.
 
 ## [0.3.0] - 2018-09-20
 
