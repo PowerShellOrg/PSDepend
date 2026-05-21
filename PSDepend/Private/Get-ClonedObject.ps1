@@ -31,9 +31,11 @@ function Get-ClonedObject {
         $val = $DeepCopyObject[$key]
         if ($val -is [hashtable]) {
             $clone[$key] = Get-ClonedObject $val
-        } elseif ($val -is [array]) {
+        }
+        elseif ($val -is [array]) {
             $clone[$key] = $val.Clone()
-        } else {
+        }
+        else {
             $clone[$key] = $val
         }
     }

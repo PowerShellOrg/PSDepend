@@ -11,7 +11,7 @@ BeforeDiscovery {
     Get-Module $env:BHProjectName | Remove-Module -Force -ErrorAction Ignore
     Import-Module -Name $outputModVerManifest -Verbose:$false -ErrorAction Stop
 
-    if($IsLinux -or $IsMacOS) {
+    if ($IsLinux -or $IsMacOS) {
         # Skip tests tagged WindowsOnly on non-Windows platforms
         $nonWindows = $true
     }
@@ -30,12 +30,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         $script:OtherCredential = New-Object System.Management.Automation.PSCredential('otherUser', $script:Password)
         $script:Credentials = @{
             'imaginaryCreds' = $script:TestCredential
-            'otherCreds' = $script:OtherCredential
+            'otherCreds'     = $script:OtherCredential
         }
 
         $script:Verbose = @{}
-        if($ENV:BHBranchName -notlike "main" -or $env:BHCommitMessage -match "!verbose") {
-            $script:Verbose.add("Verbose",$True)
+        if ($ENV:BHBranchName -notlike "main" -or $env:BHCommitMessage -match "!verbose") {
+            $script:Verbose.add("Verbose", $True)
         }
     }
 
@@ -403,11 +403,11 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             $addToPathTestCases = @(
                 @{
-                    Version = 'specific version'
+                    Version        = 'specific version'
                     DependPsd1File = "psgallerymodule.addtopath.depend.psd1"
                 },
                 @{
-                    Version = 'latest version'
+                    Version        = 'latest version'
                     DependPsd1File = "psgallerymodule.latestaddtopath.depend.psd1"
                 }
             )
@@ -792,11 +792,11 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             $addToPathTestCases = @(
                 @{
-                    Version = 'specific version'
+                    Version        = 'specific version'
                     DependPsd1File = "psgallerynuget.addtopath.depend.psd1"
                 },
                 @{
-                    Version = 'latest version'
+                    Version        = 'latest version'
                     DependPsd1File = "psgallerynuget.latestaddtopath.depend.psd1"
                 }
             )
@@ -901,9 +901,9 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             # NOTE: 'script:' qualifier is required — without it, the function is created
             # in a temporary scope that vanishes when the scriptblock returns.
             & (Get-Module PSDepend) {
-                function script:Get-Package     { [cmdletbinding()]param($ProviderName, $Name, $RequiredVersion) }
+                function script:Get-Package { [cmdletbinding()]param($ProviderName, $Name, $RequiredVersion) }
                 function script:Install-Package { [cmdletbinding()]param($Source, $Name, $RequiredVersion, $Force) }
-                function script:Find-Package    { [cmdletbinding()]param($Name, $Source) }
+                function script:Find-Package { [cmdletbinding()]param($Name, $Source) }
                 function script:Get-PackageSource { [cmdletbinding()]param() }
             }
         }
@@ -916,7 +916,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Installs Packages' {
             BeforeAll {
-                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' }) } -ModuleName PSDepend
                 Mock Get-Package -ModuleName PSDepend
                 Mock Install-Package { $True } -ModuleName PSDepend
                 $script:Results = Invoke-PSDepend @Verbose -Path "$TestDepends\package.depend.psd1" -Force
@@ -944,7 +944,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Same package version exists' {
             BeforeAll {
-                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' }) } -ModuleName PSDepend
                 Mock Install-Package -ModuleName PSDepend
                 Mock Get-Package {
                     [PSCustomObject]@{
@@ -965,7 +965,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Latest package required, and already installed' {
             BeforeAll {
-                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' }) } -ModuleName PSDepend
                 Mock Install-Package -ModuleName PSDepend
                 Mock Get-Package {
                     [PSCustomObject]@{
@@ -990,7 +990,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
         Context 'Test-Dependency' {
             BeforeEach {
-                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey'}) } -ModuleName PSDepend
+                Mock Get-PackageSource { @([PSCustomObject]@{Name = 'chocolatey'; ProviderName = 'chocolatey' }) } -ModuleName PSDepend
                 Mock Install-Package {} -ModuleName PSDepend
                 Mock Find-Package {} -ModuleName PSDepend
             }
@@ -1151,12 +1151,14 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             $script:IsWindowsEnv = !$PSVersionTable.Platform -or $PSVersionTable.Platform -eq "Win32NT"
             $script:GlobalDotnetSdkLocation = if ($script:IsWindowsEnv) {
                 "$env:LocalAppData\Microsoft\dotnet" 
-            } else {
+            }
+            else {
                 "$env:HOME/.dotnet" 
             }
             $script:DotnetFile = if ($script:IsWindowsEnv) {
                 "dotnet.exe" 
-            } else {
+            }
+            else {
                 "dotnet" 
             }
             $script:SavePath = '.dotnet'
@@ -1176,7 +1178,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             }
 
             It 'Installs the .NET Core SDK to the specified directory' {
-                Mock Test-Dotnet    { return $false } -ModuleName PSDepend
+                Mock Test-Dotnet { return $false } -ModuleName PSDepend
                 Mock Install-Dotnet {               } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\dotnetsdk.complex.depend.psd1" -Force
@@ -1248,7 +1250,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             $script:SavePath = (New-Item 'TestDrive:/PSDependPesterTest' -ItemType Directory -Force).FullName
 
             # Simulate choco.exe being present so tests don't hit the install-chocolatey branch by default
-            Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { [PSCustomObject]@{Name = 'choco.exe'} } -ModuleName PSDepend
+            Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { [PSCustomObject]@{Name = 'choco.exe' } } -ModuleName PSDepend
             # Default catch-all for Invoke-ExternalCommand; individual tests register specific ParameterFilter mocks
             Mock Invoke-ExternalCommand -ModuleName PSDepend
         }

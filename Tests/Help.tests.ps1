@@ -22,7 +22,7 @@ BeforeDiscovery {
     Get-Module $env:BHProjectName | Remove-Module -Force -ErrorAction Ignore
     Import-Module -Name $outputModVerManifest -Verbose:$false -ErrorAction Stop
     $params = @{
-        Module = (Get-Module $env:BHProjectName)
+        Module      = (Get-Module $env:BHProjectName)
         CommandType = [System.Management.Automation.CommandTypes[]]'Cmdlet, Function' # Not alias
     }
     if ($PSVersionTable.PSVersion.Major -lt 6) {

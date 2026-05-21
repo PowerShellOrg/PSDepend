@@ -159,7 +159,8 @@ if (-not $Version) {
 # Target doubles as Scope: AllUsers/CurrentUser = install scope; any other value = filesystem path
 if (-not $Dependency.Target) {
     $Scope = 'CurrentUser'
-} else {
+}
+else {
     $Scope = $Dependency.Target
 }
 
@@ -167,7 +168,8 @@ $Credential = $Dependency.Credential
 
 if ('AllUsers', 'CurrentUser' -notcontains $Scope) {
     $command = 'save'
-} else {
+}
+else {
     $command = 'install'
 }
 
@@ -213,14 +215,16 @@ if ($Credential) {
 
 if ($command -eq 'save') {
     $ModuleName = Join-Path $Scope $Name
-} elseif ($command -eq 'install') {
+}
+elseif ($command -eq 'install') {
     $ModuleName = $Name
 }
 
 # Filter params to only those accepted by the target command
 $targetCmd = if ($command -eq 'save') {
     'Save-PSResource' 
-} else {
+}
+else {
     'Install-PSResource' 
 }
 $availableParameters = (Get-Command $targetCmd).Parameters
@@ -279,12 +283,14 @@ if ($Existing) {
         [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedTempSemanticVersion)
     ) {
         $parsedTempSemanticVersion -le $parsedSemanticVersion
-    } elseif (
+    }
+    elseif (
         [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedVersion) -and
         [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
     ) {
         $parsedGalleryVersion -le $parsedVersion
-    } else {
+    }
+    else {
         $false
     }
 
@@ -310,7 +316,8 @@ if ($PSDependAction -contains 'Install') {
     if ('AllUsers', 'CurrentUser' -contains $Scope) {
         Write-Verbose "Installing [$Name] with scope [$Scope]"
         Install-PSResource @params -Scope $Scope
-    } else {
+    }
+    else {
         Write-Verbose "Saving [$Name] to path [$Scope]"
         Write-Verbose "Creating directory path to [$Scope]"
         if (-not (Test-Path $Scope -ErrorAction SilentlyContinue)) {

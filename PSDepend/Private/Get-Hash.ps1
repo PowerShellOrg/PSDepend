@@ -1,4 +1,4 @@
-﻿function Get-Hash { 
+function Get-Hash { 
     <#
         .SYNOPSIS
             Calculates the hash on a given file based on the seleced hash algorithm.
@@ -71,49 +71,46 @@
             Uses pipeline input from Get-ChildItem to get MD5 hashes of executables.
 
     #>
-    [CmdletBinding(DefaultParameterSetName='File')]
+    [CmdletBinding(DefaultParameterSetName = 'File')]
     Param(
-       [Parameter( ParameterSetName = 'File',
-                   Position=0,
-                   Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   ValueFromPipeline=$True)]
-       [Alias("PSPath","FullName")]
-       [string[]]$Path,
+        [Parameter( ParameterSetName = 'File',
+            Position = 0,
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true,
+            ValueFromPipeline = $True)]
+        [Alias("PSPath", "FullName")]
+        [string[]]$Path,
 
-       [Parameter( ParameterSetName = 'String',
-                   Position=0,
-                   Mandatory=$true)]
-       [string[]]$String,
+        [Parameter( ParameterSetName = 'String',
+            Position = 0,
+            Mandatory = $true)]
+        [string[]]$String,
 
-       [Parameter(Position=1)]
-       [ValidateSet("MD5","SHA1","SHA256","SHA384","SHA512","RIPEMD160")]
-       [string[]]$Algorithm = "SHA256"
+        [Parameter(Position = 1)]
+        [ValidateSet("MD5", "SHA1", "SHA256", "SHA384", "SHA512", "RIPEMD160")]
+        [string[]]$Algorithm = "SHA256"
     )
     Process {
 
-        if($PSCmdlet.ParameterSetName -eq 'File')
-        {
+        if ($PSCmdlet.ParameterSetName -eq 'File') {
             $Items = $Path
         }
-        elseif($PSCmdlet.ParameterSetName -eq 'String')
-        {
+        elseif ($PSCmdlet.ParameterSetName -eq 'String') {
             $Items = $String
         }
 
         ForEach ($item in $Items) {
             
-            if($PSCmdlet.ParameterSetName -eq 'File')
-            {
+            if ($PSCmdlet.ParameterSetName -eq 'File') {
 
                 $item = (Resolve-Path $item).ProviderPath
                 If (-Not ([uri]$item).IsAbsoluteUri) {
-                    Write-Verbose ("{0} is not a full path, using current directory: {1}" -f $item,$pwd)
-                    $item = (Join-Path $pwd ($item -replace "\.\\",""))
+                    Write-Verbose ("{0} is not a full path, using current directory: {1}" -f $item, $pwd)
+                    $item = (Join-Path $pwd ($item -replace "\.\\", ""))
                 }
-                If(Test-Path $item -Type Container) {
-                   Write-Warning ("Cannot calculate hash for directory: {0}" -f $item)
-                   Return
+                If (Test-Path $item -Type Container) {
+                    Write-Warning ("Cannot calculate hash for directory: {0}" -f $item)
+                    Return
                 }
                 $object = New-Object PSObject -Property @{ 
                     Path = $item
@@ -122,40 +119,38 @@
                 $stream = ([IO.StreamReader]$item).BaseStream
             
 
-                foreach($Type in $Algorithm) {                
+                foreach ($Type in $Algorithm) {                
                 
                     [string]$hash = -join ([Security.Cryptography.HashAlgorithm]::Create( $Type ).ComputeHash( $stream ) | 
-                        ForEach-Object { "{0:x2}" -f $_ })
+                            ForEach-Object { "{0:x2}" -f $_ })
                 
-                    $null = $stream.Seek(0,0)
+                    $null = $stream.Seek(0, 0)
                 
                     #If multiple algorithms are used, then they will be added to existing object                
                     $object = Add-Member -InputObject $Object -MemberType NoteProperty -Name $Type -Value $Hash -PassThru
                 }
             }
-            elseif($PSCmdlet.ParameterSetName -eq 'String')
-            {
+            elseif ($PSCmdlet.ParameterSetName -eq 'String') {
 
                 $object = New-Object PSObject -Property @{ 
                     String = $item
                 }
 
-                foreach($Type in $Algorithm) {                
+                foreach ($Type in $Algorithm) {                
                     [string]$hash = -join ([Security.Cryptography.HashAlgorithm]::Create( $Type ).ComputeHash( [System.Text.Encoding]::UTF8.GetBytes($item) ) | 
-                        ForEach-Object { "{0:x2}" -f $_ })
+                            ForEach-Object { "{0:x2}" -f $_ })
                     
                     #If multiple algorithms are used, then they will be added to existing object                
                     $object = Add-Member -InputObject $Object -MemberType NoteProperty -Name $Type -Value $Hash -PassThru
                 }
             }
 
-            $object.pstypenames.insert(0,'System.IO.FileInfo.Hash')
+            $object.pstypenames.insert(0, 'System.IO.FileInfo.Hash')
             
             #Output an object with the hash, algorithm and path
             Write-Output $object
 
-            if($PSCmdlet.ParameterSetName -eq 'File')
-            {
+            if ($PSCmdlet.ParameterSetName -eq 'File') {
                 #Close the stream
                 $stream.Close()
                 $stream.Dispose()

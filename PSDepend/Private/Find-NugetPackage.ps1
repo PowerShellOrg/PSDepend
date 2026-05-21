@@ -1,4 +1,4 @@
-﻿# All credit and major props to Joel Bennett for this simplified solution that doesn't depend on PowerShellGet
+# All credit and major props to Joel Bennett for this simplified solution that doesn't depend on PowerShellGet
 # https://gist.github.com/Jaykul/1caf0d6d26380509b04cf4ecef807355
 function Find-NugetPackage {
     [CmdletBinding()]
@@ -19,25 +19,21 @@ function Find-NugetPackage {
     )
 
     #Ugly way to do this.  Prefer islatest, otherwise look for version, otherwise grab all matching modules
-    if($IsLatest)
-    {
+    if ($IsLatest) {
         Write-Verbose "Searching for latest [$name] module"
         $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and IsLatestVersion"
     }
-    elseif($PSBoundParameters.ContainsKey($Version))
-    {
+    elseif ($PSBoundParameters.ContainsKey($Version)) {
         Write-Verbose "Searching for version [$version] of [$name]"
         $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and Version eq '$Version'"
     }
-    else
-    {
+    else {
         Write-Verbose "Searching for all versions of [$name] module"
         $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name'"
     }
 
     $headers = @{}
-    if ($null -ne $Credential)
-    {
+    if ($null -ne $Credential) {
         $basicAuthToken = [Convert]::ToBase64String(":$($Credential.GetNetworkCredential().Password)")
 
         $headers["X-NuGet-ApiKey"] = $Credential.UserName
@@ -45,10 +41,10 @@ function Find-NugetPackage {
     }
 
     Invoke-RestMethod $URI -Headers $headers |
-    Select-Object @{n='Name';ex={$_.title.('#text')}},
-                  @{n='Author';ex={$_.author.name}},
-                  @{n='Version';ex={$_.properties.NormalizedVersion}},
-                  @{n='Uri';ex={$_.Content.src}},
-                  @{n='Description';ex={$_.properties.Description}},
-                  @{n='Properties';ex={$_.properties}}
+        Select-Object @{n = 'Name'; ex = { $_.title.('#text') } },
+        @{n = 'Author'; ex = { $_.author.name } },
+        @{n = 'Version'; ex = { $_.properties.NormalizedVersion } },
+        @{n = 'Uri'; ex = { $_.Content.src } },
+        @{n = 'Description'; ex = { $_.properties.Description } },
+        @{n = 'Properties'; ex = { $_.properties } }
 }

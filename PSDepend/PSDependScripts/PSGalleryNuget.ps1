@@ -66,43 +66,36 @@ param(
     [string[]]$PSDependAction = @('Install')
 )
 # Extract data from Dependency
-    $DependencyName = $Dependency.DependencyName
-    $Name = $Dependency.Name
-    if(-not $Name)
-    {
-        $Name = $DependencyName
-    }
+$DependencyName = $Dependency.DependencyName
+$Name = $Dependency.Name
+if (-not $Name) {
+    $Name = $DependencyName
+}
 
-    $Version = $Dependency.Version
-    if(-not $Version)
-    {
-        $Version = 'latest'
-    }
+$Version = $Dependency.Version
+if (-not $Version) {
+    $Version = 'latest'
+}
 
-    $Source = $Dependency.Source
-    if(-not $Dependency.Source)
-    {
-        $Source = 'https://www.powershellgallery.com/api/v2/'
-    }
+$Source = $Dependency.Source
+if (-not $Dependency.Source) {
+    $Source = 'https://www.powershellgallery.com/api/v2/'
+}
 
-    # We use target as a proxy for Scope
-    $Target = $Dependency.Target
-    if(-not $Dependency.Target)
-    {
-        Write-Error "PSGalleryNuget requires a Dependency Target. Skipping [$DependencyName]"
-        return
-	}
+# We use target as a proxy for Scope
+$Target = $Dependency.Target
+if (-not $Dependency.Target) {
+    Write-Error "PSGalleryNuget requires a Dependency Target. Skipping [$DependencyName]"
+    return
+}
 
-	$Credential = $Dependency.Credential
+$Credential = $Dependency.Credential
 
-if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
-{
-    if(Test-PlatformSupport -Type 'PSGalleryNuget' -Support 'windows','core')
-    {
+if (-not (Get-Command Nuget -ErrorAction SilentlyContinue)) {
+    if (Test-PlatformSupport -Type 'PSGalleryNuget' -Support 'windows', 'core') {
         BootStrap-Nuget -NugetPath $NuGetPath
     }
-    if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
-    {
+    if (-not (Get-Command Nuget -ErrorAction SilentlyContinue)) {
         Write-Error "PSGalleryNuget requires Nuget.exe.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's NugetPath.  Skipping [$DependencyName]"
         return
     }
@@ -111,15 +104,13 @@ if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
 Write-Verbose -Message "Getting dependency [$name] from Nuget source [$Source]"
 
 # This code works for both install and save scenarios.
-$ModulePath =  Join-Path $Target $Name
+$ModulePath = Join-Path $Target $Name
 
 Add-ToPsModulePathIfRequired -Dependency $Dependency -Action $PSDependAction
 
-if(Test-Path $ModulePath)
-{
+if (Test-Path $ModulePath) {
     $Manifest = Join-Path $ModulePath "$Name.psd1"
-    if(-not (Test-Path $Manifest))
-    {
+    if (-not (Test-Path $Manifest)) {
         # For now, skip if we don't find a psd1
         Write-Error "Could not find manifest [$Manifest] for dependency [$Name]"
         return
@@ -133,15 +124,12 @@ if(Test-Path $ModulePath)
     $GetGalleryVersion = { (Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential -IsLatest).Version }
 
     # Version string, and equal to current
-    if($Version -and $Version -ne 'latest')
-    {
-        if(Test-VersionEquality $Version $ExistingVersion)
-        {
+    if ($Version -and $Version -ne 'latest') {
+        if (Test-VersionEquality $Version $ExistingVersion) {
             Write-Verbose "You have the requested version [$Version] of [$Name]"
             # Conditional import
             Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
-            if($PSDependAction -contains 'Test')
-            {
+            if ($PSDependAction -contains 'Test') {
                 return $True
             }
             return $null
@@ -149,33 +137,27 @@ if(Test-Path $ModulePath)
     }
 
     # latest, and we have latest
-    if( $Version -and
+    if ( $Version -and
         ($Version -eq 'latest' -or $Version -like '') -and
         ($GalleryVersion = (& $GetGalleryVersion)) -le $ExistingVersion
-    )
-    {
+    ) {
         Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and PSGallery version [$GalleryVersion]"
         # Conditional import
         Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
-        if($PSDependAction -contains 'Test')
-        {
+        if ($PSDependAction -contains 'Test') {
             return $True
         }
         return $null
     }
 
     Write-Verbose "Removing existing [$ModulePath]`nContinuing to install [$Name]: Requested version [$version], existing version [$ExistingVersion]"
-    if($PSDependAction -contains 'Install')
-    {
-        if($Force)
-        {
+    if ($PSDependAction -contains 'Install') {
+        if ($Force) {
             Remove-Item $ModulePath -Force -Recurse
         }
-        else
-        {
+        else {
             Write-Verbose "Use -Force to remove existing [$ModulePath]`nSkipping install of [$Name]: Requested version [$version], existing version [$ExistingVersion]"
-            if( $PSDependAction -contains 'Test')
-            {
+            if ( $PSDependAction -contains 'Test') {
                 return $false
             }
             return $null
@@ -184,29 +166,25 @@ if(Test-Path $ModulePath)
 }
 
 #No dependency found, return false if we're testing alone...
-if( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-{
+if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $False
 }
 
-if($PSDependAction -contains 'Install')
-{
+if ($PSDependAction -contains 'Install') {
     $TargetExists = Test-Path $Target -PathType Container
 
     Write-Verbose "Saving [$Name] with path [$Target]"
     $NugetParams = '-Source', $Source, '-ExcludeVersion', '-NonInteractive', '-OutputDirectory', $Target
-    if(-not $TargetExists)
-    {
+    if (-not $TargetExists) {
         Write-Verbose "Creating directory path to [$Target]"
         $Null = New-Item -ItemType Directory -Path $Target -Force -ErrorAction SilentlyContinue
     }
-    if($Version -and $Version -notlike 'latest')
-    {
+    if ($Version -and $Version -notlike 'latest') {
         $NugetParams += '-version', $Version
     }
     $NugetParams = 'install', $Name + $NugetParams
 
-	Invoke-ExternalCommand nuget -Arguments $NugetParams
+    Invoke-ExternalCommand nuget -Arguments $NugetParams
 }
 
 # Conditional import

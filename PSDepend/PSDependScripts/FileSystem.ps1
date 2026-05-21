@@ -1,4 +1,4 @@
-﻿<#
+<#
     .SYNOPSIS
         EXPERIMENTAL: Use Robocopy or Copy-Item for folder and file dependencies, respectively.
 
@@ -72,18 +72,15 @@ param (
 )
 
 # Extract data from Dependency
-    $DependencyName = $Dependency.DependencyName
-    $Name = $Dependency.Name
-    $Target = $Dependency.Target
-    $Sources = @($Dependency.Source)
+$DependencyName = $Dependency.DependencyName
+$Name = $Dependency.Name
+$Target = $Dependency.Target
+$Sources = @($Dependency.Source)
 
 $TestOutput = @()
-foreach($Source in @($Sources))
-{
-    if(-not (Test-Path $Source))
-    {
-        if(-not $PSDependAction -like 'Test')
-        {
+foreach ($Source in @($Sources)) {
+    if (-not (Test-Path $Source)) {
+        if (-not $PSDependAction -like 'Test') {
             Write-Error "Skipping $DependencyName, could not find source [$Sources] due to error:"
         }
         continue
@@ -94,27 +91,22 @@ foreach($Source in @($Sources))
     $Target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Target)
     $Source = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Source)
 
-    if($IsContainer)
-    {
+    if ($IsContainer) {
         $Folder = Split-Path $Source -Leaf
         $Target = Join-Path $Target $Folder
-        if(-not $ImportPath) {$ImportPath = $Target}
+        if (-not $ImportPath) { $ImportPath = $Target }
         # We don't test equality for containers yet
-        if(Test-Path $Target)
-        {
+        if (Test-Path $Target) {
             $TestOutput += $true
         }
-        else
-        {
+        else {
             $TestOutput += $false
         }
-        if($PSDependAction -like 'Install')
-        {
+        if ($PSDependAction -like 'Install') {
             # TODO: Add non Windows equivalent...
             [string[]]$Arguments = "/XO"
             $Arguments += "/E"
-            if($Dependency.Parameters.Mirror -eq $True -or $Mirror)
-            {
+            if ($Dependency.Parameters.Mirror -eq $True -or $Mirror) {
                 $Arguments += "/PURGE"
             }
 
@@ -122,75 +114,59 @@ foreach($Source in @($Sources))
             ROBOCOPY.exe $Source $Target @Arguments
         }
     }
-    else
-    {
+    else {
         $SourceFolderPath = Split-Path $Source -Parent
         $SourceFileName = Split-Path $Source -Leaf
         $TargetFile = Join-Path $Target $SourceFileName
         $SourceHash = ( Get-Hash $Source ).SHA256
         $TargetHash = $null
-        if(Test-Path $Target -PathType Leaf)
-        {
+        if (Test-Path $Target -PathType Leaf) {
             $TargetHash = ( Get-Hash $Target -ErrorAction SilentlyContinue -WarningAction SilentlyContinue ).SHA256
             $TargetPath = $Target
         }
-        elseif(Test-Path $TargetFile -PathType Leaf)
-        {
+        elseif (Test-Path $TargetFile -PathType Leaf) {
             $TargetHash = ( Get-Hash $TargetFile -ErrorAction SilentlyContinue -WarningAction SilentlyContinue ).SHA256
             $TargetPath = $TargetFile
         }
         Write-Verbose "Source [$Source] hash [$SourceHash]`n`tTarget [$TargetPath] hash [$TargetHash]"
 
-        if($TargetHash -ne $SourceHash)
-        {
+        if ($TargetHash -ne $SourceHash) {
             Write-Verbose "Hashes do not match"
-            if($PSDependAction -like 'Install')
-            {
+            if ($PSDependAction -like 'Install') {
                 Write-Verbose "Copying file [$Source] to [$Target]"
                 Copy-Item -Path $Source -Destination $Target -Force
             }
-            if($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1)
-            {
+            if ($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1) {
                 $TestOutput += $false
             }
         }
-        else
-        {
+        else {
             Write-Verbose "Matching hash: [$Source] = [$TargetFile]"
-            if($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1)
-            {
+            if ($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1) {
                 $TestOutput += $True
             }
         }
     }
 }
 
-if($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1)
-{
-    if(@($TestOutput) -contains $false -or @($TestOutput) -notcontains $true)
-    {
+if ($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1) {
+    if (@($TestOutput) -contains $false -or @($TestOutput) -notcontains $true) {
         return $false
     }
-    else
-    {
+    else {
         return $True
     }
 }
 
-if($PSDependAction -like 'Import')
-{
-    if(-not $ImportPath)
-    {
-        if(Test-Path $Target -PathType Leaf)
-        {
+if ($PSDependAction -like 'Import') {
+    if (-not $ImportPath) {
+        if (Test-Path $Target -PathType Leaf) {
             $ImportPath = Split-Path $Target -Parent
         }
-        elseif(Test-Path $Target -PathType Container)
-        {
+        elseif (Test-Path $Target -PathType Container) {
             $ImportPath = $Target
         }
-        else
-        {
+        else {
             Write-Error "Could not import target [$Target], path not found"
             return
         }

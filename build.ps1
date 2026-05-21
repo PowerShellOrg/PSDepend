@@ -27,7 +27,8 @@ param(
                 Get-PSakeScriptTasks -BuildFile './psakeFile.ps1' -ErrorAction 'Stop' |
                     Where-Object { $_.Name -like "$WordToComplete*" } |
                     Select-Object -ExpandProperty 'Name'
-            } catch {
+            }
+            catch {
                 @()
             }
         })]
@@ -50,14 +51,16 @@ if ($Bootstrap) {
     }
     Import-Module -Name PSDepend -Verbose:$false
     Invoke-PSDepend -Path './requirements.psd1' -Install -Import -Force -WarningAction SilentlyContinue
-} else {
+}
+else {
     Invoke-PSDepend -Path './requirements.psd1' -Import -Force -WarningAction SilentlyContinue
 }
 
 if ($PSCmdlet.ParameterSetName -eq 'Help') {
     Get-PSakeScriptTasks -BuildFile $psakeFile |
         Format-Table -Property Name, Description, Alias, DependsOn
-} else {
+}
+else {
     Set-BuildEnvironment -Force
     Invoke-Psake -BuildFile $psakeFile -TaskList $Task -NoLogo
     exit ([int](-not $psake.build_success))

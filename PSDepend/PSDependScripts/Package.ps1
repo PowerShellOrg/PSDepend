@@ -62,83 +62,70 @@ param(
 )
 
 # Extract data from Dependency
-    $DependencyName = $Dependency.DependencyName
-    $Source = $Dependency.Source
-    $Name = $Dependency.Name
-    if(-not $Name)
-    {
-        $Name = $DependencyName
-    }
+$DependencyName = $Dependency.DependencyName
+$Source = $Dependency.Source
+$Name = $Dependency.Name
+if (-not $Name) {
+    $Name = $DependencyName
+}
 
-    $Version = $Dependency.Version
-    if(-not $Version)
-    {
-        $Version = 'latest'
-    }
+$Version = $Dependency.Version
+if (-not $Version) {
+    $Version = 'latest'
+}
 
 $PackageSources = @( Get-PackageSource )
-if($PackageSources.Name -notcontains $Source -and -not $PSBoundParameters.ContainsKey('ProviderName'))
-{
+if ($PackageSources.Name -notcontains $Source -and -not $PSBoundParameters.ContainsKey('ProviderName')) {
     Write-Error "PackageSource [$Source] is not valid.  Valid sources:`n$($PackageSources.ProviderName | Out-String)"
     return
 }
 
 $PackageProviders = @( Get-PackageProvider )
-if($PSBoundParameters.ContainsKey('ProviderName') -and $PackageProviders.Name -notcontains $ProviderName)
-{
+if ($PSBoundParameters.ContainsKey('ProviderName') -and $PackageProviders.Name -notcontains $ProviderName) {
     Write-Error "ProviderName [$ProviderName] is not valid.  Valid sources:`n$($PackageProviders.Name | Out-String)"
     return
 }
 
 Write-Verbose -Message "Getting dependency [$name] from Package source [$Source]"
 
-if($PSBoundParameters.ContainsKey('ProviderName'))
-{
+if ($PSBoundParameters.ContainsKey('ProviderName')) {
     $ThisProvider = $ProviderName
 }
-else # Pick providername from this packagesource
-{
-    $ThisProvider = $PackageSources | Where-Object {$_.Name -eq $Source} | Select-Object -ExpandProperty ProviderName
+else { # Pick providername from this packagesource
+    $ThisProvider = $PackageSources | Where-Object { $_.Name -eq $Source } | Select-Object -ExpandProperty ProviderName
 }
 
 $GetParam = @{
-    Name = $Name
+    Name         = $Name
     ProviderName = $ThisProvider
-    ErrorAction = 'SilentlyContinue'
+    ErrorAction  = 'SilentlyContinue'
 }
 $InstallParam = @{
-    Name = $Name
+    Name   = $Name
     Source = $Source
-    Force = $True
+    Force  = $True
 }
-if($Version -notlike 'latest')
-{
+if ($Version -notlike 'latest') {
     $GetParam.add('RequiredVersion', $Version)
     $InstallParam.add('RequiredVersion', $Version)
 }
 
 # Parse target for PowerShellGet
-If($ThisProvider -eq 'PowerShellGet')
-{
+If ($ThisProvider -eq 'PowerShellGet') {
     $ValidScope = 'CurrentUser', 'AllUsers'
-    if(-not $Dependency.Target)
-    {
+    if (-not $Dependency.Target) {
         $Scope = 'AllUsers'
     }
-    else
-    {
+    else {
         $Scope = $Dependency.Target
     }
-    if($ValidScope -contains $Scope)
-    {
+    if ($ValidScope -contains $Scope) {
         $InstallParam.Add('Scope', $Scope)
     }
 }
 # Parse target for Nuget
-if($ThisProvider -eq 'Nuget')
-{
-    if(-not $Dependency.Target)
-    {
+if ($ThisProvider -eq 'Nuget') {
+    if (-not $Dependency.Target) {
         throw 'Nuget provider requires that you specify a target destination.  Use the dependency Target for this.'
     }
     $GetParam.Add('Destination', $Dependency.Target)
@@ -147,16 +134,12 @@ if($ThisProvider -eq 'Nuget')
 
 
 # Add arbitrary keys to support DynamicOptions...
-if($Dependency.Parameters.Keys.Count -gt 0)
-{
-    foreach($Key in $Dependency.Parameters.Keys)
-    {
-        if(-not $InstallParam.ContainsKey($Key))
-        {
+if ($Dependency.Parameters.Keys.Count -gt 0) {
+    foreach ($Key in $Dependency.Parameters.Keys) {
+        if (-not $InstallParam.ContainsKey($Key)) {
             $InstallParam.add($Key, $Dependency.Parameters.$Key)
         }
-        else
-        {
+        else {
             $InstallParam.$Key = $Dependency.Parameters.$Key
         }
     }
@@ -166,18 +149,14 @@ $Existing = $null
 Write-Verbose "Running Get-Package with $($GetParam | Out-String)"
 $Existing = Get-Package @GetParam
 
-if($Existing)
-{
+if ($Existing) {
     Write-Verbose "Found existing package [$Name]"
 
-    if($Version -and $Version -ne 'latest')
-    {
+    if ($Version -and $Version -ne 'latest') {
         $matchedInstall = $Existing | Where-Object { Test-VersionEquality $Version $_.Version } | Select-Object -First 1
-        if ($matchedInstall)
-        {
+        if ($matchedInstall) {
             Write-Verbose "You have the requested version [$Version] of [$Name]"
-            if($PSDependAction -contains 'Test')
-            {
+            if ($PSDependAction -contains 'Test') {
                 return $True
             }
             return $null
@@ -198,24 +177,24 @@ if($Existing)
         [System.Management.Automation.SemanticVersion]::TryParse([string]$SourceVersion, [ref]$parsedSourceSemanticVersion)
     ) {
         $parsedSourceSemanticVersion -le $parsedExistingSemanticVersion
-    } elseif (
+    }
+    elseif (
         [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedExistingVersion) -and
         [System.Version]::TryParse([string]$SourceVersion, [ref]$parsedSourceVersion)
     ) {
         $parsedSourceVersion -le $parsedExistingVersion
-    } else {
+    }
+    else {
         $false
     }
 
     # latest, and we have latest
-    if( $Version -and
+    if ( $Version -and
         ($Version -eq 'latest' -or $Version -like '') -and
         $isSourceVersionLessEquals
-    )
-    {
+    ) {
         Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and package source version [$SourceVersion]"
-        if($PSDependAction -contains 'Test')
-        {
+        if ($PSDependAction -contains 'Test') {
             return $True
         }
         return $null
@@ -225,13 +204,11 @@ if($Existing)
 }
 
 #No dependency found, return false if we're testing alone...
-if( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-{
+if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $False
 }
 
-if($PSDependAction -contains 'Install')
-{
+if ($PSDependAction -contains 'Install') {
     Write-Verbose "Installing [$Name] with params $($InstallParam | Out-String)"
     Install-Package @InstallParam
 }

@@ -18,15 +18,15 @@ BeforeDiscovery {
 BeforeAll {
     $script:TestDepends = Join-Path $ENV:BHProjectPath Tests\DependFiles
     $script:Verbose = @{}
-    if($ENV:BHBranchName -notlike "main" -or $env:BHCommitMessage -match "!verbose") {
-        $script:Verbose.add("Verbose",$True)
+    if ($ENV:BHBranchName -notlike "main" -or $env:BHCommitMessage -match "!verbose") {
+        $script:Verbose.add("Verbose", $True)
     }
 }
 
 Describe "$ENV:BHProjectName PS$PSVersion" -Tag 'Unit' {
     Context 'Strict mode' {
         BeforeAll { Set-StrictMode -Version latest }
-        AfterAll  { Set-StrictMode -Off }
+        AfterAll { Set-StrictMode -Off }
 
         It 'Should load' {
             $Module = Get-Module $ENV:BHProjectName
@@ -39,7 +39,7 @@ Describe "$ENV:BHProjectName PS$PSVersion" -Tag 'Unit' {
 Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
     Context 'Strict mode' {
         BeforeAll { Set-StrictMode -Version latest }
-        AfterAll  { Set-StrictMode -Off }
+        AfterAll { Set-StrictMode -Off }
 
         It 'Should read ModuleName=Version syntax' {
             $Dependencies = Get-Dependency -Path $TestDepends\simple.depend.psd1
@@ -106,7 +106,7 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
 
     Context 'Error and edge cases' {
         BeforeAll { Set-StrictMode -Version latest }
-        AfterAll  { Set-StrictMode -Off }
+        AfterAll { Set-StrictMode -Off }
 
         It 'Filters results to matching tags when -Tags is specified' {
             $Dependencies = Get-Dependency -Path $TestDepends\allprops.depend.psd1 -Tags 'tags'
@@ -131,7 +131,7 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
 Describe "Get-PSDependType PS$PSVersion" -Tag 'Unit' {
     Context 'Strict mode' {
         BeforeAll { Set-StrictMode -Version latest }
-        AfterAll  { Set-StrictMode -Off }
+        AfterAll { Set-StrictMode -Off }
 
         It 'Returns objects for all types in the default map' {
             $Types = Get-PSDependType -SkipHelp
@@ -161,7 +161,7 @@ Describe "Get-PSDependType PS$PSVersion" -Tag 'Unit' {
 Describe "Get-PSDependScript PS$PSVersion" -Tag 'Unit' {
     Context 'Strict mode' {
         BeforeAll { Set-StrictMode -Version latest }
-        AfterAll  { Set-StrictMode -Off }
+        AfterAll { Set-StrictMode -Off }
 
         It 'Returns a hashtable keyed by dependency type name' {
             $Scripts = Get-PSDependScript
@@ -203,7 +203,7 @@ Describe "Install-Dependency PS$PSVersion" -Tag 'Unit' {
 Describe "Invoke-DependencyScript PS$PSVersion" -Tag 'Unit' {
     Context 'Command type' {
         BeforeAll { Set-StrictMode -Version latest }
-        AfterAll  { Set-StrictMode -Off }
+        AfterAll { Set-StrictMode -Off }
 
         It 'Returns the script output for a Command dependency' {
             $Dep = Get-Dependency -Path $TestDepends\command.depend.psd1 | Select-Object -First 1
