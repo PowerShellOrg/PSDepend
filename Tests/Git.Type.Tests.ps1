@@ -32,7 +32,7 @@ Describe 'Git script' {
                 }
             }
             Mock Import-PSDependModule { }
-            Mock Add-ToItemCollection  { }
+            Mock Add-ToItemCollection { }
         }
     }
 

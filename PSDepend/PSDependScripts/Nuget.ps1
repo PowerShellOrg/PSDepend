@@ -79,42 +79,35 @@ param(
     [string]$Name
 )
 # Extract data from Dependency
-    $DependencyName = $Dependency.DependencyName
-    if ($null -ne $Dependency.Name)
-    {
-        $DependencyName = $Dependency.Name
-    }
+$DependencyName = $Dependency.DependencyName
+if ($null -ne $Dependency.Name) {
+    $DependencyName = $Dependency.Name
+}
 
-    $Version = $Dependency.Version
-    if(-not $Version)
-    {
-        $Version = 'latest'
-    }
+$Version = $Dependency.Version
+if (-not $Version) {
+    $Version = 'latest'
+}
 
-    $Source = $Dependency.Source
-    if(-not $Dependency.Source)
-    {
-        $Source = 'https://www.nuget.org/api/v2/'
-    }
+$Source = $Dependency.Source
+if (-not $Dependency.Source) {
+    $Source = 'https://www.nuget.org/api/v2/'
+}
 
-    # We use target as a proxy for Scope
-    $Target = $Dependency.Target
-    if(-not $Dependency.Target)
-    {
-        Write-Error "Nuget requires a Dependency Target. Skipping [$DependencyName]"
-        return
-	}
+# We use target as a proxy for Scope
+$Target = $Dependency.Target
+if (-not $Dependency.Target) {
+    Write-Error "Nuget requires a Dependency Target. Skipping [$DependencyName]"
+    return
+}
 
-	$Credential = $Dependency.Credential
+$Credential = $Dependency.Credential
 
-if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
-{
-    if(Test-PlatformSupport -Type 'Nuget' -Support 'windows','core')
-    {
+if (-not (Get-Command Nuget -ErrorAction SilentlyContinue)) {
+    if (Test-PlatformSupport -Type 'Nuget' -Support 'windows', 'core') {
         BootStrap-Nuget -NugetPath $NuGetPath
     }
-    if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
-    {
+    if (-not (Get-Command Nuget -ErrorAction SilentlyContinue)) {
         Write-Error "Nuget requires Nuget.exe.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's NugetPath.  Skipping [$DependencyName]"
         return
     }
@@ -123,7 +116,7 @@ if(-not (Get-Command Nuget -ErrorAction SilentlyContinue))
 Write-Verbose -Message "Getting dependency [$DependencyName] from Nuget source [$Source]"
 
 # This code works for both install and save scenarios.
-$PackagePath =  Join-Path $Target $DependencyName
+$PackagePath = Join-Path $Target $DependencyName
 
 $NameIs = if ($PSBoundParameters.ContainsKey('Name')) {
     $Name
@@ -132,10 +125,8 @@ else {
     $DependencyName
 }
 
-if(Test-Path $PackagePath)
-{
-    if($null -eq (Get-ChildItem $PackagePath -Filter "$NameIs*" -Include '*.exe', '*.dll' -Recurse))
-    {
+if (Test-Path $PackagePath) {
+    if ($null -eq (Get-ChildItem $PackagePath -Filter "$NameIs*" -Include '*.exe', '*.dll' -Recurse)) {
         # For now, skip if we don't find a DLL matching the expected name
         Write-Error "Could not find existing DLL for dependency [$DependencyName] in package path [$PackagePath]"
         return
@@ -149,13 +140,10 @@ if(Test-Path $PackagePath)
     $GetGalleryVersion = { (Find-NugetPackage -Name $DependencyName -PackageSourceUrl $Source -Credential $Credential -IsLatest).Version }
 
     # Version string, and equal to current
-    if($Version -and $Version -ne 'latest')
-    {
-        if(Test-VersionEquality $Version $ExistingVersion)
-        {
+    if ($Version -and $Version -ne 'latest') {
+        if (Test-VersionEquality $Version $ExistingVersion) {
             Write-Verbose "You have the requested version [$Version] of [$DependencyName]"
-            if($PSDependAction -contains 'Test')
-            {
+            if ($PSDependAction -contains 'Test') {
                 return $True
             }
             return $null
@@ -163,31 +151,25 @@ if(Test-Path $PackagePath)
     }
 
     # latest, and we have latest
-    if( $Version -and
+    if ( $Version -and
         ($Version -eq 'latest' -or $Version -like '') -and
         ($GalleryVersion = [System.Version](& $GetGalleryVersion)) -le [System.Version]$ExistingVersion
-    )
-    {
+    ) {
         Write-Verbose "You have the latest version of [$DependencyName], with installed version [$ExistingVersion] and Source version [$GalleryVersion]"
-        if($PSDependAction -contains 'Test')
-        {
+        if ($PSDependAction -contains 'Test') {
             return $True
         }
         return $null
     }
 
     Write-Verbose "Removing existing [$PackagePath]`nContinuing to install [$DependencyName]: Requested version [$version], existing version [$ExistingVersion]"
-    if($PSDependAction -contains 'Install')
-    {
-        if($Force)
-        {
+    if ($PSDependAction -contains 'Install') {
+        if ($Force) {
             Remove-Item $PackagePath -Force -Recurse
         }
-        else
-        {
+        else {
             Write-Verbose "Use -Force to remove existing [$PackagePath]`nSkipping install of [$DependencyName]: Requested version [$version], existing version [$ExistingVersion]"
-            if( $PSDependAction -contains 'Test')
-            {
+            if ( $PSDependAction -contains 'Test') {
                 return $false
             }
             return $null
@@ -196,27 +178,23 @@ if(Test-Path $PackagePath)
 }
 
 #No dependency found, return false if we're testing alone...
-if( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1)
-{
+if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $False
 }
 
-if($PSDependAction -contains 'Install')
-{
+if ($PSDependAction -contains 'Install') {
     $TargetExists = Test-Path $Target -PathType Container
 
     Write-Verbose "Saving [$DependencyName] with path [$Target]"
     $NugetParams = '-Source', $Source, '-ExcludeVersion', '-NonInteractive', '-OutputDirectory', $Target
-    if(-not $TargetExists)
-    {
+    if (-not $TargetExists) {
         Write-Verbose "Creating directory path to [$Target]"
         $Null = New-Item -ItemType Directory -Path $Target -Force -ErrorAction SilentlyContinue
     }
-    if($Version -and $Version -notlike 'latest')
-    {
+    if ($Version -and $Version -notlike 'latest') {
         $NugetParams += '-version', $Version
     }
     $NugetParams = 'install', $DependencyName + $NugetParams
 
-	Invoke-ExternalCommand Nuget -Arguments $NugetParams
+    Invoke-ExternalCommand Nuget -Arguments $NugetParams
 }

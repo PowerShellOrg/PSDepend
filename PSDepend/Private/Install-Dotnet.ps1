@@ -4,15 +4,15 @@
 function Install-Dotnet {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $Channel,
         
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $Version,
         
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $InstallDir
     )
@@ -29,7 +29,8 @@ function Install-Dotnet {
 
         if ($IsWindowsEnv) {
             & .\$installScript -Channel $Channel -Version $Version -InstallDir $InstallDir
-        } else {
+        }
+        else {
             bash ./$installScript -c $Channel -v $Version --install-dir $InstallDir
         }
     }

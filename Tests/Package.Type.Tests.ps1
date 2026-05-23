@@ -15,11 +15,11 @@ BeforeAll {
     # cannot mock directly. Inject simple stub functions into the module's
     # script scope so Pester can wrap them with Mock.
     & (Get-Module PSDepend) {
-        function script:Get-PackageSource   { [CmdletBinding()] param() }
+        function script:Get-PackageSource { [CmdletBinding()] param() }
         function script:Get-PackageProvider { [CmdletBinding()] param() }
-        function script:Get-Package         { [CmdletBinding()] param([string]$Name, [string]$ProviderName, [string]$RequiredVersion, [string]$Destination, [string]$ErrorAction) }
-        function script:Find-Package        { [CmdletBinding()] param([string]$Name, [string]$Source) }
-        function script:Install-Package     { [CmdletBinding()] param([string]$Name, [string]$Source, [string]$RequiredVersion, [string]$Destination, [string]$Scope, [switch]$Force) }
+        function script:Get-Package { [CmdletBinding()] param([string]$Name, [string]$ProviderName, [string]$RequiredVersion, [string]$Destination, [string]$ErrorAction) }
+        function script:Find-Package { [CmdletBinding()] param([string]$Name, [string]$Source) }
+        function script:Install-Package { [CmdletBinding()] param([string]$Name, [string]$Source, [string]$RequiredVersion, [string]$Destination, [string]$Scope, [switch]$Force) }
     }
 }
 
@@ -27,11 +27,11 @@ Describe 'Package script' {
 
     BeforeAll {
         InModuleScope PSDepend {
-            Mock Get-PackageSource   { [PSCustomObject]@{ Name = 'nuget.org'; ProviderName = 'Nuget' } }
+            Mock Get-PackageSource { [PSCustomObject]@{ Name = 'nuget.org'; ProviderName = 'Nuget' } }
             Mock Get-PackageProvider { @( [PSCustomObject]@{ Name = 'Nuget' }, [PSCustomObject]@{ Name = 'PowerShellGet' } ) }
-            Mock Get-Package         { }
-            Mock Find-Package        { [PSCustomObject]@{ Name = 'jquery'; Version = '1.0.0' } }
-            Mock Install-Package     { }
+            Mock Get-Package { }
+            Mock Find-Package { [PSCustomObject]@{ Name = 'jquery'; Version = '1.0.0' } }
+            Mock Install-Package { }
         }
     }
 
@@ -67,7 +67,7 @@ Describe 'Package script' {
     It 'Installs when installed version 2.8.0 is behind source version 2.10.0 and latest is requested' {
         $targetDir = (New-Item 'TestDrive:/pkg3' -ItemType Directory -Force).FullName
         InModuleScope PSDepend {
-            Mock Get-Package  { [PSCustomObject]@{ Name = 'jquery'; Version = [version]'2.8.0' } }
+            Mock Get-Package { [PSCustomObject]@{ Name = 'jquery'; Version = [version]'2.8.0' } }
             Mock Find-Package { [PSCustomObject]@{ Name = 'jquery'; Version = [version]'2.10.0' } }
         }
 

@@ -1,31 +1,24 @@
-﻿# Borrowed from Pester and stripped down
+# Borrowed from Pester and stripped down
 # This might be overkill
-function Resolve-DependScripts
-{
+function Resolve-DependScripts {
     param ([object[]] $Path, [bool]$Recurse = $True)
     $resolvedScriptInfo = @(
-        foreach ($object in $Path)
-        {
+        foreach ($object in $Path) {
             $unresolvedPath = [string] $object
             if ($unresolvedPath -notmatch '[\*\?\[\]]' -and
                 (Test-Path -LiteralPath $unresolvedPath -PathType Leaf) -and
-                (Get-Item -LiteralPath $unresolvedPath -Force) -is [System.IO.FileInfo])
-            {
+                (Get-Item -LiteralPath $unresolvedPath -Force) -is [System.IO.FileInfo]) {
                 $extension = [System.IO.Path]::GetExtension($unresolvedPath)
-                if ($extension -ne '.psd1')
-                {
+                if ($extension -ne '.psd1') {
                     Write-Error "Script path '$unresolvedPath' is not a psd1 file."
                 }
-                else
-                {
+                else {
                     $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($unresolvedPath)
                 }
             }
-            else
-            {
-                $RecurseParam = @{Recurse = $False}
-                if($Recurse)
-                {
+            else {
+                $RecurseParam = @{Recurse = $False }
+                if ($Recurse) {
                     $RecurseParam.Recurse = $True
                 }
                 Resolve-Path -Path $unresolvedPath |

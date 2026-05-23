@@ -4,7 +4,7 @@
 function Test-Dotnet {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $Version,
         
@@ -18,13 +18,15 @@ function Test-Dotnet {
 
     if ($InstallDir) {
         $dotnetExePath = Join-Path -Path $InstallDir -ChildPath $dotnetFile
-    } else {
+    }
+    else {
         # If dotnet is already in the PATH, check to see if that version of dotnet can find the required SDK.
         # This is "typically" the globally installed dotnet.
         $dotnetInPath = Get-Command 'dotnet' -ErrorAction SilentlyContinue
         if ($dotnetInPath) {
             $dotnetExePath = $dotnetInPath.Source
-        } else {
+        }
+        else {
             $LocalDotnetDirPath = if ($IsWindowsEnv) { "$env:LocalAppData\Microsoft\dotnet" } else { "$env:HOME/.dotnet" }
             $dotnetExePath = Join-Path -Path $LocalDotnetDirPath -ChildPath $dotnetFile
         }
@@ -35,7 +37,8 @@ function Test-Dotnet {
         if ($Version -eq 'latest') {
             # TODO: This could query the version if you have the latest
             return $false
-        } else {
+        }
+        else {
             # We need to separate the prerelease from the version
             $installedVer, $installedPre = ($installedVersion -split '-')
             $ver, $pre = ($Version -split '-')

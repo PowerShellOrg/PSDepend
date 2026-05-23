@@ -35,18 +35,17 @@ Function Import-Dependency {
     [cmdletbinding()]
     Param(
         [parameter( ValueFromPipeline = $True,
-                    ParameterSetName='Map',
-                    Mandatory = $True)]
+            ParameterSetName = 'Map',
+            Mandatory = $True)]
         [PSTypeName('PSDepend.Dependency')]
         [psobject[]]$Dependency,
 
-        [validatescript({Test-Path -Path $_ -PathType Leaf -ErrorAction Stop})]
+        [validatescript( { Test-Path -Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1),
 
         [string[]]$Tags
     )
-    Process
-    {
+    Process {
         Invoke-DependencyScript @PSBoundParameters -PSDependAction Import
     }
 }

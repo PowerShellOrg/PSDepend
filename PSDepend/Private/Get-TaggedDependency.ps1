@@ -1,22 +1,18 @@
-﻿Function Get-TaggedDependency {
+Function Get-TaggedDependency {
     param(
         [object[]]$Dependency,
         [string[]]$Tags
     )
 
     # Only return dependency with all specified tags
-    foreach($Depend in $Dependency)
-    {
+    foreach ($Depend in $Dependency) {
         $Include = $False
-        foreach($Tag in @($Tags))
-        {
-            if($Depend.Tags -contains $Tag)
-            {
+        foreach ($Tag in @($Tags)) {
+            if ($Depend.Tags -contains $Tag) {
                 $Include = $True
             }
         }
-        If($Include)
-        {
+        If ($Include) {
             $Depend
         }
     }

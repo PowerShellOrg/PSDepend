@@ -65,54 +65,60 @@ param (
     [switch]$Global
 )
 #region    Extract Dependency Data
-    $Name    = $Dependency.DependencyName
-    $Version = $Dependency.Version
-    $Target  = $Dependency.Target
-    If (-not [string]::IsNullOrEmpty($Target) -and $Target -ne 'global') {
-        # If the target matches a full path or UNC path, don't modify it;
-        # Otherwise, assume that its a folder _in the current directory_.
-        # If no target is specified, it will install to the current directory.
-        If ($Target -notmatch '(^/|:|\\\\)') {
-            $Target = "$PWD\$Target"
-        }
-        If (-not (Test-Path $Target) -and $PSDependAction -contains 'Install') {
-            Write-Verbose "Creating folder [$Target] for node module dependency [$Name]"
-            $null = New-Item -ItemType directory -Path  $Target -Force
-        }
+$Name = $Dependency.DependencyName
+$Version = $Dependency.Version
+$Target = $Dependency.Target
+If (-not [string]::IsNullOrEmpty($Target) -and $Target -ne 'global') {
+    # If the target matches a full path or UNC path, don't modify it;
+    # Otherwise, assume that its a folder _in the current directory_.
+    # If no target is specified, it will install to the current directory.
+    If ($Target -notmatch '(^/|:|\\\\)') {
+        $Target = "$PWD\$Target"
     }
+    If (-not (Test-Path $Target) -and $PSDependAction -contains 'Install') {
+        Write-Verbose "Creating folder [$Target] for node module dependency [$Name]"
+        $null = New-Item -ItemType directory -Path  $Target -Force
+    }
+}
 #endregion Extract Dependency Data
 #region    Test Action
-    If ($PSDependAction -contains 'Test') {
-        $PackageListArguments = 'ls --json --silent'
-        If ([string]::IsNullOrEmpty($Target)) {
-            $InstalledNodeModules = Get-NodeModule
-        } ElseIf ($Target -eq 'global') {
-            $InstalledNodeModules = Get-NodeModule -Global
-        } Else {
-            Push-Location $Target
-            $InstalledNodeModules = Get-NodeModule
-            Pop-Location
-        }
-        $InstalledModule = $InstalledNodeModules.$Name
-        If ($InstalledModule -eq $null) {
-            return $false
-        } ElseIf ($Version -ne $null -and $InstalledModule.Version -ne $Version) {
-            return $false
-        } Else {
-            return $true
-        }
+If ($PSDependAction -contains 'Test') {
+    $PackageListArguments = 'ls --json --silent'
+    If ([string]::IsNullOrEmpty($Target)) {
+        $InstalledNodeModules = Get-NodeModule
     }
+    ElseIf ($Target -eq 'global') {
+        $InstalledNodeModules = Get-NodeModule -Global
+    }
+    Else {
+        Push-Location $Target
+        $InstalledNodeModules = Get-NodeModule
+        Pop-Location
+    }
+    $InstalledModule = $InstalledNodeModules.$Name
+    If ($InstalledModule -eq $null) {
+        return $false
+    }
+    ElseIf ($Version -ne $null -and $InstalledModule.Version -ne $Version) {
+        return $false
+    }
+    Else {
+        return $true
+    }
+}
 #endregion Test Action
 #region    Install Action
-    If ($PSDependAction -contains 'Install') {
-        If ([string]::IsNullOrEmpty($Target)) {
-            $null = Install-NodeModule -PackageName $Name -Version $Version
-        } ElseIf ($Target -eq 'global') {
-            $null = Install-NodeModule -PackageName $Name -Version $Version -Global
-        } Else {
-            Push-Location $Target
-            $null = Install-NodeModule -PackageName $Name -Version $Version
-            Pop-Location
-        }
+If ($PSDependAction -contains 'Install') {
+    If ([string]::IsNullOrEmpty($Target)) {
+        $null = Install-NodeModule -PackageName $Name -Version $Version
     }
+    ElseIf ($Target -eq 'global') {
+        $null = Install-NodeModule -PackageName $Name -Version $Version -Global
+    }
+    Else {
+        Push-Location $Target
+        $null = Install-NodeModule -PackageName $Name -Version $Version
+        Pop-Location
+    }
+}
 #endregion Install Action

@@ -30,7 +30,7 @@ function Get-PSDependScript {
     #>
     [cmdletbinding()]
     param(
-        [validatescript({ Test-Path $_ -PathType Leaf -ErrorAction Stop })]
+        [validatescript( { Test-Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$Path = $(Join-Path $ModuleRoot PSDependMap.psd1)
     )
 
@@ -40,19 +40,21 @@ function Get-PSDependScript {
     $DependencyDefinitions = Import-LocalizedData -BaseDirectory $Base -FileName $File
 
     $DependHash = @{}
-    foreach($DependencyType in $DependencyDefinitions.Keys) {
+    foreach ($DependencyType in $DependencyDefinitions.Keys) {
         #Determine the path to this script
-        $Script =  $DependencyDefinitions.$DependencyType.Script
-        if(Test-Path $Script -ErrorAction SilentlyContinue) {
+        $Script = $DependencyDefinitions.$DependencyType.Script
+        if (Test-Path $Script -ErrorAction SilentlyContinue) {
             $ScriptPath = $Script
-        } else {
+        }
+        else {
             # account for missing ps1
             $ScriptPath = Join-Path $ModuleRoot "PSDependScripts\$($Script -replace ".ps1$").ps1"
         }
 
-        if(Test-Path $ScriptPath) {
+        if (Test-Path $ScriptPath) {
             $DependHash.$DependencyType = $ScriptPath
-        } else {
+        }
+        else {
             Write-Error "Could not find path '$ScriptPath' for dependency $DependencyType. Origin: $($DependencyDefinitions.$DependencyType.Script)"
         }
     }

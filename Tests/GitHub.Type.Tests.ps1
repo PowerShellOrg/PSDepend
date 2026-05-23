@@ -16,7 +16,7 @@ Describe 'GitHub script' {
 
     BeforeAll {
         InModuleScope PSDepend {
-            Mock Get-Module       { } -ParameterFilter { $ListAvailable }
+            Mock Get-Module { } -ParameterFilter { $ListAvailable }
             Mock Invoke-RestMethod { @() }   # No tags returned → treated as branch
             Mock Import-PSDependModule { }
         }

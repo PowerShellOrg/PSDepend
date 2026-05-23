@@ -99,31 +99,31 @@ Function Invoke-PSDepend {
         https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding( DefaultParameterSetName = 'installimport-file',
-                    SupportsShouldProcess = $True,
-                    ConfirmImpact='High' )]
+        SupportsShouldProcess = $True,
+        ConfirmImpact = 'High' )]
     Param(
-        [validatescript({Test-Path -Path $_ -ErrorAction Stop})]
+        [validatescript( { Test-Path -Path $_ -ErrorAction Stop })]
         [parameter( ParameterSetName = 'installimport-file',
-                    Position = 0,
-                    ValueFromPipeline = $True,
-                    ValueFromPipelineByPropertyName = $True)]
+            Position = 0,
+            ValueFromPipeline = $True,
+            ValueFromPipelineByPropertyName = $True)]
         [parameter( ParameterSetName = 'test-file',
-                    Position = 0,
-                    ValueFromPipeline = $True,
-                    ValueFromPipelineByPropertyName = $True)]
+            Position = 0,
+            ValueFromPipeline = $True,
+            ValueFromPipelineByPropertyName = $True)]
         [string[]]$Path = '.',
 
         [parameter( ParameterSetName = 'installimport-hashtable',
-                    Position = 0,
-                    ValueFromPipeline = $True,
-                    ValueFromPipelineByPropertyName = $True)]
+            Position = 0,
+            ValueFromPipeline = $True,
+            ValueFromPipelineByPropertyName = $True)]
         [parameter( ParameterSetName = 'test-hashtable',
-                    Position = 0,
-                    ValueFromPipeline = $True,
-                    ValueFromPipelineByPropertyName = $True)]
+            Position = 0,
+            ValueFromPipeline = $True,
+            ValueFromPipelineByPropertyName = $True)]
         [hashtable[]]$InputObject,
 
-        [validatescript({Test-Path -Path $_ -PathType Leaf -ErrorAction Stop})]
+        [validatescript( { Test-Path -Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1),
 
         [string[]]$Tags,
@@ -156,21 +156,19 @@ Function Invoke-PSDepend {
         [parameter(ParameterSetName = 'installimport-hashtable')]
         [hashtable]$Credentials
     )
-    Begin
-    {
+    Begin {
         # Build parameters
         $InvokeParams = @{
-            PSDependAction = @()
+            PSDependAction   = @()
             PSDependTypePath = $PSDependTypePath
         }
         $DoInstall = $PSCmdlet.ParameterSetName -like 'installimport-*' -and $Install
         $DoImport = $PSCmdlet.ParameterSetName -like 'installimport-*' -and $Import
         $DoTest = $PSCmdlet.ParameterSetName -like 'test-*' -and $Test
-        if($DoInstall){$InvokeParams.PSDependAction += 'Install'}
-        if($DoImport){$InvokeParams.PSDependAction += 'Import'}
-        if($DoTest){$InvokeParams.PSDependAction += 'Test'}
-        if($InvokeParams.PSDependAction.count -like 0)
-        {
+        if ($DoInstall) { $InvokeParams.PSDependAction += 'Install' }
+        if ($DoImport) { $InvokeParams.PSDependAction += 'Import' }
+        if ($DoTest) { $InvokeParams.PSDependAction += 'Test' }
+        if ($InvokeParams.PSDependAction.count -like 0) {
             $InvokeParams.PSDependAction += 'Install'
         }
         Write-Verbose "Running Invoke-PSDepend with ParameterSetName '$($PSCmdlet.ParameterSetName)', PSDependAction $($InvokeParams.PSDependAction), and params: $($PSBoundParameters | Out-String)"
@@ -178,36 +176,29 @@ Function Invoke-PSDepend {
         $DependencyFiles = New-Object System.Collections.ArrayList
         $PSDependTypes = Get-PSDependType -Path $PSDependTypePath -SkipHelp
     }
-    Process
-    {
+    Process {
         $GetPSDependParams = @{}
 
-        if($PSCmdlet.ParameterSetName -like '*-file')
-        {
-            foreach( $PathItem in $Path )
-            {
+        if ($PSCmdlet.ParameterSetName -like '*-file') {
+            foreach ( $PathItem in $Path ) {
                 # Create a map for dependencies
                 [void]$DependencyFiles.AddRange( @( Resolve-DependScripts -Path $PathItem -Recurse $Recurse ) )
-                if ($DependencyFiles.count -gt 0)
-                {
+                if ($DependencyFiles.count -gt 0) {
                     Write-Verbose "Working with [$($DependencyFiles.Count)] dependency files from [$PathItem]:`n$($DependencyFiles | Out-String)"
                 }
-                else
-                {
+                else {
                     Write-Warning "No *.depend.psd1 files found under [$PathItem]"
                 }
             }
-            $GetPSDependParams.add('Path',$DependencyFiles)
+            $GetPSDependParams.add('Path', $DependencyFiles)
         }
-        elseif($PSCmdlet.ParameterSetName -like '*-hashtable')
-        {
-            $GetPSDependParams.add('InputObject',$InputObject)
+        elseif ($PSCmdlet.ParameterSetName -like '*-hashtable') {
+            $GetPSDependParams.add('InputObject', $InputObject)
         }
 
         # Parse
-        if($PSBoundParameters.ContainsKey('Tags'))
-        {
-            $GetPSDependParams.Add('Tags',$Tags)
+        if ($PSBoundParameters.ContainsKey('Tags')) {
+            $GetPSDependParams.Add('Tags', $Tags)
         }
 
         if ($null -ne $Credentials) {
@@ -216,54 +207,43 @@ Function Invoke-PSDepend {
 
         # Handle Dependencies
         $Dependencies = Get-Dependency @GetPSDependParams
-        $Unsupported = ( $PSDependTypes | Where-Object {-not $_.Supported} ).DependencyType
-        $Dependencies = foreach($Dependency in $Dependencies)
-        {
-            if($Unsupported -contains $Dependency.DependencyType)
-            {
-                $Supports = $PSDependTypes | Where-Object {$_.DependencyType -eq $Dependency.DependencyType} | Select -ExpandProperty Supports
+        $Unsupported = ( $PSDependTypes | Where-Object { -not $_.Supported } ).DependencyType
+        $Dependencies = foreach ($Dependency in $Dependencies) {
+            if ($Unsupported -contains $Dependency.DependencyType) {
+                $Supports = $PSDependTypes | Where-Object { $_.DependencyType -eq $Dependency.DependencyType } | select -ExpandProperty Supports
                 Write-Warning "Skipping unsupported dependency:`n$( $Dependency | Out-String)`nSupported platforms:`n$($Supports | Out-String)"
             }
-            else
-            {
+            else {
                 $Dependency
             }
         }
 
-        if($DoTest -and $Quiet)
-        {
+        if ($DoTest -and $Quiet) {
             $TestResult = [System.Collections.ArrayList]@()
         }
 
         #TODO: Add ShouldProcess here if install is specified...
-        foreach($Dependency in $Dependencies)
-        {
-            if($PSBoundParameters.ContainsKey('Target'))
-            {
+        foreach ($Dependency in $Dependencies) {
+            if ($PSBoundParameters.ContainsKey('Target')) {
                 Write-Verbose "Overriding Dependency target [$($Dependency.Target)] with target parameter value [$Target]"
                 $Dependency.Target = $Target
             }
 
-            if( ($Force -and -not $WhatIf) -or
+            if ( ($Force -and -not $WhatIf) -or
                 ($DoTest) -or
                 $PSCmdlet.ShouldProcess( "Processed the dependency '$($Dependency.DependencyName -join ", ")'",
-                                        "Process the dependency '$($Dependency.DependencyName -join ", ")'?",
-                                        "Processing dependency" ))
-            {
+                    "Process the dependency '$($Dependency.DependencyName -join ", ")'?",
+                    "Processing dependency" )) {
                 $PreScriptSuccess = $True #anti pattern! Best I could come up with to handle both prescript fail and dependencies
-                if($DoInstall -and $Dependency.PreScripts.Count -gt 0)
-                {
+                if ($DoInstall -and $Dependency.PreScripts.Count -gt 0) {
                     $ExistingEA = $ErrorActionPreference
                     $ErrorActionPreference = 'Stop'
-                    foreach($script in $Dependency.PreScripts)
-                    {
-                        Try
-                        {
+                    foreach ($script in $Dependency.PreScripts) {
+                        Try {
                             Write-Verbose "Invoking pre script: [$script]"
                             . $script
                         }
-                        Catch
-                        {
+                        Catch {
                             $PreScriptSuccess = $False
                             "Skipping installation due to failed pre script: [$script]"
                             Write-Error $_
@@ -272,36 +252,28 @@ Function Invoke-PSDepend {
                     $ErrorActionPreference = $ExistingEA
                 }
 
-                if($PreScriptSuccess)
-                {
-                    if($DoTest -and $Quiet)
-                    {
+                if ($PreScriptSuccess) {
+                    if ($DoTest -and $Quiet) {
                         $null = $TestResult.Add( (Invoke-DependencyScript @InvokeParams -Dependency $Dependency -Quiet ) )
                     }
-                    else
-                    {
+                    else {
                         Invoke-DependencyScript @InvokeParams -Dependency $Dependency
                     }
                 }
 
-                if($DoInstall -and $Dependency.PostScripts.Count -gt 0)
-                {
-                    foreach($script in $Dependency.PostScripts)
-                    {
+                if ($DoInstall -and $Dependency.PostScripts.Count -gt 0) {
+                    foreach ($script in $Dependency.PostScripts) {
                         Write-Verbose "Invoking post script: $($script)"
                         . $script
                     }
                 }
             }
         }
-        if($DoTest -and $Quiet)
-        {
-            if($TestResult -contains $false)
-            {
+        if ($DoTest -and $Quiet) {
+            if ($TestResult -contains $false) {
                 $false
             }
-            else
-            {
+            else {
                 $true
             }
         }

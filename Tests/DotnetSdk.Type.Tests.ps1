@@ -22,7 +22,7 @@ Describe 'DotnetSdk script' {
     BeforeAll {
         InModuleScope PSDepend {
             Mock Install-Dotnet { }
-            Mock Test-Dotnet    { $false }
+            Mock Test-Dotnet { $false }
         }
     }
 

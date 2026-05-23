@@ -16,7 +16,7 @@ Describe 'Npm script' {
 
     BeforeAll {
         InModuleScope PSDepend {
-            Mock Get-NodeModule     { @{} }
+            Mock Get-NodeModule { @{} }
             Mock Install-NodeModule { }
         }
     }
