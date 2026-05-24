@@ -28,6 +28,7 @@ BeforeAll {
     InModuleScope PSDepend {
         function script:Install-WindowsFeature { [CmdletBinding()] param([string]$Name) }
         function script:Add-WindowsCapability  { [CmdletBinding()] param([switch]$Online, [string]$Name) }
+        function script:Get-WindowsCapability  { [CmdletBinding()] param([switch]$Online, [string]$Name) }
     }
 }
 
@@ -38,6 +39,10 @@ Describe 'WindowsRSAT script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
             Mock Get-Module             { } -ParameterFilter { $ListAvailable }
             Mock Install-WindowsFeature { }
             Mock Add-WindowsCapability  { }
+            # Mirror the real resolver: the script queries with a 'Rsat.X*'
+            # prefix and the live system returns the full version-suffixed
+            # identity, which is what gets passed to Add-WindowsCapability.
+            Mock Get-WindowsCapability  { [PSCustomObject]@{ Name = ($Name -replace '\*$', '') + '~~~~0.0.1.0'; State = 'NotPresent' } }
             Mock Get-CimInstance        { [PSCustomObject]@{ ProductType = 3 } } -ParameterFilter { $ClassName -eq 'Win32_OperatingSystem' }
             Mock Import-PSDependModule  { }
             Mock Test-Administrator     { $true }
@@ -94,7 +99,7 @@ Describe 'WindowsRSAT script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
                 InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                     & $ScriptPath -Dependency $Dep -PSDependAction Install
                 }
-            } | Should -Throw '*Unknown Module*'
+            } | Should -Throw '*No RSAT mapping*'
         }
     }
 
@@ -106,10 +111,11 @@ Describe 'WindowsRSAT script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
             }
         }
 
-        It 'Dispatches to Add-WindowsCapability with the mapped name (<ModuleName> -> <Capability>)' -TestCases @(
+        It 'Resolves and dispatches to Add-WindowsCapability with the full identity (<ModuleName> -> <Capability>~~~~*)' -TestCases @(
             @{ ModuleName = 'ActiveDirectory'; Capability = 'Rsat.ActiveDirectory.DS-LDS.Tools' }
             @{ ModuleName = 'BitLocker';       Capability = 'Rsat.BitLocker.Recovery.Tools' }
             @{ ModuleName = 'GroupPolicy';     Capability = 'Rsat.GroupPolicy.Management.Tools' }
+            @{ ModuleName = 'DNSServer';       Capability = 'Rsat.Dns.Tools' }
         ) {
             param($ModuleName, $Capability)
 
@@ -117,9 +123,30 @@ Describe 'WindowsRSAT script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
             InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Install
             }
-            Should -Invoke -CommandName Add-WindowsCapability  -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
-                $Name -eq $Capability
+            # Script must look the capability up by prefix...
+            Should -Invoke -CommandName Get-WindowsCapability -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+                $Name -eq "$Capability*"
             }
+            # ...and install the full version-suffixed identity it returns, not the short name.
+            Should -Invoke -CommandName Add-WindowsCapability  -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+                $Name -eq "$Capability~~~~0.0.1.0"
+            }
+            Should -Invoke -CommandName Install-WindowsFeature -ModuleName PSDepend -Times 0
+        }
+
+        It 'Throws a clear server-only error for modules with no capability mapping (<ModuleName>)' -TestCases @(
+            @{ ModuleName = 'Hyper-V' }
+            @{ ModuleName = 'ADRMS' }
+        ) {
+            param($ModuleName)
+
+            $dep = New-PSDependFixture -DependencyName $ModuleName -DependencyType 'WindowsRSAT'
+            {
+                InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                    & $ScriptPath -Dependency $Dep -PSDependAction Install
+                }
+            } | Should -Throw '*not available*server-only*'
+            Should -Invoke -CommandName Add-WindowsCapability  -ModuleName PSDepend -Times 0
             Should -Invoke -CommandName Install-WindowsFeature -ModuleName PSDepend -Times 0
         }
     }
@@ -134,7 +161,7 @@ Describe 'WindowsRSAT script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
                 InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                     & $ScriptPath -Dependency $Dep -PSDependAction Install
                 }
-            } | Should -Throw '*admin*'
+            } | Should -Throw '*elevated session*'
             Should -Invoke -CommandName Install-WindowsFeature -ModuleName PSDepend -Times 0
             Should -Invoke -CommandName Add-WindowsCapability  -ModuleName PSDepend -Times 0
         }

@@ -5,8 +5,13 @@
     .DESCRIPTION
         Installs a RSAT Module in Windows.
 
+        The Install action requires an elevated (administrator) session, on both
+        Workstation (Add-WindowsCapability) and Server (Install-WindowsFeature).
+        The Test action does not require elevation. If the module is already
+        present, all actions short-circuit and succeed without elevation.
+
         Relevant Dependency metadata:
-            Name: The name for the module to install                        						
+            Name: The name for the module to install
 
     .PARAMETER PSDependAction
         Test, Install, or Import the module.  Defaults to Install
@@ -18,8 +23,8 @@
     .EXAMPLE
         @{
             ActiveDirectory = @{
-                DependencyType = 'WindowsRSAT'                   
-                Name = 'ActiveDirectory'                                             
+                DependencyType = 'WindowsRSAT'
+                Name = 'ActiveDirectory'
             }
         }
 #>
@@ -76,11 +81,11 @@ $RSAT_MODULE_MAP = @{
     }
     'DNSClient'                 = @{
         'WindowsFeature'    = 'RSAT-DNS-Server'
-        'WindowsCapability' = 'rsat.dns.tools'
+        'WindowsCapability' = 'Rsat.Dns.Tools'
     }
     'DNSServer'                 = @{
         'WindowsFeature'    = 'RSAT-DNS-Server'
-        'WindowsCapability' = 'rsat.dns.tools'
+        'WindowsCapability' = 'Rsat.Dns.Tools'
     }
     'FailoverClusters'          = @{
         'WindowsFeature'    = 'RSAT-Clustering-PowerShell'
@@ -132,31 +137,45 @@ if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
 }
 
 if ($PSDependAction -contains 'Install') {
-    
+
     if (-not (Test-Administrator)) {
-        throw "Must be an admin to install RSAT modules"
+        throw "Installing RSAT module '$ModuleName' requires an elevated session. Re-run from a PowerShell started with 'Run as administrator'."
     }
 
     #Server
     $Type = 'WindowsFeature'
-    if ((get-CimInstance -ClassName Win32_OperatingSystem).ProductType -eq 1) {
+    if ((Get-CimInstance -ClassName Win32_OperatingSystem).ProductType -eq 1) {
         # Workstation
         $Type = 'WindowsCapability'
     }
-    
+
     if (-not $RSAT_MODULE_MAP.ContainsKey($ModuleName)) {
-        throw "Unknown Module $ModuleName"
+        throw "Unknown module '$ModuleName'. No RSAT mapping is defined for it."
     }
 
-    if ($null -eq $RSAT_MODULE_MAP[$ModuleName][$type]) {
-        throw "Unknown Module $ModuleName"
+    $mapping = $RSAT_MODULE_MAP[$ModuleName]
+    if (-not $mapping.ContainsKey($Type) -or [string]::IsNullOrEmpty($mapping[$Type])) {
+        # In the table, but no entry for this OS install path. Most commonly a
+        # module that ships only as a Server feature (e.g. Hyper-V, ADRMS) and
+        # has no equivalent Windows capability on a Workstation.
+        throw "Module '$ModuleName' is not available via $Type on this system (it may be server-only)."
     }
-    
+
     if ($Type -eq 'WindowsFeature') {
-        $null = install-windowsfeature -name $RSAT_MODULE_MAP[$ModuleName][$Type]
+        $null = Install-WindowsFeature -Name $mapping[$Type]
     }
     else {
-        $null = Add-WindowsCapability -Online -Name $RSAT_MODULE_MAP[$ModuleName][$Type]
+        # Resolve the exact capability identity (e.g.
+        # 'Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0') from the stable short
+        # name in the map. DISM does accept the short base name directly, but
+        # that relies on undocumented prefix matching and the version suffix
+        # varies by Windows build -- so look it up and pass the canonical name.
+        $capabilityName = $mapping[$Type]
+        $capability = Get-WindowsCapability -Online -Name "$capabilityName*" | Select-Object -First 1
+        if (-not $capability) {
+            throw "No Windows capability matching '$capabilityName' was found on this system."
+        }
+        $null = Add-WindowsCapability -Online -Name $capability.Name
     }
 }
 
