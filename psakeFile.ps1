@@ -22,6 +22,8 @@ Properties {
     if (-not $IsWindows) {
         $PSBPreference.Test.ExcludeTagFilter = @('WindowsOnly')
     }
+
+    $PSBPreference.Publish.ApiKey = $env:PSGALLERY_API_KEY
 }
 
 # Pre-set before -FromModule so PowerShellBuild 0.7.x's null-check doesn't override it.
@@ -31,7 +33,11 @@ $PSBBuildDependency = @('StageFiles')
 
 # Override with: .\build.ps1 InstallLocal -Properties @{PreReleaseLabel='rc1'}
 Task InstallLocal -Depends StageFiles {
-    $label = if ($PreReleaseLabel) { $PreReleaseLabel } else { "pre-$(git rev-parse --short HEAD)" }
+    $label = if ($PreReleaseLabel) {
+        $PreReleaseLabel 
+    } else {
+        "pre-$(git rev-parse --short HEAD)" 
+    }
 
     $moduleName = $PSBPreference.General.ModuleName
     $stagedDir = $PSBPreference.Build.ModuleOutDir
