@@ -16,13 +16,13 @@
     #CompanyName = 'Unknown'
 
     # Copyright statement for this module
-    Copyright = '(c) 2016 Warren F. All rights reserved.'
+    Copyright = '(c) 2016-2026 Warren F. All rights reserved.'
 
     # Description of the functionality provided by this module
     Description = 'PowerShell Dependency Handler'
 
     # Minimum version of the Windows PowerShell engine required by this module
-    PowerShellVersion = '3.0'
+    PowerShellVersion = '5.1'
 
     # Name of the Windows PowerShell host required by this module
     # PowerShellHostName = ''
@@ -71,13 +71,13 @@
     )
 
     # Cmdlets to export from this module
-    CmdletsToExport = '*'
+    CmdletsToExport = @()
 
     # Variables to export from this module
-    # VariablesToExport = '*'
+    VariablesToExport = @()
 
     # Aliases to export from this module
-    AliasesToExport = '*'
+    AliasesToExport = @()
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()
@@ -103,7 +103,7 @@
             ProjectUri = 'https://github.com/PowerShellOrg/PSDepend/'
 
             # A URL to an icon representing this module.
-            # IconUri = ''
+            IconUri = 'https://raw.githubusercontent.com/PowerShellOrg/PSDepend/main/static/logo.png'
 
             # ReleaseNotes of this module
             ReleaseNotes = 'https://github.com/PowerShellOrg/PSDepend/blob/main/CHANGELOG.md'
