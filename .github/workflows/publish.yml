@@ -19,6 +19,16 @@ on:
         required: false
         type: boolean
         default: false
+      create_release:
+        description: "If false, skip creating the GitHub release and tag."
+        required: false
+        type: boolean
+        default: true
+      publish:
+        description: "If false, skip publishing to PowerShell Gallery."
+        required: false
+        type: boolean
+        default: true
 permissions:
   contents: write
 jobs:
@@ -29,4 +39,6 @@ jobs:
       version: ${{ inputs.version || '' }}
       force: ${{ inputs.force || false }}
       dry_run: ${{ inputs.dry_run || false }}
+      create_release: ${{ inputs.create_release != false }}
+      publish: ${{ inputs.publish != false }}
     secrets: inherit
