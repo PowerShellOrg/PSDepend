@@ -1,4 +1,4 @@
-Function Get-NodeModule {
+﻿Function Get-NodeModule {
     [cmdletbinding()]
     Param([switch]$Global)
     If ($Global -eq $true) {

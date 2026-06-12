@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Download a file
 
@@ -111,7 +111,7 @@ else {
         $FileName = Parse-URLForFile -URL $URL
     }
     $Path = Join-Path $Target $FileName
-        
+
     if (Test-Path $Path -PathType Leaf) {
         Write-Verbose "Skipping existing file [$Path]"
         if ($PSDependAction -contains 'Test') {
@@ -137,7 +137,7 @@ if ($PSDependAction -contains 'Install' -and $ToInstall) {
     Get-WebFile -URL $URL -Path $Path
 }
 
-if ($Dependency.AddToPath) {   
+if ($Dependency.AddToPath) {
     Write-Verbose "Setting PATH to`n$($PathToAdd, $env:PATH -join ';' | Out-String)"
     Add-ToItemCollection -Reference Env:\Path -Item $PathToAdd
 }

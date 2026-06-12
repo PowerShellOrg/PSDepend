@@ -1,4 +1,4 @@
-Function Invoke-PSDepend {
+﻿Function Invoke-PSDepend {
     <#
     .SYNOPSIS
         Invoke PSDepend
@@ -101,6 +101,7 @@ Function Invoke-PSDepend {
     [cmdletbinding( DefaultParameterSetName = 'installimport-file',
         SupportsShouldProcess = $True,
         ConfirmImpact = 'High' )]
+    [OutputType([string], [bool])]
     Param(
         [validatescript( { Test-Path -Path $_ -ErrorAction Stop })]
         [parameter( ParameterSetName = 'installimport-file',
@@ -210,7 +211,7 @@ Function Invoke-PSDepend {
         $Unsupported = ( $PSDependTypes | Where-Object { -not $_.Supported } ).DependencyType
         $Dependencies = foreach ($Dependency in $Dependencies) {
             if ($Unsupported -contains $Dependency.DependencyType) {
-                $Supports = $PSDependTypes | Where-Object { $_.DependencyType -eq $Dependency.DependencyType } | select -ExpandProperty Supports
+                $Supports = $PSDependTypes | Where-Object { $_.DependencyType -eq $Dependency.DependencyType } | Select-Object -ExpandProperty Supports
                 Write-Warning "Skipping unsupported dependency:`n$( $Dependency | Out-String)`nSupported platforms:`n$($Supports | Out-String)"
             }
             else {

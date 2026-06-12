@@ -1,4 +1,4 @@
-BeforeDiscovery {
+﻿BeforeDiscovery {
     if ($null -eq $env:BHPSModuleManifest) {
         & "$PSScriptRoot/../Build.ps1" -Task Init
     }
@@ -1150,16 +1150,16 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         BeforeAll {
             $script:IsWindowsEnv = !$PSVersionTable.Platform -or $PSVersionTable.Platform -eq "Win32NT"
             $script:GlobalDotnetSdkLocation = if ($script:IsWindowsEnv) {
-                "$env:LocalAppData\Microsoft\dotnet" 
+                "$env:LocalAppData\Microsoft\dotnet"
             }
             else {
-                "$env:HOME/.dotnet" 
+                "$env:HOME/.dotnet"
             }
             $script:DotnetFile = if ($script:IsWindowsEnv) {
-                "dotnet.exe" 
+                "dotnet.exe"
             }
             else {
-                "dotnet" 
+                "dotnet"
             }
             $script:SavePath = '.dotnet'
         }

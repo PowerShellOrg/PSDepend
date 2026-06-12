@@ -1,19 +1,19 @@
-function Test-VersionEquality {
+﻿function Test-VersionEquality {
     <#
     .SYNOPSIS
     Compare two versions by casting and comparing individual components.
-    
+
     .DESCRIPTION
     Compare two version strings by attempting to parse them as System.Version
     and System.Management.Automation.SemanticVersion, and comparing their
     components. If parsing fails, fall back to string comparison.
-    
+
     .PARAMETER ReferenceVersion
     The reference version string to compare against.
-    
+
     .PARAMETER DifferenceVersion
     The version string to compare with the reference version.
-    
+
     .EXAMPLE
     Test-VersionEquality -ReferenceVersion '1.2.3' -DifferenceVersion '1.2.3'
 

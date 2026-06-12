@@ -1,4 +1,4 @@
-function Add-ToPsModulePathIfRequired {
+﻿function Add-ToPsModulePathIfRequired {
     [cmdletbinding()]
     param(
         [PSTypeName('PSDepend.Dependency')]
@@ -23,7 +23,7 @@ function Add-ToPsModulePathIfRequired {
             Write-Verbose "Creating directory path to [$path]"
             $Null = New-Item -ItemType Directory -Path $path -Force -ErrorAction SilentlyContinue
         }
-        
+
         Write-Verbose "Setting PSModulePath to`n$($path, $env:PSModulePath -join ';' | Out-String)"
         Add-ToItemCollection -Reference Env:\PSModulePath -Item (Get-Item $path -Force).FullName
     }

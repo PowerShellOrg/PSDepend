@@ -1,4 +1,4 @@
-# Taken with love from https://github.com/PowerShell/DscResource.Tests/blob/master/MetaFixers.psm1
+﻿# Taken with love from https://github.com/PowerShell/DscResource.Tests/blob/master/MetaFixers.psm1
 
 <#
     This module helps fix problems, found by Meta.Tests.ps1

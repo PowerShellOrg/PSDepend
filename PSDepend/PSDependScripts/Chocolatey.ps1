@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
     Installs a Chocolatey package a repository.
 

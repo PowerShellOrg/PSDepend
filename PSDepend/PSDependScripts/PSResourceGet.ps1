@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Installs a PowerShell resource from a PowerShell repository using PSResourceGet.
 
@@ -222,10 +222,10 @@ elseif ($command -eq 'install') {
 
 # Filter params to only those accepted by the target command
 $targetCmd = if ($command -eq 'save') {
-    'Save-PSResource' 
+    'Save-PSResource'
 }
 else {
-    'Install-PSResource' 
+    'Install-PSResource'
 }
 $availableParameters = (Get-Command $targetCmd).Parameters
 $tempParams = $params.Clone()

@@ -1,4 +1,4 @@
-# Borrowed and tweaked from BuildHelpers.  TODO: Doc, commit back there
+﻿# Borrowed and tweaked from BuildHelpers.  TODO: Doc, commit back there
 function Get-ProjectDetail {
     <#
     .SYNOPSIS

@@ -1,4 +1,4 @@
-function Invoke-DependencyScript {
+﻿function Invoke-DependencyScript {
     <#
     .SYNOPSIS
         Invoke a dependency script
@@ -126,7 +126,7 @@ function Invoke-DependencyScript {
                     if ($ThisDependency.Parameters.Import -and $PSDependActions -notcontains 'Test') {
                         $PSDependActions += 'Import'
                         $PSDependActions = $PSDependActions | Sort-Object -Unique
-                    } 
+                    }
 
                     if ($splat.ContainsKey('PSDependAction')) {
                         $Splat['PSDependAction'] = $PSDependActions

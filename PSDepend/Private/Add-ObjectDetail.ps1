@@ -1,4 +1,4 @@
-function Add-ObjectDetail {
+﻿function Add-ObjectDetail {
     <#
     .SYNOPSIS
         Decorate an object with
@@ -10,19 +10,19 @@ function Add-ObjectDetail {
         Helper function to decorate an object with
             - A TypeName
             - New properties
-            - Default parameters 
+            - Default parameters
 
     .PARAMETER InputObject
         Object to decorate. Accepts pipeline input.
 
     .PARAMETER TypeName
         Typename to insert.
-        
+
         This will show up when you use Get-Member against the resulting object.
-        
+
     .PARAMETER PropertyToAdd
         Add these noteproperties.
-        
+
         Format is a hashtable with Key (Property Name) = Value (Property Value).
 
         Example to add a One and Date property:
@@ -85,7 +85,7 @@ function Add-ObjectDetail {
     .NOTES
         This breaks the 'do one thing' rule from certain perspectives...
         The goal is to decorate an object all in one shot
-   
+
         This abstraction simplifies decorating an object, with a slight trade-off in performance. For example:
 
         10,000 objects, add a property and typename:
@@ -94,11 +94,11 @@ function Add-ObjectDetail {
 
         Initial code borrowed from Shay Levy:
         http://blogs.microsoft.co.il/scriptfanatic/2012/04/13/custom-objects-default-display-in-powershell-30/
-        
+
     .FUNCTIONALITY
         PowerShell Language
     #>
-    [CmdletBinding()] 
+    [CmdletBinding()]
     param(
         [Parameter( Mandatory = $true,
             Position = 0,
@@ -111,7 +111,7 @@ function Add-ObjectDetail {
         [string]$TypeName,
 
         [Parameter( Mandatory = $false,
-            Position = 2)]    
+            Position = 2)]
         [System.Collections.Hashtable]$PropertyToAdd,
 
         [Parameter( Mandatory = $false,
@@ -122,7 +122,7 @@ function Add-ObjectDetail {
 
         [boolean]$Passthru = $True
     )
-    
+
     Begin {
         if ($PSBoundParameters.ContainsKey('DefaultProperties')) {
             # define a subset of properties
@@ -136,7 +136,7 @@ function Add-ObjectDetail {
                 'PropertyToAdd' {
                     foreach ($Key in $PropertyToAdd.Keys) {
                         #Add some noteproperties. Slightly faster than Add-Member.
-                        $Object.PSObject.Properties.Add( ( New-Object System.Management.Automation.PSNoteProperty($Key, $PropertyToAdd[$Key]) ) )  
+                        $Object.PSObject.Properties.Add( ( New-Object System.Management.Automation.PSNoteProperty($Key, $PropertyToAdd[$Key]) ) )
                     }
                 }
                 'TypeName' {

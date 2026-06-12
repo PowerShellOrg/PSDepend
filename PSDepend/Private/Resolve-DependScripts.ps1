@@ -1,4 +1,4 @@
-# Borrowed from Pester and stripped down
+﻿# Borrowed from Pester and stripped down
 # This might be overkill
 function Resolve-DependScripts {
     param ([object[]] $Path, [bool]$Recurse = $True)

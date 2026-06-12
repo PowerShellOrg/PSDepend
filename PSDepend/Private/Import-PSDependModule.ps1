@@ -1,4 +1,4 @@
-function Import-PSDependModule {
+﻿function Import-PSDependModule {
     [cmdletbinding()]
     param (
         [string[]]$Name = $ModulePath,

@@ -1,4 +1,4 @@
-# Check for nuget exe. If it doesn't exist, create full path to parent, and download it
+﻿# Check for nuget exe. If it doesn't exist, create full path to parent, and download it
 function BootStrap-Nuget {
     [cmdletbinding()]
     param(

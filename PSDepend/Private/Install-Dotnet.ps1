@@ -1,4 +1,4 @@
-# This installs the .NET SDK that satisfies the Channel, Version, and InstallDir that is passed in
+﻿# This installs the .NET SDK that satisfies the Channel, Version, and InstallDir that is passed in
 # If on Windows, it will download the .NET SDK PowerShell install script (dotnet-install.ps1)
 # On all other platforms, it will download the .NET SDK shell script (dotnet-install.sh)
 function Install-Dotnet {
@@ -7,11 +7,11 @@ function Install-Dotnet {
         [Parameter(Mandatory = $true)]
         [string]
         $Channel,
-        
+
         [Parameter(Mandatory = $true)]
         [string]
         $Version,
-        
+
         [Parameter(Mandatory = $true)]
         [string]
         $InstallDir

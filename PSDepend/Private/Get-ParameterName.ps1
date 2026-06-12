@@ -1,4 +1,4 @@
-Function Get-ParameterName {
+﻿Function Get-ParameterName {
     #Get parameter names for a specific command
     [cmdletbinding()]
     param(

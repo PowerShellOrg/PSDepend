@@ -1,6 +1,6 @@
-# Borrowed from http://poshcode.org/5929 with a minor tweak for validateset - thanks all!
+﻿# Borrowed from http://poshcode.org/5929 with a minor tweak for validateset - thanks all!
 Function Get-Parameter {
-    #.Synopsis 
+    #.Synopsis
     #  Enumerates the parameters of one or more commands
     #.Description
     #  Lists all the parameters of a command, by ParameterSet, including their aliases, type, etc.
@@ -39,9 +39,9 @@ Function Get-Parameter {
     begin {
         $PropertySet = @( "Name",
             @{n = "Position"; e = { if ($_.Position -lt 0) { "Named" }else { $_.Position } } },
-            "Aliases", 
+            "Aliases",
             @{n = "Short"; e = { $_.Name } },
-            @{n = "Type"; e = { $_.ParameterType.Name } }, 
+            @{n = "Type"; e = { $_.ParameterType.Name } },
             @{n = "ParameterSet"; e = { $paramset } },
             @{n = "Command"; e = { $command } },
             @{n = "Mandatory"; e = { $_.IsMandatory } },
@@ -96,7 +96,7 @@ Function Get-Parameter {
                         Write-Debug ("CREATE:" + $d.Name + " " + $provider.Name)
                         $Parameters.($d.Name) = $Parameters.($d.Name) | Select-Object *, @{ n = "DynamicProvider"; e = { @($provider.Name) } }
                     }
-                } 
+                }
             }
         }
     }
@@ -151,7 +151,7 @@ Function Get-Parameter {
                             $MoreParameters = (Get-Command $command -Args $drive).Parameters.Values
                         }
                         catch {}
-       
+
                         if ($MoreParameters.Length -gt 0) {
                             Add-Parameters $Parameters $MoreParameters
                         }
@@ -174,7 +174,7 @@ Function Get-Parameter {
 
                     foreach ($name in $aliases) {
                         $short = "^"
-                        foreach ($char in [char[]]$name) {         
+                        foreach ($char in [char[]]$name) {
                             $short += $char
                             $mCount = ($ParameterNames -match $short).Count
                             if ($mCount -eq 1 ) {
@@ -205,7 +205,7 @@ Function Get-Parameter {
                         if (!$Force -and ($CommonParameters -contains $Parameter)) { continue }
                         if ($Parameters.$Parameter.ParameterSets.ContainsKey($paramset) -or $Parameters.$Parameter.ParameterSets.ContainsKey("__AllParameterSets")) {
                             if ($Parameters.$Parameter.ParameterSets.ContainsKey($paramset)) {
-                                $output = Join-Object $Parameters.$Parameter $Parameters.$Parameter.ParameterSets.$paramSet 
+                                $output = Join-Object $Parameters.$Parameter $Parameters.$Parameter.ParameterSets.$paramSet
                             }
                             else {
                                 $output = Join-Object $Parameters.$Parameter $Parameters.$Parameter.ParameterSets.__AllParameterSets

@@ -1,4 +1,4 @@
-#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
+﻿#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
     if (-not $env:BHProjectPath) {

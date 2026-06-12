@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         'Install a WindowsRSAT PowerShell module using Add-WindowsCapability or Install-WindowsFeature, depending on OS'
 

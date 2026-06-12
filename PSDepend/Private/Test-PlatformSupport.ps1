@@ -1,5 +1,6 @@
-function Test-PlatformSupport {
+﻿function Test-PlatformSupport {
     [CmdletBinding()]
+    [OutputType([bool])]
     param(
         $Type,
         [string[]]

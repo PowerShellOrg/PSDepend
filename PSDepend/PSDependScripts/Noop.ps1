@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Display variables that a dependency script would receive.
 

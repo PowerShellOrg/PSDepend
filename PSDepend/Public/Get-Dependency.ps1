@@ -1,4 +1,4 @@
-function Get-Dependency {
+﻿function Get-Dependency {
     <#
     .SYNOPSIS
         Read a dependency psd1 file

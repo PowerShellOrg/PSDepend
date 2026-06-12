@@ -1,10 +1,10 @@
-function Get-Hash { 
+﻿function Get-Hash {
     <#
         .SYNOPSIS
             Calculates the hash on a given file based on the seleced hash algorithm.
 
         .DESCRIPTION
-            Calculates the hash on a given file based on the seleced hash algorithm. Multiple hashing 
+            Calculates the hash on a given file based on the seleced hash algorithm. Multiple hashing
             algorithms can be used with this command.
 
         .PARAMETER Path
@@ -13,7 +13,7 @@ function Get-Hash {
         .PARAMETER Algorithm
             The type of algorithm that will be used to determine the hash of a file or files.
             Default hash algorithm used is SHA256. More then 1 algorithm type can be used.
-            
+
             Available hash algorithms:
 
             MD5
@@ -37,11 +37,11 @@ function Get-Hash {
             Get-Hash -Path Test2.txt
             Path                             SHA256
             ----                             ------
-            C:\users\prox\desktop\TEST2.txt 5f8c58306e46b23ef45889494e991d6fc9244e5d78bc093f1712b0ce671acc15      
-            
+            C:\users\prox\desktop\TEST2.txt 5f8c58306e46b23ef45889494e991d6fc9244e5d78bc093f1712b0ce671acc15
+
             Description
             -----------
-            Displays the SHA256 hash for the text file.   
+            Displays the SHA256 hash for the text file.
 
         .EXAMPLE
             Get-Hash -Path .\TEST2.txt -Algorithm MD5,SHA256,RIPEMD160 | Format-List
@@ -100,7 +100,7 @@ function Get-Hash {
         }
 
         ForEach ($item in $Items) {
-            
+
             if ($PSCmdlet.ParameterSetName -eq 'File') {
 
                 $item = (Resolve-Path $item).ProviderPath
@@ -112,41 +112,41 @@ function Get-Hash {
                     Write-Warning ("Cannot calculate hash for directory: {0}" -f $item)
                     Return
                 }
-                $object = New-Object PSObject -Property @{ 
+                $object = New-Object PSObject -Property @{
                     Path = $item
                 }
                 #Open the Stream
                 $stream = ([IO.StreamReader]$item).BaseStream
-            
 
-                foreach ($Type in $Algorithm) {                
-                
-                    [string]$hash = -join ([Security.Cryptography.HashAlgorithm]::Create( $Type ).ComputeHash( $stream ) | 
+
+                foreach ($Type in $Algorithm) {
+
+                    [string]$hash = -join ([Security.Cryptography.HashAlgorithm]::Create( $Type ).ComputeHash( $stream ) |
                             ForEach-Object { "{0:x2}" -f $_ })
-                
+
                     $null = $stream.Seek(0, 0)
-                
-                    #If multiple algorithms are used, then they will be added to existing object                
+
+                    #If multiple algorithms are used, then they will be added to existing object
                     $object = Add-Member -InputObject $Object -MemberType NoteProperty -Name $Type -Value $Hash -PassThru
                 }
             }
             elseif ($PSCmdlet.ParameterSetName -eq 'String') {
 
-                $object = New-Object PSObject -Property @{ 
+                $object = New-Object PSObject -Property @{
                     String = $item
                 }
 
-                foreach ($Type in $Algorithm) {                
-                    [string]$hash = -join ([Security.Cryptography.HashAlgorithm]::Create( $Type ).ComputeHash( [System.Text.Encoding]::UTF8.GetBytes($item) ) | 
+                foreach ($Type in $Algorithm) {
+                    [string]$hash = -join ([Security.Cryptography.HashAlgorithm]::Create( $Type ).ComputeHash( [System.Text.Encoding]::UTF8.GetBytes($item) ) |
                             ForEach-Object { "{0:x2}" -f $_ })
-                    
-                    #If multiple algorithms are used, then they will be added to existing object                
+
+                    #If multiple algorithms are used, then they will be added to existing object
                     $object = Add-Member -InputObject $Object -MemberType NoteProperty -Name $Type -Value $Hash -PassThru
                 }
             }
 
             $object.pstypenames.insert(0, 'System.IO.FileInfo.Hash')
-            
+
             #Output an object with the hash, algorithm and path
             Write-Output $object
 

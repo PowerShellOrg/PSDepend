@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Invoke a PowerShell command
 
@@ -13,12 +13,12 @@
             Source: The code to run
             Parameters:
                 FailOnError: If specified, throw a terminating error if the command errors out.
-    
+
     .PARAMETER PSDependAction
         Only option is to install the module.  Defaults to Install
 
         Install: Install the dependency
-    
+
     .PARAMETER Dependency
         Dependency to process
 

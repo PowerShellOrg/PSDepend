@@ -1,4 +1,4 @@
-# Thanks to https://gallery.technet.microsoft.com/scriptcenter/Sort-With-Custom-List-07b1d93a
+﻿# Thanks to https://gallery.technet.microsoft.com/scriptcenter/Sort-With-Custom-List-07b1d93a
 Function Sort-ObjectWithCustomList {
     Param (
         [parameter(ValueFromPipeline = $true)]
@@ -28,7 +28,7 @@ Function Sort-ObjectWithCustomList {
         $sortOrder = {
             $key = if ($Property) { $_.$Property } else { $_ }
             $rank = $hash[$key]
-            if ($rank -ne $null) {
+            if ($null -ne $rank) {
                 $rank
             }
             else {
