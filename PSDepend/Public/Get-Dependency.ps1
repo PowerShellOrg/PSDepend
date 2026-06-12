@@ -117,7 +117,7 @@ function Get-Dependency {
 
             -Credentials @{
                 PrivatePackage = $privateCredentials
-                AnotherPrivatePackage = $morePrivateCredenials
+                AnotherPrivatePackage = $morePrivateCredentials
             }
 
     .EXAMPLE

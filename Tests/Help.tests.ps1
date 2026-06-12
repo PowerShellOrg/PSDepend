@@ -1,8 +1,8 @@
 # Taken with love from @juneb_get_help (https://raw.githubusercontent.com/juneb/PesterTDD/master/Module.Help.Tests.ps1)
 
 BeforeDiscovery {
-    if ($null -eq $env:BHProjectName) {
-        .\build.ps1 -Task Build
+    if (-not $env:BHProjectPath) {
+        & "$PSScriptRoot\..\build.ps1" -Task 'Build'
     }
     function global:FilterOutCommonParams {
         param ($Params)
@@ -12,7 +12,7 @@ BeforeDiscovery {
     }
 
     $manifest = Import-PowerShellDataFile -Path $env:BHPSModuleManifest
-    $outputDir = Join-Path -Path $env:BHProjectPath -ChildPath 'output'
+    $outputDir = Join-Path -Path $env:BHProjectPath -ChildPath 'Output'
     $outputModDir = Join-Path -Path $outputDir -ChildPath $env:BHProjectName
     $outputModVerDir = Join-Path -Path $outputModDir -ChildPath $manifest.ModuleVersion
     $outputModVerManifest = Join-Path -Path $outputModVerDir -ChildPath "$($env:BHProjectName).psd1"
