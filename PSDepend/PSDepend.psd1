@@ -4,7 +4,7 @@
     RootModule = 'PSDepend.psm1'
 
     # Version number of this module.
-    ModuleVersion = '0.4.0'
+    ModuleVersion = '0.4.1'
 
     # ID used to uniquely identify this module
     GUID = '63ea9e2a-320d-43ff-a11a-4930ca03cce6'
