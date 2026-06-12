@@ -172,4 +172,36 @@ Describe 'PSGalleryModule script' {
             Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
         }
     }
+
+    Context 'Multiple installed versions — requested version present but not the maximum' {
+        It 'Imports the requested version and skips Install when an older requested version is installed alongside a newer one' {
+            InModuleScope PSDepend {
+                Mock Get-Module {
+                    @(
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'1.2.3' }
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' }
+                    )
+                } -ParameterFilter { $ListAvailable }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '1.2.3'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Test, Import
+            }
+            Should -Invoke -CommandName Import-PSDependModule -ModuleName PSDepend -Times 1 -Exactly `
+                -ParameterFilter { $Version.ToString() -eq '1.2.3' }
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
+        }
+    }
+
+    Context 'Repository = $null falls through to all registered repositories' {
+        It 'Skips repository validation and calls Install-Module without -Repository when Repository is null' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -Repository $null
+            }
+            Should -Invoke -CommandName Get-PSRepository -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 1 -Exactly `
+                -ParameterFilter { -not $PSBoundParameters.ContainsKey('Repository') }
+        }
+    }
 }
