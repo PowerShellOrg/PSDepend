@@ -86,6 +86,32 @@ and is consistent with the principle that PSDepend should be idempotent.
 - `Write-Error` (not `throw`) for recoverable failures.
 - `Write-Warning` for skip-and-continue cases (see `Task.ps1`).
 
+### 9. External tool and endpoint currency
+
+Wrapper scripts break when the thing they wrap moves, not just when the
+PowerShell is wrong. `choco list` silently changed meaning in Chocolatey 2.0
+(local-only by default, `--local-only` removed, remote queries moved to
+`choco search`) and the script kept passing review because every *mechanics*
+check still passed — see issue #187.
+
+- Know the CLI contract for every major version of the tool the script
+  supports, and version-gate flags that changed (see `Get-ChocoVersion` in
+  `Chocolatey.ps1`).
+- Default endpoint URLs go stale: prefer the current canonical host
+  (e.g. `community.chocolatey.org`, not the legacy `chocolatey.org` redirect)
+  and note known-legacy defaults (the nuget.exe scripts still default to
+  v2 OData feeds).
+- If the underlying provider is deprecated upstream (PowerShellGet v2,
+  PackageManagement), the script's help must say so and point at the
+  supported alternative (see `PSResourceGet.ps1`).
+
+### 10. Output-stream hygiene
+
+A dependency script's return value *is* its output stream — `Test` returns
+booleans through it. Any cmdlet that emits objects (`New-Item`, `Copy-Item
+-PassThru`, `Install-Package`) must be assigned to `$null` or piped to
+`Out-Null`, or it corrupts the Test result seen by the engine.
+
 ## Reviewer checklist
 
 Use this as a PR review checklist when adding or modifying a script under
@@ -103,6 +129,11 @@ Use this as a PR review checklist when adding or modifying a script under
 - [ ] `.SYNOPSIS` and `.DESCRIPTION` are present.
 - [ ] "Relevant Dependency metadata" block enumerates **every** `$Dependency.*`
       field the script reads.
+- [ ] Every field the help documents is **actually read by the code** — and
+      every documented parameter exists in the param block. Drift in either
+      direction ships a silent no-op or a binding error (`Task.ps1` documented
+      `Target` while the code read only `Source`; `FileSystem.ps1` documented
+      `Force`/`Mirror` with no matching parameters).
 - [ ] Every parameter has a `.PARAMETER` entry.
 - [ ] At least one `.EXAMPLE` with a runnable `@{ }` hashtable.
 
@@ -130,8 +161,25 @@ Use this as a PR review checklist when adding or modifying a script under
 - [ ] Failures use `Write-Error` (not `throw`) unless terminating is intended
       (e.g. `FailOnError`).
 - [ ] No `Out-Null` / `2>$null` swallowing of error streams.
+- [ ] No pipeline pollution: object-emitting cmdlets (`New-Item`,
+      `Install-Package`, etc.) are assigned to `$null` so stray objects don't
+      corrupt the `Test` boolean in the output stream.
 - [ ] Verbose messages on each decision branch.
 - [ ] Cross-platform paths use `Join-Path` (not string concat with `\`).
+
+### External tool currency
+
+- [ ] The script's CLI calls are valid on **every major version of the
+      external tool it claims to support** — flags and subcommands that
+      changed between majors are version-gated (Chocolatey 2.0 removed
+      `--local-only` and made `choco list` local-only; see issue #187 and
+      `Get-ChocoVersion` in `Chocolatey.ps1`).
+- [ ] Default registry/feed URLs are the current canonical endpoints, not
+      legacy redirects.
+- [ ] Unauthenticated calls to rate-limited public APIs (e.g.
+      `api.github.com`) honor `Credential` so CI runs don't hit limits.
+- [ ] If the wrapped provider is deprecated upstream, the help says so and
+      names the supported successor.
 
 ### Version comparison (for installers)
 
@@ -147,6 +195,11 @@ Use this as a PR review checklist when adding or modifying a script under
 ### Security / hygiene
 
 - [ ] No plaintext credentials emitted in `Write-Verbose`.
+- [ ] No secrets passed as external-process **command-line arguments** where
+      avoidable — argv is visible to any process lister and to verbose
+      command echoing (`Chocolatey.ps1` passes `--password='<plaintext>'`
+      to choco; prefer the tool's config/env mechanism when one exists, and
+      flag any new occurrence).
 - [ ] No `Invoke-Expression` on dependency data. `Command.ps1` uses
       `[ScriptBlock]::Create` — that's the documented trust boundary;
       any new script doing this needs an explicit opt-in
