@@ -42,6 +42,8 @@ Describe "Test help for <_.Name>" -ForEach $commands {
         $commandHelp = Get-Help $command.Name -ErrorAction SilentlyContinue
         $commandParameters = global:FilterOutCommonParams -Params $command.ParameterSets.Parameters
         $commandParameterNames = $commandParameters.Name
+        $helpParameters = global:FilterOutCommonParams -Params $commandHelp.Parameters.Parameter
+        $helpParameterNames = $helpParameters.Name
         # $helpLinks             = $commandHelp.relatedLinks.navigationLink.uri
     }
 
@@ -110,7 +112,7 @@ Describe "Test help for <_.Name>" -ForEach $commands {
 
         # Shouldn't find extra parameters in help.
         It "finds help parameter in code: <_>" {
-            $_ -in $parameterNames | Should -Be $true
+            $_ -in $commandParameterNames | Should -Be $true
         }
     }
 }

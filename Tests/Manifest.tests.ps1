@@ -10,7 +10,6 @@ BeforeAll {
     $outputManifestPath = Join-Path -Path $outputModVerDir -Child "$($moduleName).psd1"
     $manifestData = Test-ModuleManifest -Path $outputManifestPath -Verbose:$false -ErrorAction Stop -WarningAction SilentlyContinue
 
-    $changelogPath = Join-Path -Path $env:BHProjectPath -Child 'CHANGELOG.md'
     $changelogPath = Join-Path -Path $env:BHProjectPath -ChildPath 'CHANGELOG.md'
     $changelogLine = Get-Content -Path $changelogPath | Where-Object { $_ -match "^##\s\[(?<Version>(\d+\.){1,3}\d+)\]" } | Select-Object -First 1
     $changelogVersion = if ($changelogLine -and ($changelogLine -match "^##\s\[(?<Version>(\d+\.){1,3}\d+)\]")) { $matches.Version } else { $null }
