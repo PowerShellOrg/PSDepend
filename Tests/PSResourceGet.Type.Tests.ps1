@@ -195,6 +195,24 @@ Describe 'PSResourceGet script' {
             $result | Should -Be $true
             Should -Invoke -CommandName Install-PSResource -ModuleName PSDepend -Times 0
         }
+
+        It 'Imports the requested version (not the maximum) when both are installed' {
+            InModuleScope PSDepend {
+                Mock Get-Module {
+                    @(
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'1.2.3' }
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.0.0' }
+                    )
+                } -ParameterFilter { $ListAvailable }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version '1.2.3'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Test, Import
+            }
+            Should -Invoke -CommandName Import-PSDependModule -ModuleName PSDepend -Times 1 -Exactly `
+                -ParameterFilter { $Version.ToString() -eq '1.2.3' }
+            Should -Invoke -CommandName Install-PSResource -ModuleName PSDepend -Times 0
+        }
     }
 
     Context 'Target as path uses Save-PSResource instead of Install-PSResource' {
