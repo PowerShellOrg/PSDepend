@@ -1,17 +1,24 @@
 ﻿<#
     .SYNOPSIS
-    Installs a Chocolatey package a repository.
+    Installs a package from a Chocolatey repository.
 
     .DESCRIPTION
-    Installs a package from a Chocolatey repository like Chocolatey.org.
+    Installs a package from a Chocolatey repository like the Chocolatey community repository.
 
     Relevant Dependency metadata:
         Name: The name of the package
         Version: Used to identify existing installs meeting this criteria. Defaults to 'latest'
         Source: Source Uri. Defaults to https://community.chocolatey.org/api/v2/
 
+    .PARAMETER Dependency
+    Dependency to process
+
     .PARAMETER Force
     If specified and the package is already installed, force the install again.
+
+    .PARAMETER ChocoInstallScriptUrl
+    Url to the script used to bootstrap Chocolatey when choco.exe is not found.
+    Defaults to https://community.chocolatey.org/install.ps1
 
     .PARAMETER PSDependAction
     Test, or Install the package. Defaults to Install
@@ -27,7 +34,7 @@
         }
     }
 
-    # Install version 2.0.2 of git via Chocolatey.org
+    # Install version 2.0.2 of git from the Chocolatey community repository
 
     .EXAMPLE
     @{
@@ -54,7 +61,7 @@
         'putty' = 'latest'
     }
 
-    # Installs the list of Chocolatey packages from Chocolatey.org using the Global PSDependOptions to limit repetition.
+    # Installs the list of Chocolatey packages from the Chocolatey community repository using the Global PSDependOptions to limit repetition.
 
 #>
 [CmdletBinding()]
@@ -304,9 +311,23 @@ else {
 # If the version in the remote repository is less than or equal to the version installed, then we have the latest already
 [System.Version]$parsedRepositoryVersion = $null
 [System.Version]$parsedExistingVersion = $null
-$haveLatest = [System.Version]::TryParse($repositoryVersion, [ref]$parsedRepositoryVersion) -and
-    [System.Version]::TryParse($existingVersion, [ref]$parsedExistingVersion) -and
+[System.Management.Automation.SemanticVersion]$parsedRepositorySemanticVersion = $null
+[System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersion = $null
+$haveLatest = if (
+    [System.Management.Automation.SemanticVersion]::TryParse([string]$repositoryVersion, [ref]$parsedRepositorySemanticVersion) -and
+    [System.Management.Automation.SemanticVersion]::TryParse([string]$existingVersion, [ref]$parsedExistingSemanticVersion)
+) {
+    $parsedRepositorySemanticVersion -le $parsedExistingSemanticVersion
+}
+elseif (
+    [System.Version]::TryParse([string]$repositoryVersion, [ref]$parsedRepositoryVersion) -and
+    [System.Version]::TryParse([string]$existingVersion, [ref]$parsedExistingVersion)
+) {
     $parsedRepositoryVersion -le $parsedExistingVersion
+}
+else {
+    $false
+}
 if ($Version -eq 'latest' -and $haveLatest) {
     Write-Verbose "You have the latest version of [$Name], with installed version [$existingVersion] and Source version [$repositoryVersion]"
     if ($PSDependAction -contains 'Test') {

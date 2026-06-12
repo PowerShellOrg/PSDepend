@@ -85,7 +85,7 @@ $TestOutput = @()
 foreach ($Source in @($Sources)) {
     if (-not (Test-Path $Source)) {
         if ($PSDependAction -notcontains 'Test') {
-            Write-Error "Skipping $DependencyName, could not find source [$Sources]"
+            Write-Error "Skipping $DependencyName, could not find source [$Source]"
         }
         continue
     }
@@ -108,8 +108,11 @@ foreach ($Source in @($Sources)) {
         }
         if ($PSDependAction -contains 'Install') {
             # TODO: Add non Windows equivalent...
-            [string[]]$Arguments = "/XO"
-            $Arguments += "/E"
+            [string[]]$Arguments = "/E"
+            if (-not ($Dependency.Parameters.Force -eq $True -or $Force)) {
+                # Without -Force, skip files where the target copy is newer
+                $Arguments += "/XO"
+            }
             if ($Dependency.Parameters.Mirror -eq $True -or $Mirror) {
                 $Arguments += "/PURGE"
             }
