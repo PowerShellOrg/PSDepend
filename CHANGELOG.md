@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-06-12
+
+### Added
+
+- Reviewer checklist guidance for dependency scripts covering external
+  tool/endpoint currency (version-gating CLI flags across tool majors),
+  docs-vs-code drift, secrets on process command lines, and
+  output-stream hygiene — the blind spots that let #187 ship (#189).
+
+### Changed
+
+- `GitHub` zip extraction now uses `Expand-Archive` instead of the COM
+  `shell.application` API, which failed on Server Core and other
+  non-interactive sessions; the module floor is PS 5.1, where
+  `Expand-Archive` is always available (#189).
+
+### Fixed
+
+- `Chocolatey` handler is now compatible with Chocolatey 2.x: remote
+  version queries use `choco search` (in 2.0, `choco list` stopped
+  querying remote sources and rejects URL sources), and `--local-only`
+  is passed only on 1.x, where it still exists, based on detection of
+  the installed CLI version (#187, #189).
+- `Chocolatey` default feed and bootstrap script URLs updated to
+  `community.chocolatey.org`; fixed an undefined variable in the
+  bootstrap error path and switched version checks to typed comparison
+  so prerelease versions no longer throw or trigger reinstalls (#189).
+- `PSGalleryNuget` "have latest" check compared version strings
+  lexically, so `10.0.0` sorted below `9.0.0` and triggered needless
+  reinstalls; it now uses typed SemVer/Version comparison (#189).
+- `FileSystem` missing-source errors were silenced by an operator
+  precedence bug, and the documented `Force` / `Mirror` parameters were
+  absent from the param block, so passing them was a binding error.
+  `Force` is now wired: it overwrites target files even where the
+  target copy is newer (#189).
+- `Task` only read `Source` while its help documented `Target`, so the
+  documented usage silently ran zero tasks; both are now honored (#189).
+- `Git` handler stops after reporting that git is not installed instead
+  of attempting to invoke it anyway (#189).
+- `Command` verbose output referenced the wrong loop variable when
+  processing multiple dependencies (#189).
+- Help tests now iterate parameters correctly during Pester discovery
+  and use the right variable names in assertions.
+
 ## [0.4.0] - 2026-05-26
 
 ### Added
