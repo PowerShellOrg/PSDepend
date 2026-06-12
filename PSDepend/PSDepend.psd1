@@ -109,7 +109,7 @@
             ReleaseNotes = 'https://github.com/PowerShellOrg/PSDepend/blob/main/CHANGELOG.md'
 
             # Prerelease string (e.g. 'beta1', 'rc2'). Empty string = stable release.
-            Prerelease   = 'alpha'
+            Prerelease   = ''
 
         } # End of PSData hashtable
 
