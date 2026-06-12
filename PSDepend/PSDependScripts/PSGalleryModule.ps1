@@ -9,8 +9,8 @@
             Name: The name for this module
             Version: Used to identify existing installs meeting this criteria, and as RequiredVersion for installation.  Defaults to 'latest'
             Target: Used as 'Scope' for Install-Module.  If this is a path, we use Save-Module with this path.  On reruns, PSDepend checks existing modules first and skips reinstalling when the requested version is already present.  Defaults to 'AllUsers'
-			AddToPath: If target is used as a path, prepend that path to ENV:PSModulePath
-			Credential: The username and password used to authenticate against the private repository
+            AddToPath: If target is used as a path, prepend that path to ENV:PSModulePath
+            Credential: The username and password used to authenticate against the private repository
 
         If you don't have the Nuget package provider, we install it for you
 
