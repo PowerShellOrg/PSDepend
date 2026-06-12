@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Installs a module from a PowerShell repository like the PowerShell Gallery.
 
@@ -25,7 +25,7 @@
 
     .PARAMETER AcceptLicense
         Accepts the license agreement during installation.
-        
+
     .PARAMETER AllowPrerelease
         If specified, allow for prerelease.
 
@@ -80,7 +80,7 @@
         # No version is specified - we assume latest in this case.
 
         # * Perhaps you use this https://github.com/PowerShell/PSPrivateGallery, or Artifactory, ProGet, etc.
-    
+
     .EXAMPLE
         @{
             'vmware.powercli' = @{
