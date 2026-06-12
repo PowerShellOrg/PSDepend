@@ -1,23 +1,23 @@
-function Get-ClonedObject {
+﻿function Get-ClonedObject {
     <#
     .SYNOPSIS
     Clones
-    
+
     .DESCRIPTION
     Creates a deep copy of the provided object. This is useful for cloning
     dependency objects before passing them to dependency scripts, allowing
     modifications to the clone without affecting the original object.
-    
+
     .PARAMETER DeepCopyObject
     The source object to copy from.
-    
+
     .EXAMPLE
     Get-ClonedObject $MyObject
 
     Get a deep copy of $MyObject.  This is used to clone dependency objects
     before passing them to dependency scripts, so that we can modify the object
     without affecting the original.
-    
+
     .NOTES
     Idea from https://stackoverflow.com/a/7475744
     borrowed from https://stackoverflow.com/q/8982782

@@ -1,4 +1,4 @@
-Function Install-Dependency {
+﻿Function Install-Dependency {
     <#
     .SYNOPSIS
         Install a specific dependency

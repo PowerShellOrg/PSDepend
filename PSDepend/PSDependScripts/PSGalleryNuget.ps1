@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Installs a module from a PowerShell repository like the PowerShell Gallery using nuget.exe
 

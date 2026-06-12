@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Installs a module from a GitHub repository.
 
@@ -313,7 +313,7 @@ if ($ShouldInstall) {
     $Page = 0
 
     try {
-        :nullcheck while ($GitHubVersion -Eq $null) {
+        :nullcheck while ($null -eq $GitHubVersion) {
             $Page++
             [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
             $GitHubTags = Invoke-RestMethod -Uri "https://api.github.com/repos/$DependencyID/tags?per_page=100&page=$Page"

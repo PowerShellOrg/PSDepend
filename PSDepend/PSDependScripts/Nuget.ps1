@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Installs a package from a Nuget repository like Nuget.org using nuget.exe
 

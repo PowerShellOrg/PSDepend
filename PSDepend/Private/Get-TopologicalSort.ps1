@@ -1,4 +1,4 @@
-# Thanks to http://stackoverflow.com/questions/8982782/does-anyone-have-a-dependency-graph-and-topological-sorting-code-snippet-for-pow
+﻿# Thanks to http://stackoverflow.com/questions/8982782/does-anyone-have-a-dependency-graph-and-topological-sorting-code-snippet-for-pow
 # Input is a hashtable of @{ID = @(Depended,On,IDs);...}
 function Get-TopologicalSort {
     param(
@@ -35,7 +35,7 @@ function Get-TopologicalSort {
 
         # Take this time to convert them to a HashSet for faster operation
         $currentDestinationNodes = New-Object -TypeName System.Collections.Generic.HashSet[object] -ArgumentList (, [object[]] $currentDestinationNodes )
-        [void] $fasterEdgeList.Add($currentNode, $currentDestinationNodes)        
+        [void] $fasterEdgeList.Add($currentNode, $currentDestinationNodes)
     }
 
     # Now let's reconcile by adding empty dependencies for source nodes they didn't tell us about
@@ -48,7 +48,7 @@ function Get-TopologicalSort {
 
     $currentEdgeList = $fasterEdgeList
 
-    while ($setOfAllNodesWithNoIncomingEdges.Count -gt 0) {        
+    while ($setOfAllNodesWithNoIncomingEdges.Count -gt 0) {
         $currentNode = $setOfAllNodesWithNoIncomingEdges.Dequeue()
         [void] $currentEdgeList.Remove($currentNode)
         [void] $topologicallySortedElements.Add($currentNode)
@@ -60,7 +60,7 @@ function Get-TopologicalSort {
 
                 if ($currentNodeDestinations.Count -eq 0) {
                     [void] $setOfAllNodesWithNoIncomingEdges.Enqueue($currentEdgeSourceNode)
-                }                
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-function Add-ToItemCollection {
+﻿function Add-ToItemCollection {
     param(
         $Delimiter = [IO.Path]::PathSeparator,
         $Reference, # e.g. ENV:Path

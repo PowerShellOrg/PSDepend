@@ -1,4 +1,4 @@
-BeforeDiscovery {
+﻿BeforeDiscovery {
     if ($null -eq $env:BHPSModuleManifest) {
         & "$PSScriptRoot/../Build.ps1" -Task Init
     }

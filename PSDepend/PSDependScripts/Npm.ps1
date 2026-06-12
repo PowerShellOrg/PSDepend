@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Install a node package from NPM.
 
@@ -18,7 +18,7 @@
 
     .PARAMETER Dependency
         Dependency to process
-    
+
     .PARAMETER Global
         If specified, the node package will be installed globally.
 
@@ -96,10 +96,10 @@ If ($PSDependAction -contains 'Test') {
         Pop-Location
     }
     $InstalledModule = $InstalledNodeModules.$Name
-    If ($InstalledModule -eq $null) {
+    If ($null -eq $InstalledModule) {
         return $false
     }
-    ElseIf ($Version -ne $null -and $InstalledModule.Version -ne $Version) {
+    ElseIf ($null -ne $Version -and $InstalledModule.Version -ne $Version) {
         return $false
     }
     Else {

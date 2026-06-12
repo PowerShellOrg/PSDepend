@@ -1,4 +1,4 @@
-#function to extract properties
+﻿#function to extract properties
 Function Get-PropertyOrder {
     <#
     .SYNOPSIS

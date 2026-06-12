@@ -1,13 +1,14 @@
-# This tests if if the .NET SDK of the specified version exists
+﻿# This tests if if the .NET SDK of the specified version exists
 # If you specify the InstallDir, it will check if the .NET SDK exists there
 # Otherwise it will use the global .NET SDK location.
 function Test-Dotnet {
     [CmdletBinding()]
+    [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true)]
         [string]
         $Version,
-        
+
         [Parameter()]
         [string]
         $InstallDir
@@ -31,7 +32,7 @@ function Test-Dotnet {
             $dotnetExePath = Join-Path -Path $LocalDotnetDirPath -ChildPath $dotnetFile
         }
     }
-    
+
     if (Test-Path $dotnetExePath) {
         $installedVersion = Get-DotnetVersion $dotnetExePath
         if ($Version -eq 'latest') {

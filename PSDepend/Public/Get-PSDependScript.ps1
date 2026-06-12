@@ -1,4 +1,4 @@
-function Get-PSDependScript {
+﻿function Get-PSDependScript {
     <#
     .SYNOPSIS
         Get dependency types and associated scripts
@@ -29,6 +29,7 @@ function Get-PSDependScript {
         https://github.com/PowerShellOrg/PSDepend
     #>
     [cmdletbinding()]
+    [OutputType([hashtable])]
     param(
         [validatescript( { Test-Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$Path = $(Join-Path $ModuleRoot PSDependMap.psd1)

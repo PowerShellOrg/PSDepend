@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Support dependencies by handling simple tasks.
 

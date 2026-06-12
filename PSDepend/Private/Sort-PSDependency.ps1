@@ -1,5 +1,6 @@
-function Sort-PSDependency {
+﻿function Sort-PSDependency {
     [cmdletbinding()]
+    [OutputType([object[]])]
     param(
         [object[]]$Dependencies
     )

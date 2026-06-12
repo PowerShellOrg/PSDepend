@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Clone a git repository
 
@@ -68,7 +68,7 @@ param(
     [string[]]$PSDependAction = @('Install'),
 
     [string]$ImportPath,
-    
+
     [bool]$ExtractProject = $False
 )
 
@@ -170,7 +170,7 @@ elseif ($GottaInstall -and $ExtractProject) {
 
     $null = New-Item -ItemType Directory -Path $OutPath -Force
     Push-Location $OutPath
-    
+
     Write-Verbose -Message "Cloning dependency [$GitName] with git from [$($Target)]"
     Invoke-ExternalCommand git 'clone', $Name
 
@@ -198,7 +198,7 @@ elseif ($GottaInstall -and $ExtractProject) {
 if ($Dependency.AddToPath) {
     Write-Verbose "Setting PSModulePath to`n$($Target, $env:PSModulePath -join ';' | Out-String)"
     Add-ToItemCollection -Reference Env:\PSModulePath -Item (Get-Item $Target).FullName
-    
+
     Write-Verbose "Setting PATH to`n$($RepoPath, $env:PATH -join ';' | Out-String)"
     Add-ToItemCollection -Reference Env:\PATH -Item (Get-Item $Target).FullName
 }

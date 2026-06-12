@@ -1,4 +1,4 @@
-function Test-Administrator {
+﻿function Test-Administrator {
     [CmdletBinding()]
     [OutputType([bool])]
     param()

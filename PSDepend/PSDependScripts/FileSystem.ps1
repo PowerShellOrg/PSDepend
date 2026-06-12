@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         EXPERIMENTAL: Use Robocopy or Copy-Item for folder and file dependencies, respectively.
 
@@ -86,7 +86,7 @@ foreach ($Source in @($Sources)) {
         continue
     }
     $IsContainer = ( Get-Item $Source ).PSIsContainer
-    
+
     # Resolve PSDrives.
     $Target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Target)
     $Source = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Source)

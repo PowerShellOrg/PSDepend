@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         Installs the .NET Core SDK.
 

@@ -1,4 +1,4 @@
-function Test-Dependency {
+﻿function Test-Dependency {
     <#
     .SYNOPSIS
         Test a specific dependency

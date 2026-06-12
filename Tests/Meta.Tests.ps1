@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     if (-not $env:BHProjectPath) {
         & "$PSScriptRoot\..\build.ps1" -Task 'Build'
     }

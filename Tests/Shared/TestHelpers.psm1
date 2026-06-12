@@ -1,4 +1,4 @@
-function New-PSDependFixture {
+﻿function New-PSDependFixture {
     [CmdletBinding()]
     param(
         [string]$DependencyName = 'TestModule',
@@ -39,6 +39,7 @@ function New-TestCredential {
         Justification = 'Dummy credential for testing.'
     )]
     [CmdletBinding()]
+    [OutputType([PSCredential])]
     param(
         [string]$UserName = 'testUser',
         [string]$Password = 'testPassword'
@@ -52,6 +53,7 @@ function New-TestCredential {
 
 function Test-PSDependTypeSupportedHere {
     [CmdletBinding()]
+    [OutputType([bool])]
     param(
         [Parameter(Mandatory)][string]$DependencyType,
         [string]$MapPath = (
@@ -68,7 +70,7 @@ function Test-PSDependTypeSupportedHere {
 
     $map = Import-PowerShellDataFile -Path $MapPath
     if (-not $map.ContainsKey($DependencyType)) {
-        return $false 
+        return $false
     }
     $support = @($map[$DependencyType].Supports)
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
     .SYNOPSIS
         EXPERIMENTAL: Installs a package using the PackageManagement module
 
