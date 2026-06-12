@@ -1,6 +1,6 @@
 @{
-	'imaginary' = @{
-		Version = 'latest'
-		Credential = 'imaginaryCreds'
-	}
+    'imaginary' = @{
+        Version = 'latest'
+        Credential = 'imaginaryCreds'
+    }
 }

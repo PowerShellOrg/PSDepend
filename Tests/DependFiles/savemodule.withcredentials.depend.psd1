@@ -1,6 +1,6 @@
 @{
-	'jenkins' = @{
-		target = 'TestDrive:/PSDependPesterTest'
-		credential = 'imaginaryCreds'
-	}
+    'jenkins' = @{
+        target = 'TestDrive:/PSDependPesterTest'
+        credential = 'imaginaryCreds'
+    }
 }

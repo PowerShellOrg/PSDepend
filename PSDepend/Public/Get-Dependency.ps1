@@ -108,17 +108,17 @@ function Get-Dependency {
                 BuildHelpers = 'latest'
                 PSDeploy = 'latest'
                 InvokeBuild = 'latest'
-			}
+            }
 
-	.PARAMETER Credentials
-		Specifies a hashtable of PSCredentials to use for each dependency that is served from a private feed.
+    .PARAMETER Credentials
+        Specifies a hashtable of PSCredentials to use for each dependency that is served from a private feed.
 
-		For example:
+        For example:
 
-			-Credentials @{
-				PrivatePackage = $privateCredentials
-				AnotherPrivatePackage = $morePrivateCredenials
-			}
+            -Credentials @{
+                PrivatePackage = $privateCredentials
+                AnotherPrivatePackage = $morePrivateCredenials
+            }
 
     .EXAMPLE
         Get-Dependency -Path C:\requirements.psd1
