@@ -137,17 +137,37 @@ if (Test-Path $ModulePath) {
     }
 
     # latest, and we have latest
-    if ( $Version -and
-        ($Version -eq 'latest' -or $Version -like '') -and
-        ($GalleryVersion = (& $GetGalleryVersion)) -le $ExistingVersion
-    ) {
-        Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and PSGallery version [$GalleryVersion]"
-        # Conditional import
-        Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
-        if ($PSDependAction -contains 'Test') {
-            return $True
+    if ($Version -and ($Version -eq 'latest' -or $Version -like '')) {
+        $GalleryVersion = & $GetGalleryVersion
+        [System.Version]$parsedExistingVersion = $null
+        [System.Version]$parsedGalleryVersion = $null
+        [System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersion = $null
+        [System.Management.Automation.SemanticVersion]$parsedGallerySemanticVersion = $null
+        $isGalleryVersionLessEquals = if (
+            [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedExistingSemanticVersion) -and
+            [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedGallerySemanticVersion)
+        ) {
+            $parsedGallerySemanticVersion -le $parsedExistingSemanticVersion
         }
-        return $null
+        elseif (
+            [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedExistingVersion) -and
+            [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
+        ) {
+            $parsedGalleryVersion -le $parsedExistingVersion
+        }
+        else {
+            $false
+        }
+
+        if ($isGalleryVersionLessEquals) {
+            Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and PSGallery version [$GalleryVersion]"
+            # Conditional import
+            Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
+            if ($PSDependAction -contains 'Test') {
+                return $True
+            }
+            return $null
+        }
     }
 
     Write-Verbose "Removing existing [$ModulePath]`nContinuing to install [$Name]: Requested version [$version], existing version [$ExistingVersion]"
