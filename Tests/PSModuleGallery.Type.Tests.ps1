@@ -1279,12 +1279,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Package version installed is what is requested' {
 
             It 'skips installing the package' {
-                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments[0] -eq 'list' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.specificversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 0 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'search' } -Times 0 -Exactly -ModuleName PSDepend
                 Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 0 -Exactly -ModuleName PSDepend
             }
         }
@@ -1292,13 +1292,13 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Package version installed is latest' {
 
             It 'skips installing the package' {
-                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
-                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'list' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'search' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.latestversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'search' } -Times 1 -Exactly -ModuleName PSDepend
                 Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 0 -Exactly -ModuleName PSDepend
             }
         }
@@ -1306,13 +1306,13 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Package requested is latest and version installed is newer than available in source' {
 
             It 'skips installing the package' {
-                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
-                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'list' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments[0] -eq 'search' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.latestversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'search' } -Times 1 -Exactly -ModuleName PSDepend
                 Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 0 -Exactly -ModuleName PSDepend
             }
         }
@@ -1320,14 +1320,35 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Package requested is latest and version installed is older than available in source' {
 
             It 'installs the package' {
-                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments -contains '--local-only' } -ModuleName PSDepend
-                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments[0] -eq 'list' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|2.0" } -ParameterFilter { $Arguments[0] -eq 'search' } -ModuleName PSDepend
 
                 Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.latestversionrequested.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
-                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' } -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'search' } -Times 1 -Exactly -ModuleName PSDepend
                 Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'upgrade' } -Times 1 -Exactly -ModuleName PSDepend
+            }
+        }
+
+        Context 'Chocolatey CLI version detection' {
+
+            It 'passes --local-only to choco list on Chocolatey 1.x' {
+                Mock Invoke-ExternalCommand { '1.4.0' } -ParameterFilter { $Arguments -contains '--version' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments[0] -eq 'list' } -ModuleName PSDepend
+
+                Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.specificversionrequested.depend.psd1" -Force -ErrorAction Stop
+
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -contains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
+            }
+
+            It 'omits --local-only from choco list on Chocolatey 2.x' {
+                Mock Invoke-ExternalCommand { '2.2.2' } -ParameterFilter { $Arguments -contains '--version' } -ModuleName PSDepend
+                Mock Invoke-ExternalCommand { "7zip|1.0" } -ParameterFilter { $Arguments[0] -eq 'list' } -ModuleName PSDepend
+
+                Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.specificversionrequested.depend.psd1" -Force -ErrorAction Stop
+
+                Should -Invoke Invoke-ExternalCommand -ParameterFilter { $Arguments[0] -eq 'list' -and $Arguments -notcontains '--local-only' } -Times 1 -Exactly -ModuleName PSDepend
             }
         }
     }

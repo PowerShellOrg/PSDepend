@@ -8,7 +8,7 @@
     Relevant Dependency metadata:
         Name: The name of the package
         Version: Used to identify existing installs meeting this criteria. Defaults to 'latest'
-        Source: Source Uri. Defaults to https://chocolatey.org/api/v2/
+        Source: Source Uri. Defaults to https://community.chocolatey.org/api/v2/
 
     .PARAMETER Force
     If specified and the package is already installed, force the install again.
@@ -64,11 +64,32 @@ param(
 
     [switch]$Force,
 
-    [string]$ChocoInstallScriptUrl = 'https://chocolatey.org/install.ps1',
+    [string]$ChocoInstallScriptUrl = 'https://community.chocolatey.org/install.ps1',
 
     [ValidateSet('Test', 'Install')]
     [string[]]$PSDependAction = @('Install')
 )
+
+function Get-ChocoVersion {
+    [CmdletBinding()]
+    param ()
+
+    $invokeExternalCommandSplat = @{
+        Command   = 'choco.exe'
+        Arguments = @('--version')
+        PassThru  = $true
+    }
+    $rawVersion = [string](Invoke-ExternalCommand @invokeExternalCommandSplat | Select-Object -First 1)
+    [System.Version]$parsedVersion = $null
+    # Strip prerelease/build metadata (e.g. 2.2.2-beta) before parsing
+    if ([System.Version]::TryParse(($rawVersion -replace '[-+].*$'), [ref]$parsedVersion)) {
+        $parsedVersion
+    }
+    else {
+        # Assume a modern CLI when the version cannot be determined
+        [System.Version]'2.0'
+    }
+}
 
 function Get-ChocoInstalledPackage {
     [CmdletBinding()]
@@ -80,9 +101,13 @@ function Get-ChocoInstalledPackage {
         'list',
         "$Name",
         '--limit-output',
-        '--exact',
-        '--local-only'
+        '--exact'
     )
+    # Chocolatey 2.0 removed --local-only ('choco list' is now local-only by default);
+    # before 2.0, 'choco list' queried remote sources unless the flag was passed
+    if ((Get-ChocoVersion).Major -lt 2) {
+        $chocoParams += '--local-only'
+    }
     $invokeExternalCommandSplat = @{
         Command   = 'choco.exe'
         Arguments = $chocoParams
@@ -105,7 +130,9 @@ function Get-ChocoLatestPackage {
         [Management.Automation.PSCredential]$Credential
     )
 
-    $chocoParams = @('list', "$Name", '--limit-output', '--exact')
+    # 'choco search' queries remote sources on both 1.x and 2.x; 'choco list' stopped
+    # querying remote sources in Chocolatey 2.0 and rejects URL sources (issue #187)
+    $chocoParams = @('search', "$Name", '--limit-output', '--exact')
     if ($Source) {
         $chocoParams += "--source='$Source'"
     }
@@ -191,7 +218,7 @@ if (-not $Dependency.Version -or $Version -eq '') {
 
 $Source = $Dependency.Source
 if (-not $Dependency.Source -or $Source -eq '') {
-    $Source = 'https://chocolatey.org/api/v2/'
+    $Source = 'https://community.chocolatey.org/api/v2/'
 }
 
 $Credential = $Dependency.Credential
@@ -211,7 +238,7 @@ if (-not (Get-Command -Name 'choco.exe' -ErrorAction SilentlyContinue)) {
         & $scriptPath
     }
     catch {
-        throw "Unable to install Chocolatey from '$scriptUrl'."
+        throw "Unable to install Chocolatey from '$ChocoInstallScriptUrl'."
     }
 }
 
@@ -245,8 +272,8 @@ else {
     Write-Verbose "Package [$Name] not installed."
 }
 
-# Version latest requested, and equal to current
-if ($Version -ne 'latest' -and $Version -eq $existingVersion) {
+# Specific version requested, and equal to current
+if ($Version -ne 'latest' -and (Test-VersionEquality -ReferenceVersion $Version -DifferenceVersion $existingVersion)) {
     Write-Verbose "You have the requested version [$Version] of [$Name]"
     if ($PSDependAction -contains 'Test') {
         return $true
@@ -275,10 +302,12 @@ else {
 }
 
 # If the version in the remote repository is less than or equal to the version installed, then we have the latest already
-if (
-    $Version -eq 'latest' -and
-    ([System.Version]$repositoryVersion -le [System.Version]$existingVersion)
-) {
+[System.Version]$parsedRepositoryVersion = $null
+[System.Version]$parsedExistingVersion = $null
+$haveLatest = [System.Version]::TryParse($repositoryVersion, [ref]$parsedRepositoryVersion) -and
+    [System.Version]::TryParse($existingVersion, [ref]$parsedExistingVersion) -and
+    $parsedRepositoryVersion -le $parsedExistingVersion
+if ($Version -eq 'latest' -and $haveLatest) {
     Write-Verbose "You have the latest version of [$Name], with installed version [$existingVersion] and Source version [$repositoryVersion]"
     if ($PSDependAction -contains 'Test') {
         return $true

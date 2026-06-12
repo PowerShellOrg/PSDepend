@@ -73,7 +73,7 @@ If (-not [string]::IsNullOrEmpty($Target) -and $Target -ne 'global') {
     # Otherwise, assume that its a folder _in the current directory_.
     # If no target is specified, it will install to the current directory.
     If ($Target -notmatch '(^/|:|\\\\)') {
-        $Target = "$PWD\$Target"
+        $Target = Join-Path $PWD $Target
     }
     If (-not (Test-Path $Target) -and $PSDependAction -contains 'Install') {
         Write-Verbose "Creating folder [$Target] for node module dependency [$Name]"
@@ -83,7 +83,6 @@ If (-not [string]::IsNullOrEmpty($Target) -and $Target -ne 'global') {
 #endregion Extract Dependency Data
 #region    Test Action
 If ($PSDependAction -contains 'Test') {
-    $PackageListArguments = 'ls --json --silent'
     If ([string]::IsNullOrEmpty($Target)) {
         $InstalledNodeModules = Get-NodeModule
     }

@@ -22,6 +22,9 @@
     .PARAMETER Dependency
         Dependency to process
 
+    .PARAMETER FailOnError
+        If specified, throw a terminating error if the command errors out
+
     .EXAMPLE
         @{
             ExampleCommand = @{
@@ -48,7 +51,7 @@ Write-Verbose "Executing $($Dependency.count) commands"
 
 foreach ($Depend in $Dependency) {
     foreach ($Command in $Depend.Source) {
-        Write-Verbose "Invoking command [$($Dependency.DependencyName)]:`n$Command"
+        Write-Verbose "Invoking command [$($Depend.DependencyName)]:`n$Command"
         $ScriptBlock = [ScriptBlock]::Create($Command)
         Try {
             . $ScriptBlock

@@ -29,13 +29,13 @@ Describe 'Chocolatey script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
         }
     }
 
-    It 'Defaults Source to https://chocolatey.org/api/v2/ when not supplied' {
+    It 'Defaults Source to https://community.chocolatey.org/api/v2/ when not supplied' {
         $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey'
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
             & $ScriptPath -Dependency $Dep -Force
         }
         Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
-            ($Arguments -join ' ') -match "--source='https://chocolatey\.org/api/v2/'"
+            ($Arguments -join ' ') -match "--source='https://community\.chocolatey\.org/api/v2/'"
         }
     }
 

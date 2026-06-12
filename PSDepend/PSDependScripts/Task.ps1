@@ -6,7 +6,7 @@
         Support dependencies by handling simple tasks.
 
         Relevant Dependency metadata:
-            Target: One or more scripts to run for this task
+            Target: One or more scripts to run for this task (Source is honored as an alias)
             Parameters: Parameters to call against the task scripts
 
     .PARAMETER PSDependAction
@@ -57,7 +57,8 @@ param (
 Write-Verbose "Executing $($Dependency.count) tasks"
 
 foreach ($Depend in $Dependency) {
-    foreach ($Task in $Depend.Source) {
+    $Tasks = if ($Depend.Source) { $Depend.Source } else { $Depend.Target }
+    foreach ($Task in $Tasks) {
         if (Test-Path $Task -PathType Leaf) {
             $params = @{}
             if ($Depend.Parameters) {

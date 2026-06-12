@@ -118,6 +118,7 @@ else { # Target exists
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Error "Git dependency type requires git.  Ensure this is in your path, or explicitly specified in $ModuleRoot\PSDepend.Config's GitPath.  Skipping [$DependencyName]"
+    return
 }
 
 $Version = $Dependency.Version

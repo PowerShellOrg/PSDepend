@@ -68,7 +68,11 @@ param (
     [ValidateSet('Test', 'Install', 'Import')]
     [string[]]$PSDependAction = @('Install'),
 
-    [string]$ImportPath
+    [string]$ImportPath,
+
+    [switch]$Force,
+
+    [switch]$Mirror
 )
 
 # Extract data from Dependency
@@ -80,8 +84,8 @@ $Sources = @($Dependency.Source)
 $TestOutput = @()
 foreach ($Source in @($Sources)) {
     if (-not (Test-Path $Source)) {
-        if (-not $PSDependAction -like 'Test') {
-            Write-Error "Skipping $DependencyName, could not find source [$Sources] due to error:"
+        if ($PSDependAction -notcontains 'Test') {
+            Write-Error "Skipping $DependencyName, could not find source [$Sources]"
         }
         continue
     }
@@ -102,7 +106,7 @@ foreach ($Source in @($Sources)) {
         else {
             $TestOutput += $false
         }
-        if ($PSDependAction -like 'Install') {
+        if ($PSDependAction -contains 'Install') {
             # TODO: Add non Windows equivalent...
             [string[]]$Arguments = "/XO"
             $Arguments += "/E"
@@ -132,24 +136,24 @@ foreach ($Source in @($Sources)) {
 
         if ($TargetHash -ne $SourceHash) {
             Write-Verbose "Hashes do not match"
-            if ($PSDependAction -like 'Install') {
+            if ($PSDependAction -contains 'Install') {
                 Write-Verbose "Copying file [$Source] to [$Target]"
                 Copy-Item -Path $Source -Destination $Target -Force
             }
-            if ($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1) {
+            if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
                 $TestOutput += $false
             }
         }
         else {
             Write-Verbose "Matching hash: [$Source] = [$TargetFile]"
-            if ($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1) {
+            if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
                 $TestOutput += $True
             }
         }
     }
 }
 
-if ($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1) {
+if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     if (@($TestOutput) -contains $false -or @($TestOutput) -notcontains $true) {
         return $false
     }
@@ -158,7 +162,7 @@ if ($PSDependAction -like 'Test' -and $PSDependAction.count -eq 1) {
     }
 }
 
-if ($PSDependAction -like 'Import') {
+if ($PSDependAction -contains 'Import') {
     if (-not $ImportPath) {
         if (Test-Path $Target -PathType Leaf) {
             $ImportPath = Split-Path $Target -Parent
