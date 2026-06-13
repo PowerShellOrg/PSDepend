@@ -77,10 +77,8 @@ Write-Verbose "Using URL: $URL"
 # Act on target path....
 $ToInstall = $False # Anti pattern
 
-# Normalize relative paths against $PWD so callers don't get burned by cwd-dependent splits
-if (-not [IO.Path]::IsPathRooted($Target)) {
-    $Target = Join-Path $PWD $Target
-}
+# Resolve PSDrive paths (e.g. TestDrive:) and relative paths to absolute filesystem paths
+$Target = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Target)
 
 $TargetParent = Split-Path $Target -Parent
 $PathToAdd = $Target
