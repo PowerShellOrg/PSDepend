@@ -27,7 +27,7 @@
     FileDownload    = @{
         Script      = 'FileDownload.ps1'
         Description = 'Download a file'
-        Supports    = 'windows'
+        Supports    = 'windows', 'core', 'macos', 'linux'
     }
 
     FileSystem      = @{

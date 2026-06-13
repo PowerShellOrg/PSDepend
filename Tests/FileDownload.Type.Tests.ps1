@@ -71,4 +71,45 @@ Describe 'FileDownload script' -Skip:$SkipUnsupported {
         }
         $result | Should -Be $true
     }
+
+    It 'Creates a new directory and downloads into it when Target has no extension and does not exist' {
+        $newDir = Join-Path (New-Item 'TestDrive:/dl5base' -ItemType Directory -Force).FullName 'newcontainer'
+        $dep = New-PSDependFixture -DependencyName 'https://example.com/sample.dll' -DependencyType 'FileDownload' -Target $newDir
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath; T = $newDir } {
+            & $ScriptPath -Dependency $Dep
+        }
+        Should -Invoke -CommandName Get-WebFile -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+            $URL -eq 'https://example.com/sample.dll' -and ($Path -like "*newcontainer*sample.dll")
+        }
+        Test-Path $newDir -PathType Container | Should -Be $true
+    }
+
+    It 'Treats Target as a full file path when it has a file extension and parent exists' {
+        $targetDir = (New-Item 'TestDrive:/dl6' -ItemType Directory -Force).FullName
+        $targetFile = Join-Path $targetDir 'out.dll'
+        $dep = New-PSDependFixture -DependencyName 'https://example.com/other.dll' -DependencyType 'FileDownload' -Target $targetFile
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+            & $ScriptPath -Dependency $Dep
+        }
+        Should -Invoke -CommandName Get-WebFile -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+            $URL -eq 'https://example.com/other.dll' -and $Path -eq $targetFile
+        }
+    }
+
+    It 'Roots a relative Target against $PWD and downloads to it' {
+        $baseDir = (New-Item 'TestDrive:/relbase' -ItemType Directory -Force).FullName
+        Push-Location $baseDir
+        try {
+            $dep = New-PSDependFixture -DependencyName 'https://example.com/sample.dll' -DependencyType 'FileDownload' -Target 'subdir'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep
+            }
+            Should -Invoke -CommandName Get-WebFile -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+                $Path -like "*subdir*sample.dll"
+            }
+        }
+        finally {
+            Pop-Location
+        }
+    }
 }
