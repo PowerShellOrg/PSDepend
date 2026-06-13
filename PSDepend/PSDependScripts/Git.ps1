@@ -132,7 +132,11 @@ if ($GottaTest) {
     $Branch = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse --abbrev-ref HEAD) -Passthru
     $Commit = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse HEAD) -Passthru
     Pop-Location
-    if ($Version -eq $Branch -or $Version -eq $Commit) {
+    if (-not $Branch) {
+        Write-Warning "[$RepoPath] exists but does not appear to be a valid git repository. Skipping [$DependencyName]."
+        $GottaInstall = $False
+    }
+    elseif ($Version -eq $Branch -or $Version -eq $Commit) {
         Write-Verbose "[$RepoPath] exists and is already at version [$Version]"
         if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
             return $true

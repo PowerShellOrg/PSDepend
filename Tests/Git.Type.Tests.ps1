@@ -74,4 +74,39 @@ Describe 'Git script' {
         $result | Should -Be $false
         Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
     }
+
+    It 'Does not clone again when repo already exists at the correct version (idempotency)' {
+        $targetDir = (New-Item 'TestDrive:/git-idempotent' -ItemType Directory -Force).FullName
+        # Pre-create the repo directory as if a prior run cloned it
+        $null = New-Item (Join-Path $targetDir 'repo') -ItemType Directory -Force
+        $dep = New-PSDependFixture -DependencyName 'https://example.com/user/repo.git' -DependencyType 'Git' -Version 'main' -Target $targetDir
+
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+            # rev-parse returns the branch name matching Version
+            Mock Invoke-ExternalCommand {
+                if ($Arguments -contains '--abbrev-ref') { return 'main' }
+                if ($Arguments -notcontains 'clone' -and $Arguments -notcontains '--abbrev-ref') { return 'abc1234' }
+            }
+            & $ScriptPath -Dependency $Dep
+        }
+        Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -ParameterFilter {
+            $Arguments -contains 'clone'
+        }
+    }
+
+    It 'Emits a warning and skips install when the repo path exists but is not a git repository' {
+        $targetDir = (New-Item 'TestDrive:/git-nongit' -ItemType Directory -Force).FullName
+        # Pre-create the directory but leave it empty (not a git repo)
+        $null = New-Item (Join-Path $targetDir 'repo') -ItemType Directory -Force
+        $dep = New-PSDependFixture -DependencyName 'https://example.com/user/repo.git' -DependencyType 'Git' -Version 'main' -Target $targetDir
+
+        InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+            # rev-parse returns nothing (non-git directory)
+            Mock Invoke-ExternalCommand { }
+            { & $ScriptPath -Dependency $Dep } | Should -Not -Throw
+        }
+        Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -ParameterFilter {
+            $Arguments -contains 'clone'
+        }
+    }
 }
