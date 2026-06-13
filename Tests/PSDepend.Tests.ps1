@@ -119,6 +119,26 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
             $Dependencies | Should -BeNullOrEmpty
         }
 
+        It 'Does not mutate the caller''s InputObject — PSDependOptions key survives after Get-Dependency' {
+            $inputObj = @{
+                PSDependOptions = @{ Target = 'CurrentUser' }
+                Pester          = 'latest'
+            }
+            $null = Get-Dependency -InputObject $inputObj
+            $inputObj.ContainsKey('PSDependOptions') | Should -Be $True
+        }
+
+        It 'Does not mutate the caller''s InputObject — PSDependOptions honored on a second Get-Dependency call' {
+            $inputObj = @{
+                PSDependOptions = @{ Target = 'CurrentUser' }
+                Pester          = 'latest'
+            }
+            $null = Get-Dependency -InputObject $inputObj
+            $null = Get-Dependency -InputObject $inputObj
+            $inputObj.ContainsKey('PSDependOptions') | Should -Be $True
+            $inputObj.PSDependOptions.Target | Should -Be 'CurrentUser'
+        }
+
         It 'Parses -InputObject hashtable as PSGalleryModule by default' {
             $Dependencies = Get-Dependency -InputObject @{ Pester = 'latest' }
             $Dependencies.DependencyName | Should -Be 'Pester'

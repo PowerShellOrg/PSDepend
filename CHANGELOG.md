@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `Get-Dependency -InputObject` no longer mutates the caller's hashtable:
+  `PSDependOptions` is now preserved after the call, so a second invocation
+  with the same object still honors global options such as `Target` (#35).
+
 ## [0.4.1] - 2026-06-12
 
 ### Fixed

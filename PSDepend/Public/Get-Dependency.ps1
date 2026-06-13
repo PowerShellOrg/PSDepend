@@ -437,7 +437,7 @@
     elseif ($PSCmdlet.ParameterSetName -eq 'Hashtable') {
         $DependencyFile = 'Hashtable'
         $ParsedDependencies = foreach ($InputDependency in $InputObject) {
-            $Dependencies = $InputDependency
+            $Dependencies = $InputDependency.Clone()
 
             Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName
         }
