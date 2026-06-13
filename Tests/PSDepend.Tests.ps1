@@ -134,9 +134,10 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
                 Pester          = 'latest'
             }
             $null = Get-Dependency -InputObject $inputObj
-            $null = Get-Dependency -InputObject $inputObj
+            $deps2 = Get-Dependency -InputObject $inputObj
             $inputObj.ContainsKey('PSDependOptions') | Should -Be $True
             $inputObj.PSDependOptions.Target | Should -Be 'CurrentUser'
+            ($deps2 | Where-Object DependencyName -eq 'Pester').Target | Should -Be 'CurrentUser'
         }
 
         It 'Parses -InputObject hashtable as PSGalleryModule by default' {
