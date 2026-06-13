@@ -9,15 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `FileDownload` is now supported on all platforms (`windows`, `core`, `macos`, `linux`); there was no Windows-only code blocking this (#98).
-- `FileDownload` relative `Target` paths are now rooted against `$PWD` before resolution, matching the intuitive expectation of callers (#49).
+- `FileDownload` is now supported on all platforms (`windows`, `core`,
+  `macos`, `linux`); there was no Windows-only code blocking this (#98).
+- `FileDownload` relative `Target` paths are now rooted against `$PWD`
+  before resolution, matching the intuitive expectation of callers (#49).
 
 ### Fixed
 
 - `Get-Dependency -InputObject` no longer mutates the caller's hashtable:
   `PSDependOptions` is now preserved after the call, so a second invocation
   with the same object still honors global options such as `Target` (#35).
-- `FileDownload` no longer misidentifies a directory-like `Target` (no file extension, or trailing slash) as a full file path when its parent happens to exist; the handler now uses a file-extension heuristic to distinguish file targets from container targets and creates the directory when it does not yet exist (#49).
+- `FileDownload` no longer misidentifies a directory-like `Target` (no
+  file extension, or trailing slash) as a full file path when its parent
+  happens to exist; the handler now uses a file-extension heuristic to
+  distinguish file targets from container targets and creates the directory
+  when it does not yet exist (#49).
+- `Git` handler no longer silently ignores a pre-existing directory at
+  the clone target that is not a valid git repository; it now emits a
+  `Write-Warning` so the user knows why the install was skipped (#86).
+
+### Tests
+
+- Added idempotency test: a second install run against an already-cloned
+  repo does not trigger a second `git clone` (#86).
+- Added non-git-directory test: confirms a warning is emitted and no
+  clone is attempted when the target path exists but is not a git repo (#86).
 
 ## [0.4.1] - 2026-06-12
 
