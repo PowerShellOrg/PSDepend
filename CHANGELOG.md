@@ -189,8 +189,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local build-environment improvements (#78).
 - Tests now use `TestDrive` instead of `TargetPath`.
 - `psake` build task allows `psd1` version overrides.
-- Unmarked `Github` as experimental.
-- Honor arbitrary target path logic for `Github` types.
+- Unmarked `GitHub` as experimental.
+- Honor arbitrary target path logic for `GitHub` types.
 - Removed `mkdir` from the module.
 - Path delimiter on Linux.
 - Conditional logic for removing parameters from splats.
