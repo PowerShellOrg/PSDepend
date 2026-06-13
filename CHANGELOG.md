@@ -9,22 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.1] - 2026-06-12
 
-### Added
-
-- Reviewer checklist guidance for dependency scripts covering external
-  tool/endpoint currency (version-gating CLI flags across tool majors),
-  docs-vs-code drift, secrets on process command lines, and
-  output-stream hygiene — the blind spots that let #187 ship (#189).
-
-### Changed
+### Fixed
 
 - `GitHub` zip extraction now uses `Expand-Archive` instead of the COM
   `shell.application` API, which failed on Server Core and other
   non-interactive sessions; the module floor is PS 5.1, where
   `Expand-Archive` is always available (#189).
-
-### Fixed
-
+- Reviewer checklist guidance for dependency scripts covering external
+  tool/endpoint currency (version-gating CLI flags across tool majors),
+  docs-vs-code drift, secrets on process command lines, and
+  output-stream hygiene — the blind spots that let #187 ship (#189).
 - `Chocolatey` handler is now compatible with Chocolatey 2.x: remote
   version queries use `choco search` (in 2.0, `choco list` stopped
   querying remote sources and rejects URL sources), and `--local-only`
@@ -86,6 +80,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTEXT.md` documenting the PSDepend domain lexicon (Dependency,
   DependencyType, Target, Scope, `PSDependAction`, etc.) for both
   human and AI contributors.
+- A note that `Save-Module` may need to be rerun if a dependency's
+  `Target` directory was removed between invocations (#177).
+- Credential help and a credential-misconfiguration warning added to
+  the relevant handler scripts and `Invoke-PSDepend` help.
 
 ### Changed
 
@@ -167,14 +165,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DotnetSdk` install test now mocks `Install-Dotnet` so the test
   suite no longer attempts a real SDK install on CI runners (#178).
 
-### Docs
-
-- Added a note that `Save-Module` may need to be rerun if a
-  dependency's `Target` directory was removed between invocations
-  (#177).
-- Credential help and a credential-misconfiguration warning added to
-  the relevant handler scripts and `Invoke-PSDepend` help.
-
 ## [0.3.0] - 2018-09-20
 
 ### Added
@@ -191,21 +181,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.1] - 2018-05-11
 
-### Added
+### Fixed
 - PowerShell Core support (#79).
 - `AllowClobber` parameter on `PSGalleryModule` (#53).
 - Resolving of `PSDrives`.
 - Error-handling parameters on dependency scripts.
-
-### Changed
 - Local build-environment improvements (#78).
 - Tests now use `TestDrive` instead of `TargetPath`.
 - `psake` build task allows `psd1` version overrides.
 - Unmarked `Github` as experimental.
 - Honor arbitrary target path logic for `Github` types.
 - Removed `mkdir` from the module.
-
-### Fixed
 - Path delimiter on Linux.
 - Conditional logic for removing parameters from splats.
 
@@ -229,31 +215,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.63] - 2018-01-17
 
-### Added
+### Fixed
 - GitHub dependency type rewrite: versioned folders, version targets, multiple-version support, "latest" GitHub version lookup, scope keyword support, examples.
 - `SkipPublisherCheck` for PSGallery modules (#46, #64).
-
-### Changed
 - `AddToPath` now applies on both install **and** subsequent imports (#60).
 - Performance: removed redundant `Get-PSRepository` calls (#52); reduced calls to find the latest version of a module/package (#58).
-
-### Fixed
 - Ensure the correct version of a module is imported (#57).
 - Doubled-folder bug, version bug, and import bug in the GitHub rewrite.
 - Resolve `Target` correctly (#56).
 
 ## [0.1.56] - 2017-10-04
 
-### Added
+### Fixed
 - `Npm` dependency type with unit tests.
 - `PreScripts` and `PostScripts` with injected variables.
 - Module extraction in the `Git` dependency script.
 - Initial simple-syntax with namespaces (#41).
-
-### Changed
 - Full-path resolution for `AddToPath`, including when relative.
-
-### Fixed
 - Documentation typos.
 - `PreScripts` and `PostScripts` feature bugs.
 
@@ -288,7 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.30] - 2016-08-28
 
-### Added
+### Fixed
 - `Test-Dependency`, `Import-Dependency`, and `Install-Dependency` actions.
 - `Git` dependency type with branch/commit support.
 - `PSGalleryNuget` dependency type.
@@ -297,8 +275,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for `requirements.psd1` filename.
 - AppVeyor CI hookup and initial test suite.
 - `about_PSDepend` help and notes about PSDeploy.
-
-### Fixed
 - Bug in `Git` account/repo regex.
 - Bug in `PSGalleryNuget`.
 - Default Git dependency type discovery.
