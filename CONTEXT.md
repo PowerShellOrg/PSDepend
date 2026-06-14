@@ -60,6 +60,10 @@ _Avoid_: filter, category, label
 > **Dev:** "I need psake to install before PowerShellBuild. How do I express that?"
 > **Domain expert:** "Declare a **Prerequisite** on PowerShellBuild: `DependsOn = 'psake'`. The engine resolves all **Prerequisites** into topological order before dispatching any **DependencyScript**."
 
+**RepositoryRegistry**:
+A `Repositories` hashtable nested inside `PSDependOptions` that maps repository names to their source URLs. Used by DependencyScripts to auto-register a repository when it is not already present on the machine.
+_Avoid_: repository map, source list, feed declarations
+
 ## Flagged ambiguities
 
 - "dependency" collides with **Prerequisite** in natural speech ("psake is a dependency of PowerShellBuild") — resolved: use **Prerequisite** for the ordering relationship, **Dependency** only for a declared entry in a DependencyFile.
