@@ -1,4 +1,4 @@
-﻿Function Import-Dependency {
+﻿function Import-Dependency {
     <#
     .SYNOPSIS
         Import a specific dependency
@@ -32,13 +32,13 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding()]
+    [CmdletBinding()]
     Param(
         [parameter( ValueFromPipeline = $True,
             ParameterSetName = 'Map',
             Mandatory = $True)]
         [PSTypeName('PSDepend.Dependency')]
-        [psobject[]]$Dependency,
+        [PSObject[]]$Dependency,
 
         [validatescript( { Test-Path -Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1),

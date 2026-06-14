@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-types/cspell.schema.json",
     "version": "0.2",
     "ignorePaths": [],
     "dictionaryDefinitions": [],
@@ -6,10 +7,37 @@
         "powershell"
     ],
     "words": [
+        "BHPS",
+        "RSAT",
         "choco",
-        "lessmsi",
-        "psake"
+        "psake",
+        "nuget",
+        "PSDepend"
     ],
-    "ignoreWords": [],
+    "ignoreWords": [
+        "Creds",
+        "ContainsKey",
+        "Padgett",
+        "PSGALLERY",
+        "TARGETDIR",
+        "addtopath",
+        "buildhelpers",
+        "dotnetsdk",
+        "gitbook",
+        "islatest",
+        "packagesource",
+        "proga",
+        "psdependoptions",
+        "psdeploy",
+        "psgallerymodule",
+        "psgallerynuget",
+        "psresourceget",
+        "providername",
+        "ramblingcookiemonster",
+        "semanticversion",
+        "validateset",
+        "validatescript",
+        "whatif"
+    ],
     "import": []
 }

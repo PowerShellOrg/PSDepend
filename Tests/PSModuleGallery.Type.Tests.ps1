@@ -1,4 +1,5 @@
-﻿BeforeDiscovery {
+﻿# cspell:ignore dummysource latestaddtopath latestversion latestversionrequested missingrepo multiplecredentials nightroman sameversion savemodule skippubcheck specificversionrequested withcredentials xcopy
+BeforeDiscovery {
     if ($null -eq $env:BHPSModuleManifest) {
         & "$PSScriptRoot/../Build.ps1" -Task Init
     }
@@ -519,7 +520,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Pop-Location {} -ModuleName PSDepend
                 Mock Set-Location {} -ModuleName PSDepend
                 Mock Test-Path { return $False } -ModuleName PSDepend -ParameterFilter { $Path -match 'buildhelpers' }
-                Mock New-Item { [pscustomobject]@{ FullName = $Path } } -ModuleName PSDepend
+                Mock New-Item { [PSCustomObject]@{ FullName = $Path } } -ModuleName PSDepend
                 $null = Invoke-PSDepend @Verbose -Path "$TestDepends\git.depend.psd1" -Force
             }
 
@@ -901,10 +902,18 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             # NOTE: 'script:' qualifier is required — without it, the function is created
             # in a temporary scope that vanishes when the scriptblock returns.
             & (Get-Module PSDepend) {
-                function script:Get-Package { [cmdletbinding()]param($ProviderName, $Name, $RequiredVersion) }
-                function script:Install-Package { [cmdletbinding()]param($Source, $Name, $RequiredVersion, $Force) }
-                function script:Find-Package { [cmdletbinding()]param($Name, $Source) }
-                function script:Get-PackageSource { [cmdletbinding()]param() }
+                function script:Get-Package {
+                    [CmdletBinding()]param($ProviderName, $Name, $RequiredVersion)
+                }
+                function script:Install-Package {
+                    [CmdletBinding()]param($Source, $Name, $RequiredVersion, $Force)
+                }
+                function script:Find-Package {
+                    [CmdletBinding()]param($Name, $Source)
+                }
+                function script:Get-PackageSource {
+                    [CmdletBinding()]param()
+                }
             }
         }
 
@@ -1151,14 +1160,12 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             $script:IsWindowsEnv = !$PSVersionTable.Platform -or $PSVersionTable.Platform -eq "Win32NT"
             $script:GlobalDotnetSdkLocation = if ($script:IsWindowsEnv) {
                 "$env:LocalAppData\Microsoft\dotnet"
-            }
-            else {
+            } else {
                 "$env:HOME/.dotnet"
             }
             $script:DotnetFile = if ($script:IsWindowsEnv) {
                 "dotnet.exe"
-            }
-            else {
+            } else {
                 "dotnet"
             }
             $script:SavePath = '.dotnet'
@@ -1207,7 +1214,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Get-DotnetVersion { return '2.1.330-rc1' } -ModuleName PSDepend
             }
 
-            It 'Can propertly compare semantic versions' {
+            It 'Can properly compare semantic versions' {
                 # '2.1.330-rc1' >= '2.1.330-preview1'
                 # '2.1.330-rc1' >= '2.1.330-rc1'
                 # '2.1.330-rc1' >= '1.0'

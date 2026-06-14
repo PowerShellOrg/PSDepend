@@ -1,5 +1,5 @@
 ﻿function Validate-DependencyParameters {
-    [cmdletbinding()]
+    [CmdletBinding()]
     [OutputType([bool])]
     param(
         [string[]]$Required,

@@ -16,5 +16,6 @@
         "**/*.code-search": true,
         "**/.ruby-lsp": true,
         "Output/**": true
-    }
+    },
+    "snyk.advanced.autoSelectOrganization": true
 }

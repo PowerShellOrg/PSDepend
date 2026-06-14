@@ -1,4 +1,5 @@
-﻿function Add-ObjectDetail {
+﻿# cspell:ignore ddps noteproperties
+function Add-ObjectDetail {
     <#
     .SYNOPSIS
         Decorate an object with
@@ -35,7 +36,7 @@
     .PARAMETER DefaultProperties
         Change the default properties that show up
 
-    .PARAMETER Passthru
+    .PARAMETER PassThru
         Whether to pass the resulting object on. Defaults to true
 
     .EXAMPLE
@@ -104,7 +105,7 @@
             Position = 0,
             ValueFromPipeline = $true )]
         [ValidateNotNullOrEmpty()]
-        [psobject[]]$InputObject,
+        [PSObject[]]$InputObject,
 
         [Parameter( Mandatory = $false,
             Position = 1)]
@@ -120,17 +121,17 @@
         [Alias('dp')]
         [System.String[]]$DefaultProperties,
 
-        [boolean]$Passthru = $True
+        [boolean]$PassThru = $True
     )
 
-    Begin {
+    begin {
         if ($PSBoundParameters.ContainsKey('DefaultProperties')) {
             # define a subset of properties
             $ddps = New-Object System.Management.Automation.PSPropertySet DefaultDisplayPropertySet, $DefaultProperties
             $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]$ddps
         }
     }
-    Process {
+    process {
         foreach ($Object in $InputObject) {
             switch ($PSBoundParameters.Keys) {
                 'PropertyToAdd' {
@@ -148,7 +149,7 @@
                     Add-Member -InputObject $Object -MemberType MemberSet -Name PSStandardMembers -Value $PSStandardMembers
                 }
             }
-            if ($Passthru) {
+            if ($PassThru) {
                 $Object
             }
         }

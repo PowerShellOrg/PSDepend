@@ -28,7 +28,7 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding()]
+    [CmdletBinding()]
     [OutputType([hashtable])]
     param(
         [validatescript( { Test-Path $_ -PathType Leaf -ErrorAction Stop })]

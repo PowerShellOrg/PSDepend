@@ -44,13 +44,13 @@
         }
 
         # Simple syntax
-        # The .NET SDK will be installed with the latest verion from the LTS channel, globally.
+        # The .NET SDK will be installed with the latest version from the LTS channel, globally.
 
 #>
 [CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]
+    [PSObject[]]
     $Dependency,
 
     [ValidateSet('Test', 'Install', 'Import')]
@@ -60,7 +60,7 @@ param(
 
 # Users can specify 'Global which will use the default global path of
 # "$env:LocalAppData\Microsoft\dotnet" on Windows or "$env:HOME/.dotnet" elsewhere
-# Since Global is the default behavior, we ingore the fact that the Target was set.
+# Since Global is the default behavior, we ignore the fact that the Target was set.
 $InstallDir = if ($Dependency.Target -and $Dependency.Target -ne 'Global') { $Dependency.Target }
 $Version = $Dependency.Version
 $Channel = if ($Dependency.DependencyName) { $Dependency.DependencyName } else { "release" }

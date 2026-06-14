@@ -33,13 +33,13 @@
             }
         }
 
-        # Run some aribtrary PowerShell code that assigns a variable and uses it in a string
+        # Run some arbitrary PowerShell code that assigns a variable and uses it in a string
         # Output: Running a command on WJ-LAB
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param (
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [switch]$FailOnError,
 

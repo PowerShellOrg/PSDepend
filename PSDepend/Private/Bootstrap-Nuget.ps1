@@ -1,6 +1,6 @@
 ﻿# Check for nuget exe. If it doesn't exist, create full path to parent, and download it
 function BootStrap-Nuget {
-    [cmdletbinding()]
+    [CmdletBinding()]
     param(
         $NugetPath = "$env:APPDATA\nuget.exe"
     )

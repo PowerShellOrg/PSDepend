@@ -1,4 +1,5 @@
-﻿# Borrowed and tweaked from BuildHelpers.  TODO: Doc, commit back there
+﻿# cspell:ignore currentfolder subfolders
+# Borrowed and tweaked from BuildHelpers.  TODO: Doc, commit back there
 function Get-ProjectDetail {
     <#
     .SYNOPSIS
@@ -36,12 +37,12 @@ function Get-ProjectDetail {
     .LINK
         about_BuildHelpers
     #>
-    [cmdletbinding()]
+    [CmdletBinding()]
     param(
         $Path = $PWD.Path
     )
 
-    Function Resolve-ProjectDetail {
+    function Resolve-ProjectDetail {
         param(
             $Path = $Path,
             $RelativePath = '\',

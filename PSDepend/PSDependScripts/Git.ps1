@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore jdoe TrimEnd
+<#
     .SYNOPSIS
         Clone a git repository
 
@@ -53,14 +54,14 @@
 
         # Simple syntax
           # First example shows cloning PSDeploy from ramblingcookiemonster's GitHub repo
-          # Second example shows clonging BuildHelpers from jdoe's internal GitLab account and checking out a specific commit
+          # Second example shows cloning BuildHelpers from jdoe's internal GitLab account and checking out a specific commit
           # Both are cloned to the current path (e.g. .\<repo name>)
           # This syntax assumes git as a source. The right hand side is the version (branch, commit, tags/<tag name>, etc.)
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [switch]$Force,
 
@@ -84,16 +85,14 @@ if (-not $Name) {
 if ($Name -match "^[a-zA-Z0-9]+/[a-zA-Z0-9_-]+$") {
     $Name = "https://github.com/$Name.git"
 }
-$GitName = $Name.trimend('/').split('/')[-1] -replace "\.git$", ''
+$GitName = $Name.TrimEnd('/').split('/')[-1] -replace "\.git$", ''
 if ($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction SilentlyContinue).FullName)) {
     Write-Debug "Target resolved to $Target"
-}
-else {
+} else {
     if ($Dependency.Target) {
         $Target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Dependency.Target)
         Write-Debug "Target $($Dependency.Target) does not exist yet, will be created"
-    }
-    else {
+    } else {
         $Target = $PWD.Path
         Write-Debug "Target defaulted to current dir: $Target"
     }
@@ -111,8 +110,8 @@ if (-not (Test-Path $RepoPath)) {
     if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
         return $False
     }
-}
-else { # Target exists
+} else {
+    # Target exists
     $GottaTest = $True
 }
 
@@ -129,8 +128,8 @@ if (-not $Version) {
 if ($GottaTest) {
     Push-Location
     Set-Location $RepoPath
-    $Branch = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse --abbrev-ref HEAD) -Passthru
-    $Commit = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse HEAD) -Passthru
+    $Branch = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse --abbrev-ref HEAD) -PassThru
+    $Commit = Invoke-ExternalCommand git -Arguments (Write-Output rev-parse HEAD) -PassThru
     Pop-Location
     if (-not $Branch) {
         Write-Warning "[$RepoPath] exists but does not appear to be a valid git repository. Skipping [$DependencyName]."
@@ -138,19 +137,16 @@ if ($GottaTest) {
             return $false
         }
         $GottaInstall = $False
-    }
-    elseif ($Version -eq $Branch -or $Version -eq $Commit) {
+    } elseif ($Version -eq $Branch -or $Version -eq $Commit) {
         Write-Verbose "[$RepoPath] exists and is already at version [$Version]"
         if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
             return $true
         }
         $GottaInstall = $False
-    }
-    elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
+    } elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
         Write-Verbose "[$RepoPath] exists and is at branch [$Branch], commit [$Commit].`nWe don't currently support moving to the requested version [$Version]"
         return $false
-    }
-    else {
+    } else {
         Write-Verbose "[$RepoPath] exists and is at branch [$Branch], commit [$Commit].`nWe don't currently support moving to the requested version [$Version]"
         $GottaInstall = $False
     }
@@ -171,8 +167,7 @@ if ($GottaInstall -and !$ExtractProject) {
     Write-Verbose -Message "Checking out [$Version] of [$Name] from [$RepoPath]"
     Invoke-ExternalCommand git 'checkout', $Version
     Pop-Location
-}
-elseif ($GottaInstall -and $ExtractProject) {
+} elseif ($GottaInstall -and $ExtractProject) {
     $OutPath = Join-Path ([System.IO.Path]::GetTempPath()) ([guid]::NewGuid().guid)
     $RepoFolder = Join-Path -Path $OutPath -ChildPath $GitName
 

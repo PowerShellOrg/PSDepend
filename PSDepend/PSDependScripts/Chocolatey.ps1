@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore lessmsi
+<#
     .SYNOPSIS
     Installs a package from a Chocolatey repository.
 
@@ -91,8 +92,7 @@ function Get-ChocoVersion {
     # Strip prerelease/build metadata (e.g. 2.2.2-beta) before parsing
     if ([System.Version]::TryParse(($rawVersion -replace '[-+].*$'), [ref]$parsedVersion)) {
         $parsedVersion
-    }
-    else {
+    } else {
         # Assume a modern CLI when the version cannot be determined
         [System.Version]'2.0'
     }
@@ -243,8 +243,7 @@ if (-not (Get-Command -Name 'choco.exe' -ErrorAction SilentlyContinue)) {
     try {
         Invoke-WebRequest -UseBasicParsing -Uri $ChocoInstallScriptUrl -OutFile $scriptPath
         & $scriptPath
-    }
-    catch {
+    } catch {
         throw "Unable to install Chocolatey from '$ChocoInstallScriptUrl'."
     }
 }
@@ -274,8 +273,7 @@ Write-Verbose "Getting package [$Name] version, if it is installed."
 $existingVersion = (Get-ChocoInstalledPackage -Name $Name).Version
 if ($existingVersion) {
     Write-Verbose "Found package [$Name] installed with version [$existingVersion]."
-}
-else {
+} else {
     Write-Verbose "Package [$Name] not installed."
 }
 
@@ -302,8 +300,7 @@ Write-Verbose "Getting latest package [$Name] version from source [$Source]."
 $repositoryVersion = (Get-ChocoLatestPackage @repoParams).Version
 if ($repositoryVersion) {
     Write-Verbose "Found package [$Name] version [$repositoryVersion] on source [$Source]."
-}
-else {
+} else {
     Write-Verbose "Package [$Name] not found on source [$Source]. Nothing more can be done."
     return  # cannot continue
 }
@@ -318,14 +315,12 @@ $haveLatest = if (
     [System.Management.Automation.SemanticVersion]::TryParse([string]$existingVersion, [ref]$parsedExistingSemanticVersion)
 ) {
     $parsedRepositorySemanticVersion -le $parsedExistingSemanticVersion
-}
-elseif (
+} elseif (
     [System.Version]::TryParse([string]$repositoryVersion, [ref]$parsedRepositoryVersion) -and
     [System.Version]::TryParse([string]$existingVersion, [ref]$parsedExistingVersion)
 ) {
     $parsedRepositoryVersion -le $parsedExistingVersion
-}
-else {
+} else {
     $false
 }
 if ($Version -eq 'latest' -and $haveLatest) {
@@ -353,7 +348,6 @@ if ($PSDependAction -contains 'Install') {
     }
 
     Invoke-ChocoInstallPackage @params
-}
-elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
+} elseif ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $false
 }

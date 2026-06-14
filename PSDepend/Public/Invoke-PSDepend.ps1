@@ -1,4 +1,5 @@
-﻿Function Invoke-PSDepend {
+﻿# cspell:ignore installimport subfolders
+function Invoke-PSDepend {
     <#
     .SYNOPSIS
         Invoke PSDepend
@@ -77,7 +78,7 @@
 
         -Credentials @{
                 PrivatePackage = $privateCredentials
-                AnotherPrivatePackage = $morePrivateCredenials
+                AnotherPrivatePackage = $morePrivateCredentials
         }
 
     .EXAMPLE
@@ -98,7 +99,7 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding( DefaultParameterSetName = 'installimport-file',
+    [CmdletBinding( DefaultParameterSetName = 'installimport-file',
         SupportsShouldProcess = $True,
         ConfirmImpact = 'High' )]
     [OutputType([string], [bool])]

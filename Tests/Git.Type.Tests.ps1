@@ -1,4 +1,5 @@
-﻿#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
+﻿# cspell:ignore materialising nongit TrimEnd
+#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
     if (-not $env:BHProjectPath) {
@@ -84,8 +85,12 @@ Describe 'Git script' {
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
             # rev-parse returns the branch name matching Version
             Mock Invoke-ExternalCommand {
-                if ($Arguments -contains '--abbrev-ref') { return 'main' }
-                if ($Arguments -notcontains 'clone' -and $Arguments -notcontains '--abbrev-ref') { return 'abc1234' }
+                if ($Arguments -contains '--abbrev-ref') {
+                    return 'main' 
+                }
+                if ($Arguments -notcontains 'clone' -and $Arguments -notcontains '--abbrev-ref') {
+                    return 'abc1234' 
+                }
             }
             & $ScriptPath -Dependency $Dep
         }

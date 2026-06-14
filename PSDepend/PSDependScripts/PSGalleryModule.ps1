@@ -91,10 +91,10 @@
         }
         # Install the latest version of PowerCLI, allowing for prerelease
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [AllowNull()]
     [string]$Repository = 'PSGallery', # From Parameters...

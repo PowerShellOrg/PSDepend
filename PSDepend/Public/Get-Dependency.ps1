@@ -1,4 +1,5 @@
-﻿function Get-Dependency {
+﻿# cspell:ignore paramset
+function Get-Dependency {
     <#
     .SYNOPSIS
         Read a dependency psd1 file
@@ -25,7 +26,7 @@
 
         These are parsed from dependency PSD1 files as follows:
 
-        Simple syntax, intepreted:
+        Simple syntax, interpreted:
             @{
                 DependencyName = 'Version'
             }
@@ -128,7 +129,7 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding(DefaultParameterSetName = 'File')]
+    [CmdletBinding(DefaultParameterSetName = 'File')]
     param(
         [parameter(ParameterSetName = 'File')]
         [string[]]$Path = $PWD.Path,
@@ -146,7 +147,7 @@
         [hashtable]$Credentials
     )
 
-    # Helper to pick from global psdependoptions, or return a default
+    # Helper to pick from global PSDependOptions, or return a default
     function Get-GlobalOption {
         param(
             $Options = $PSDependOptions,
@@ -158,12 +159,10 @@
         $Output = $Default
         if ($Prefer) {
             $Output = $Prefer
-        }
-        else {
+        } else {
             try {
                 $Output = $Options[$Name]
-            }
-            catch {
+            } catch {
                 $Output = $Default
             }
         }
@@ -179,7 +178,7 @@
     }
 
     function Inject-Variable {
-        [cmdletbinding()]
+        [CmdletBinding()]
         param( $Value )
         $Output = $Value
         switch ($Value) {
@@ -214,14 +213,14 @@
 
     # Helper to take in a dependency hash and output Dependency objects
     function Parse-Dependency {
-        [cmdletbinding()]
+        [CmdletBinding()]
         param(
             $ParamSet = $PSCmdlet.ParameterSetName
         )
 
         # Global settings....
         $PSDependOptions = $null
-        if ($Dependencies.Containskey('PSDependOptions')) {
+        if ($Dependencies.ContainsKey('PSDependOptions')) {
             $PSDependOptions = $Dependencies.PSDependOptions
             $Dependencies.Remove('PSDependOptions')
         }
@@ -261,7 +260,7 @@
             elseif ( $DependencyHash -is [string] -and
                 $Dependency -notmatch '/' -and
                 (-not $DependencyType -or
-                    $DependencyType -eq 'PSGalleryModule')) {
+                $DependencyType -eq 'PSGalleryModule')) {
                 [PSCustomObject]@{
                     PSTypeName      = 'PSDepend.Dependency'
                     DependencyFile  = $DependencyFile
@@ -287,7 +286,7 @@
                 $Dependency -match '/' -and
                 $Dependency.split('/').count -eq 2 -and
                 (-not $DependencyType -or
-                    $DependencyType -eq 'GitHub')) {
+                $DependencyType -eq 'GitHub')) {
                 [PSCustomObject]@{
                     PSTypeName      = 'PSDepend.Dependency'
                     DependencyFile  = $DependencyFile
@@ -311,7 +310,7 @@
             elseif ($DependencyHash -is [string] -and
                 $Dependency -match '/' -and
                 (-not $DependencyType -or
-                    $DependencyType -eq 'Git')) {
+                $DependencyType -eq 'Git')) {
                 [PSCustomObject]@{
                     PSTypeName      = 'PSDepend.Dependency'
                     DependencyFile  = $DependencyFile
@@ -330,8 +329,7 @@
                     PSDependOptions = $PSDependOptions
                     Raw             = $null
                 }
-            }
-            else {
+            } else {
                 # Parse dependency hash format
                 # Default type is module, unless it's in a git-style format
                 if (-not $DependencyHash.DependencyType) {
@@ -342,10 +340,10 @@
                     elseif (
                         # Ugly right? Watch out for split called on hashtable...
                         ($Dependency -match '/' -and -not $Dependency.Name -and
-                            ($Dependency -is [string] -and $Dependency.split('/').count -eq 2)
+                        ($Dependency -is [string] -and $Dependency.split('/').count -eq 2)
                         ) -or
                         ($DependencyHash.Name -match '/' -and
-                            ($DependencyHash -is [string] -and $DependencyHash.split('/').count -eq 2)
+                        ($DependencyHash -is [string] -and $DependencyHash.split('/').count -eq 2)
                         )
                     ) {
                         $DependencyType = 'GitHub'
@@ -356,13 +354,11 @@
                         $DependencyHash.Name -match '/'
                     ) {
                         $DependencyType = 'Git'
-                    }
-                    else {
+                    } else {
                         # finally, psgallerymodule
                         $DependencyType = 'PSGalleryModule'
                     }
-                }
-                else {
+                } else {
                     $DependencyType = $DependencyHash.DependencyType
                 }
 
@@ -402,8 +398,7 @@
 
             if ($Credentials.ContainsKey($Name)) {
                 $credential = $Credentials[$Name]
-            }
-            else {
+            } else {
                 Write-Warning "No credential found for the specified name $Name. Was the dependency misconfigured?"
             }
         }
@@ -418,8 +413,7 @@
 
             if (Test-Path $DependencyPath -PathType Container) {
                 $DependencyFiles = @( Resolve-DependScripts -Path $DependencyPath -Recurse $Recurse )
-            }
-            else {
+            } else {
                 $DependencyFiles = @( $DependencyPath )
             }
             $DependencyFiles = $DependencyFiles | Select-Object -Unique
@@ -433,8 +427,7 @@
                 Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName
             }
         }
-    }
-    elseif ($PSCmdlet.ParameterSetName -eq 'Hashtable') {
+    } elseif ($PSCmdlet.ParameterSetName -eq 'Hashtable') {
         $DependencyFile = 'Hashtable'
         $ParsedDependencies = foreach ($InputDependency in $InputObject) {
             $Dependencies = $InputDependency.Clone()

@@ -1,5 +1,5 @@
 ﻿# Thanks to https://gallery.technet.microsoft.com/scriptcenter/Sort-With-Custom-List-07b1d93a
-Function Sort-ObjectWithCustomList {
+function Sort-ObjectWithCustomList {
     Param (
         [parameter(ValueFromPipeline = $true)]
         [PSObject]
