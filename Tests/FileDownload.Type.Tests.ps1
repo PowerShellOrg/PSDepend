@@ -73,8 +73,10 @@ Describe 'FileDownload script' -Skip:$SkipUnsupported {
     }
 
     It 'Creates a new directory and downloads into it when Target has no extension and does not exist' {
-        $newDir = Join-Path (New-Item 'TestDrive:/dl5base' -ItemType Directory -Force).FullName 'newcontainer'
-        $dep = New-PSDependFixture -DependencyName 'https://example.com/sample.dll' -DependencyType 'FileDownload' -Target $newDir
+        $base = (New-Item 'TestDrive:/dl5base' -ItemType Directory -Force).FullName
+        $newDir = Join-Path $base 'newcontainer'
+        # Trailing separator signals "this is a container, not an extensionless file"
+        $dep = New-PSDependFixture -DependencyName 'https://example.com/sample.dll' -DependencyType 'FileDownload' -Target "$newDir/"
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath; T = $newDir } {
             & $ScriptPath -Dependency $Dep
         }
@@ -100,7 +102,8 @@ Describe 'FileDownload script' -Skip:$SkipUnsupported {
         $baseDir = (New-Item 'TestDrive:/relbase' -ItemType Directory -Force).FullName
         Push-Location $baseDir
         try {
-            $dep = New-PSDependFixture -DependencyName 'https://example.com/sample.dll' -DependencyType 'FileDownload' -Target 'subdir'
+            # Trailing separator signals "this is a container, not an extensionless file"
+            $dep = New-PSDependFixture -DependencyName 'https://example.com/sample.dll' -DependencyType 'FileDownload' -Target 'subdir/'
             InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep
             }
