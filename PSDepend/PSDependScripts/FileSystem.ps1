@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore psams
+<#
     .SYNOPSIS
         EXPERIMENTAL: Use Robocopy or Copy-Item for folder and file dependencies, respectively.
 
@@ -59,10 +60,10 @@
         # Copy psams module to C:\ProjectX\psams
 
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param (
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]
+    [PSObject[]]
     $Dependency,
 
     [ValidateSet('Test', 'Install', 'Import')]

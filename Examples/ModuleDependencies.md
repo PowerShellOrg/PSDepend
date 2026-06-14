@@ -1,5 +1,7 @@
 # Handling Module Dependencies
 
+<!-- cspell:ignore azcopy msiexec -->
+
 `Install-Module` handles dependencies declared in a module manifest's `RequiredModules` section, but it only covers the PowerShell Gallery. PSDepend lets you declare dependencies from multiple sources — Gallery modules, Git repos, and file downloads — in one place.
 
 This walkthrough demonstrates embedding a `requirements.psd1` in a module so dependencies are resolved automatically on import.
@@ -22,7 +24,7 @@ Invoke-PSDepend -Path $PSScriptRoot\Requirements.psd1 -Target $PSScriptRoot\Depe
 
 Import-Module Posh-SSH
 
-Function Test-PSDependExample {
+functionTest-PSDependExample {
     Get-ChildItem $PSScriptRoot\Dependencies -Recurse -Depth 1 | Select-Object -ExpandProperty FullName
     Get-Module | Select-Object Name, Path
 }

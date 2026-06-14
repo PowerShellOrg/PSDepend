@@ -122,7 +122,7 @@
 [CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [AllowNull()]
     [string]$Repository = 'PSGallery',

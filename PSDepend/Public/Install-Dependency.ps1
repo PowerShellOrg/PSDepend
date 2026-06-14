@@ -1,4 +1,4 @@
-﻿Function Install-Dependency {
+﻿functionInstall-Dependency {
     <#
     .SYNOPSIS
         Install a specific dependency
@@ -35,13 +35,13 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding( SupportsShouldProcess = $True,
+    [CmdletBinding( SupportsShouldProcess = $True,
         ConfirmImpact = 'High' )]
     Param(
         [parameter( ValueFromPipeline = $True,
             Mandatory = $True)]
         [PSTypeName('PSDepend.Dependency')]
-        [psobject[]]$Dependency,
+        [PSObject[]]$Dependency,
 
         [validatescript( { Test-Path -Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1),

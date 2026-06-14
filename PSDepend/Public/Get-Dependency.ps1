@@ -1,4 +1,5 @@
-﻿function Get-Dependency {
+﻿# cspell:ignore paramset
+function Get-Dependency {
     <#
     .SYNOPSIS
         Read a dependency psd1 file
@@ -25,7 +26,7 @@
 
         These are parsed from dependency PSD1 files as follows:
 
-        Simple syntax, intepreted:
+        Simple syntax, interpreted:
             @{
                 DependencyName = 'Version'
             }
@@ -128,7 +129,7 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding(DefaultParameterSetName = 'File')]
+    [CmdletBinding(DefaultParameterSetName = 'File')]
     param(
         [parameter(ParameterSetName = 'File')]
         [string[]]$Path = $PWD.Path,
@@ -179,7 +180,7 @@
     }
 
     function Inject-Variable {
-        [cmdletbinding()]
+        [CmdletBinding()]
         param( $Value )
         $Output = $Value
         switch ($Value) {
@@ -214,14 +215,14 @@
 
     # Helper to take in a dependency hash and output Dependency objects
     function Parse-Dependency {
-        [cmdletbinding()]
+        [CmdletBinding()]
         param(
             $ParamSet = $PSCmdlet.ParameterSetName
         )
 
         # Global settings....
         $PSDependOptions = $null
-        if ($Dependencies.Containskey('PSDependOptions')) {
+        if ($Dependencies.ContainsKey('PSDependOptions')) {
             $PSDependOptions = $Dependencies.PSDependOptions
             $Dependencies.Remove('PSDependOptions')
         }

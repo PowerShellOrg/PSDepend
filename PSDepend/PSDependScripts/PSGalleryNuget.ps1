@@ -53,10 +53,10 @@
         # Install the latest version of PSDeploy on an internal nuget feed, to C:\temp,
 
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [switch]$Force,
 

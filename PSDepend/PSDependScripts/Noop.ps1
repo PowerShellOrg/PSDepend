@@ -15,10 +15,10 @@
     .PARAMETER StringParameter
         An example parameter that does nothing
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param (
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [string[]]$StringParameter
 )

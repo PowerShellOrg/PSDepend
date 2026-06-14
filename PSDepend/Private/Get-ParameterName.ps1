@@ -1,6 +1,7 @@
-﻿Function Get-ParameterName {
+﻿# cspell:ignore parameterset
+functionGet-ParameterName {
     #Get parameter names for a specific command
-    [cmdletbinding()]
+    [CmdletBinding()]
     param(
         [string]$command,
         [string]$parameterset = $null,
@@ -15,7 +16,7 @@
             "PipelineVariable",
             "Confirm",
             "Whatif" ),
-        [string[]]$exclude = $( "Passthru", "Commit" )
+        [string[]]$exclude = $( "PassThru", "Commit" )
     )
     if ($parameterset) {
         ((Get-Command -Name $command).ParameterSets | Where-Object { $_.name -eq $parameterset } ).Parameters.Name | Where-Object { ($exclude + $excludeDefault) -notcontains $_ }

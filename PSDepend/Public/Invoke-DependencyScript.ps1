@@ -35,13 +35,13 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding()]
+    [CmdletBinding()]
     param(
         [parameter( ValueFromPipeline = $True,
             ParameterSetName = 'Map',
             Mandatory = $True)]
         [PSTypeName('PSDepend.Dependency')]
-        [psobject]$Dependency,
+        [PSObject]$Dependency,
 
         [validatescript( { Test-Path -Path $_ -PathType Leaf -ErrorAction Stop })]
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1),
@@ -64,7 +64,7 @@
         $DependencyDefs = Get-PSDependScript
         $TheseDependencyTypes = @( $Dependency.DependencyType | Sort-Object -Unique )
 
-        #Build up hash, we call each dependencytype script for applicable dependencies
+        #Build up hash, we call each DependencyType script for applicable dependencies
         foreach ($DependencyType in $TheseDependencyTypes) {
             $PSDependType = ($PSDependTypes | Where-Object { $_.DependencyType -eq $DependencyType })
             if (-not $PSDependType.Supported) {
@@ -94,8 +94,7 @@
             [string[]]$PSDependActions = foreach ($Action in $PSDependAction) {
                 if ($ValidPSDependActions -contains $Action) {
                     $Action
-                }
-                else {
+                } else {
                     Write-Warning "Skipping PSDependAction [$Action] for dependency [$($Dependency.DependencyName)]. Valid actions: [$ValidPSDependActions]"
                 }
             }
@@ -117,8 +116,7 @@
                     foreach ($key in $ThisDependency.Parameters.keys) {
                         if ($ValidParamNames -contains $key) {
                             $splat.Add($key, $ThisDependency.Parameters.$key)
-                        }
-                        else {
+                        } else {
                             Write-Warning "Parameter [$Key] with value [$($ThisDependency.Parameters.$Key)] is not a valid parameter for [$DependencyType], ignoring.  Valid params:`n[$ValidParamNames]"
                         }
                     }
@@ -130,12 +128,10 @@
 
                     if ($splat.ContainsKey('PSDependAction')) {
                         $Splat['PSDependAction'] = $PSDependActions
-                    }
-                    else {
+                    } else {
                         $Splat.add('PSDependAction', $PSDependActions)
                     }
-                }
-                else {
+                } else {
                     $splat = @{PSDependAction = $PSDependActions }
                 }
 
@@ -147,19 +143,16 @@
                     foreach ($TaskScript in $ThisDependency.Target) {
                         if ( Test-Path $TaskScript -PathType Leaf) {
                             . $TaskScript @splat
-                        }
-                        else {
+                        } else {
                             Write-Error "Could not process task [$TaskScript].`nAre connectivity, privileges, and other needs met to access it?"
                         }
                     }
-                }
-                else {
+                } else {
                     Write-Verbose "Invoking '$DependencyScript' with parameters $($Splat | Out-String)"
                     $Output = . $DependencyScript @splat
                     if ($PSDependActions -contains 'Test' -and -not $Quiet) {
                         Add-Member -InputObject $ThisDependency -MemberType NoteProperty -Name DependencyExists -Value $Output -Force -PassThru
-                    }
-                    else {
+                    } else {
                         $Output
                     }
                 }

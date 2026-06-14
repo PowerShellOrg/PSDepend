@@ -1,4 +1,4 @@
-﻿Function Get-TaggedDependency {
+﻿functionGet-TaggedDependency {
     param(
         [object[]]$Dependency,
         [string[]]$Tags
