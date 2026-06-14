@@ -77,6 +77,11 @@ Write-Verbose "Using URL: $URL"
 # Act on target path....
 $ToInstall = $False # Anti pattern
 
+# Capture trailing-separator intent before GetUnresolvedProviderPathFromPSPath normalizes it away;
+# a trailing separator is an explicit signal that the target is a container, not a file.
+$endsWithSeparator = $Target -and
+    $Target[-1] -in @([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+
 # Resolve PSDrive paths (e.g. TestDrive:) and relative paths to absolute filesystem paths
 $Target = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Target)
 
@@ -92,8 +97,15 @@ if (Test-Path $Target -PathType Leaf) {
     }
     $PathToAdd = Split-Path $Target -Parent
 }
-elseif ([IO.Path]::GetExtension($Target) -and -not (Test-Path $Target -PathType Container)) {
-    # Target has a file extension — treat as a full destination file path
+elseif (
+    -not $endsWithSeparator -and
+    -not (Test-Path $Target -PathType Container) -and
+    ([IO.Path]::GetExtension($Target) -or (Test-Path $TargetParent))
+) {
+    # Treat as a full destination file path.
+    # Triggered when: has a file extension, OR parent already exists and caller gave no trailing separator.
+    # The trailing-separator check preserves extensionless binary targets (e.g. /usr/local/bin/terraform)
+    # while still allowing directory-like targets to be signalled with a trailing slash.
     $PathToAdd = $TargetParent
     if (-not (Test-Path $TargetParent)) {
         Write-Error "Could not find parent path [$TargetParent] for target [$Target]"
@@ -104,10 +116,10 @@ elseif ([IO.Path]::GetExtension($Target) -and -not (Test-Path $Target -PathType 
     }
     $Path = $Target
     $ToInstall = $True
-    Write-Verbose "Target has extension, treating as file path [$Target]"
+    Write-Verbose "Treating as destination file path [$Target]"
 }
 else {
-    # No extension (or already a container) — treat target as a directory
+    # No extension (or already a container, or explicit trailing separator) — treat target as a directory
     Write-Verbose "[$Target] is a container, creating path to file"
     if (-not (Test-Path $Target) -and $PSDependAction -contains 'Install') {
         New-Item -ItemType Directory -Path $Target -Force | Out-Null
