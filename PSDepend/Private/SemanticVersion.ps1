@@ -85,7 +85,7 @@ namespace System.Management.Automation
         public SemanticVersion(int major, int minor, int patch, string label)
             : this(major, minor, patch)
         {
-            // We presume the SemVer :
+            // We presume the SemVer:
             // 1) major.minor.patch-label
             // 2) 'label' starts with letter or digit.
             if (!string.IsNullOrEmpty(label))
