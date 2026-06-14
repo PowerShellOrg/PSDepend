@@ -134,6 +134,9 @@ if ($GottaTest) {
     Pop-Location
     if (-not $Branch) {
         Write-Warning "[$RepoPath] exists but does not appear to be a valid git repository. Skipping [$DependencyName]."
+        if ($PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
+            return $false
+        }
         $GottaInstall = $False
     }
     elseif ($Version -eq $Branch -or $Version -eq $Commit) {

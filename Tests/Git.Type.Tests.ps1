@@ -92,6 +92,9 @@ Describe 'Git script' {
         Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -ParameterFilter {
             $Arguments -contains 'clone'
         }
+        Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -ParameterFilter {
+            $Arguments -contains 'checkout'
+        }
     }
 
     It 'Emits a warning and skips install when the repo path exists but is not a git repository' {
@@ -103,7 +106,11 @@ Describe 'Git script' {
         InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
             # rev-parse returns nothing (non-git directory)
             Mock Invoke-ExternalCommand { }
-            { & $ScriptPath -Dependency $Dep } | Should -Not -Throw
+            Mock Write-Warning { }
+            & $ScriptPath -Dependency $Dep
+        }
+        Should -Invoke -CommandName Write-Warning -ModuleName PSDepend -Times 1 -ParameterFilter {
+            $Message -like '*does not appear to be a valid git repository*'
         }
         Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -ParameterFilter {
             $Arguments -contains 'clone'
