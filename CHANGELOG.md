@@ -28,13 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the clone target that is not a valid git repository; it now emits a
   `Write-Warning` so the user knows why the install was skipped (#86).
 
-### Tests
-
-- Added idempotency test: a second install run against an already-cloned
-  repo does not trigger a second `git clone` (#86).
-- Added non-git-directory test: confirms a warning is emitted and no
-  clone is attempted when the target path exists but is not a git repo (#86).
-
 ## [0.4.1] - 2026-06-12
 
 ### Fixed
