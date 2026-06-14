@@ -1,5 +1,5 @@
-﻿Function Install-NodeModule {
-    [cmdletbinding()]
+﻿function Install-NodeModule {
+    [CmdletBinding()]
     Param(
         [string]$Version,
         [switch]$Global,

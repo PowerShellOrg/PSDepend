@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore extensionless sqllite
+<#
     .SYNOPSIS
         Download a file
 
@@ -35,10 +36,10 @@
 
         # Downloads System.Data.SQLite.dll to C:\temp\sqlite.dll
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]
+    [PSObject[]]
     $Dependency,
 
     [ValidateSet('Test', 'Install')]
@@ -46,7 +47,7 @@ param(
 )
 
 function Parse-URLForFile {
-    [cmdletbinding()]
+    [CmdletBinding()]
     param($URL)
     # This will need work.  Assume leaf is file.  If CGI exists in leaf, assume it is after the file
     $FileName = $URL.split('/')[-1]

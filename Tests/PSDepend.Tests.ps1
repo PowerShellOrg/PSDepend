@@ -1,4 +1,5 @@
-﻿BeforeDiscovery {
+﻿# cspell:ignore allprops multiplepsgallerymodule nonexistenttag
+BeforeDiscovery {
     if ($null -eq $env:BHPSModuleManifest) {
         & "$PSScriptRoot/../Build.ps1" -Task Init
     }
@@ -78,6 +79,7 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
         }
 
         It 'Should handle DependsOn' {
+            # cspell:disable-next-line
             $Dependencies = Get-Dependency -Path $TestDepends\dependson.depend.psd1
             @( $Dependencies ).count | Should -Be 3
             $Dependencies[0].DependencyName | Should -Be 'One'
@@ -137,7 +139,7 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
             $deps2 = Get-Dependency -InputObject $inputObj
             $inputObj.ContainsKey('PSDependOptions') | Should -Be $True
             $inputObj.PSDependOptions.Target | Should -Be 'CurrentUser'
-            ($deps2 | Where-Object DependencyName -eq 'Pester').Target | Should -Be 'CurrentUser'
+            ($deps2 | Where-Object DependencyName -EQ 'Pester').Target | Should -Be 'CurrentUser'
         }
 
         It 'Parses -InputObject hashtable as PSGalleryModule by default' {

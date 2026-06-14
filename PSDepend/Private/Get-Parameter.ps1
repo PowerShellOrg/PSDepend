@@ -1,5 +1,6 @@
-﻿# Borrowed from http://poshcode.org/5929 with a minor tweak for validateset - thanks all!
-Function Get-Parameter {
+﻿# cspell:ignore paramset parameterset pstypenames
+# Borrowed from http://poshcode.org/5929 with a minor tweak for ValidateSet - thanks all!
+function Get-Parameter {
     #.Synopsis
     #  Enumerates the parameters of one or more commands
     #.Description
@@ -17,7 +18,7 @@ Function Get-Parameter {
         [Alias("Name")]
         [string[]]$CommandName,
 
-        # The parameter name to filter by (allows Wilcards)
+        # The parameter name to filter by (allows Wildcards)
         [Parameter(Position = 2, ValueFromPipelineByPropertyName = $true, ParameterSetName = "FilterNames")]
         [string[]]$ParameterName = "*",
 

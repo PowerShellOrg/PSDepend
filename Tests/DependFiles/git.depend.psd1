@@ -1,4 +1,5 @@
-﻿@{
+﻿# cspell:ignore nightroman
+@{
     'buildhelpers' = @{
         Name = 'https://github.com/RamblingCookieMonster/BuildHelpers.git'
         Version = 'd32a9495c39046c851ceccfb7b1a85b17d5be051'

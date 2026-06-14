@@ -15,7 +15,7 @@ function Find-NugetPackage {
         [string]$Version,
 
         # If specified, gets passed during the Nuget source call
-        [pscredential]$Credential = $null
+        [PSCredential]$Credential = $null
     )
 
     #Ugly way to do this.  Prefer islatest, otherwise look for version, otherwise grab all matching modules

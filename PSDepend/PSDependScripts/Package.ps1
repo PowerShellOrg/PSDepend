@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore jquery
+<#
     .SYNOPSIS
         EXPERIMENTAL: Installs a package using the PackageManagement module
 
@@ -50,10 +51,10 @@
         # Install jquery from my internal nuget feed to C:\MyProject
 
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [ValidateSet('Test', 'Install')]
     [string[]]$PSDependAction = @('Install'),

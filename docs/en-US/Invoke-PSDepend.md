@@ -5,6 +5,8 @@ online version: https://github.com/PowerShellOrg/PSDepend
 schema: 2.0.0
 ---
 
+<!-- cspell:ignore installimport -->
+
 # Invoke-PSDepend
 
 ## SYNOPSIS

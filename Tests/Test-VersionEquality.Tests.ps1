@@ -1,4 +1,5 @@
-﻿#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
+﻿# cspell:ignore normalisation normalises
+#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
     if (-not $env:BHProjectPath) {

@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore branchname bundyfx Dargmuesli Finke nullcheck psslack Thelemann versionslocal versionsremote zipball
+<#
     .SYNOPSIS
         Installs a module from a GitHub repository.
 
@@ -153,10 +154,10 @@
         # This downloads the latest version of demo_ci by powershell from GitHub.
         # Then it extracts "repo-root/Assets/DscPipelineTools" and "repo-root/InfraDNS/Configs/DNSServer.ps1" to the target.
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [ValidateSet('Test', 'Install', 'Import')]
     [string[]]$PSDependAction = @('Install'),
@@ -180,7 +181,11 @@ Write-Verbose -Message "Am I on Windows? [$script:IsWindows]! Am I PS Core? [$sc
 $DependencyID = $Dependency.DependencyName
 $DependencyVersion = $Dependency.Version
 $DependencyTarget = $Dependency.Target
-$DependencyName = if ($Dependency.Name) { $Dependency.Name } Else { $DependencyID.Split("/")[1] }
+$DependencyName = if ($Dependency.Name) {
+    $Dependency.Name 
+} else {
+    $DependencyID.Split("/")[1] 
+}
 
 # Translate "" to "latest"
 if ($DependencyVersion -eq "") {
@@ -194,24 +199,21 @@ if ($DependencyVersion -match "^\d+(?:\.\d+)+$") {
 
 if ($script:IsCoreCLR) {
     $ModuleChildPath = "PowerShell\Modules"
-}
-else {
+} else {
     $ModuleChildPath = "WindowsPowerShell\Modules"
 }
 
 # Get system installation path
 if ($script:IsWindows) {
     $AllUsersPath = Join-Path -Path $env:ProgramFiles -ChildPath $ModuleChildPath
-}
-else {
+} else {
     $AllUsersPath = [System.Management.Automation.Platform]::SelectProductNameForDirectory('SHARED_MODULES')
 }
 
 # Check if the MyDocuments folder path is accessible
 try {
     $MyDocumentsFolderPath = [Environment]::GetFolderPath("MyDocuments")
-}
-catch {
+} catch {
     $MyDocumentsFolderPath = $null
 }
 
@@ -219,34 +221,28 @@ catch {
 if ($script:IsWindows) {
     if ($MyDocumentsFolderPath) {
         $CurrentUserPath = Join-Path -Path $MyDocumentsFolderPath -ChildPath $ModuleChildPath
-    }
-    else {
+    } else {
         $CurrentUserPath = Join-Path -Path $HOME -ChildPath "Documents\$ModuleChildPath"
     }
-}
-else {
+} else {
     $CurrentUserPath = [System.Management.Automation.Platform]::SelectProductNameForDirectory('USER_MODULES')
 }
 
 # Set target path
 if ($DependencyTarget) {
     # Resolve scope keywords
-    if ($DependencyTarget -Eq "CurrentUser") {
+    if ($DependencyTarget -eq "CurrentUser") {
         $TargetPath = $CurrentUserPath
-    }
-    elseif ($DependencyTarget -Eq "AllUsers") {
+    } elseif ($DependencyTarget -eq "AllUsers") {
         $TargetPath = $AllUsersPath
-    }
-    else {
+    } else {
         $TargetPath = $DependencyTarget
     }
-}
-else {
+} else {
     # Set default target depending on admin permissions
-    if (($script:IsWindows) -And (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))) {
+    if (($script:IsWindows) -and (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))) {
         $TargetPath = $AllUsersPath
-    }
-    else {
+    } else {
         $TargetPath = $CurrentUserPath
     }
 }
@@ -268,8 +264,7 @@ $URL = $null
 
 if ($Module) {
     $ModuleExisting = $true
-}
-else {
+} else {
     $ModuleExisting = $false
 }
 
@@ -294,13 +289,11 @@ if ($ModuleExisting) {
                 }
             }
         }
-    }
-    else {
+    } else {
         # The version that is to be used is probably a GitHub branch name
         $ShouldInstall = $true
     }
-}
-else {
+} else {
     Write-Verbose "Did not find existing module [$DependencyName]"
     $ShouldInstall = $true
 }
@@ -323,7 +316,7 @@ if ($ShouldInstall) {
                     if ($GitHubTag.name -match "^v?\d+(?:\.\d+)+$" -and ($DependencyVersion -match "^\d+(?:\.\d+)+$" -or $DependencyVersion -eq "latest")) {
                         $GitHubVersion = New-Object "System.Version" ($GitHubTag.name -replace '^v', '')
 
-                        if ($DependencyVersion -Eq "latest") {
+                        if ($DependencyVersion -eq "latest") {
                             $DependencyVersion = $GitHubVersion
                         }
 
@@ -344,13 +337,11 @@ if ($ShouldInstall) {
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 break nullcheck
             }
         }
-    }
-    catch {
+    } catch {
         # Repository does not seem to exist or a branch is the target
         $ShouldInstall = $false
         Write-Warning "Could not find module on GitHub: $_"
@@ -377,8 +368,7 @@ if ($ShouldInstall) {
                 }
             }
         }
-    }
-    else {
+    } else {
         Write-Verbose "[$DependencyID] has no tags on GitHub or [$DependencyVersion] is a branchname"
         # Translate version "latest" to "main"
         if ($DependencyVersion -eq "latest") {
@@ -426,18 +416,15 @@ if (($PSDependAction -contains 'Install') -and $ShouldInstall) {
             $AbsolutePath = Join-Path $OutPath $RelativePath
             if (-not (Test-Path $AbsolutePath)) {
                 Write-Warning "Expected ExtractPath [$RelativePath], did not find at [$AbsolutePath]"
-            }
-            else {
+            } else {
                 $AbsolutePath
             }
         }
-    }
-    elseif ($ExtractProject) {
+    } elseif ($ExtractProject) {
         # Filter only the project contents
         $ProjectDetails = Get-ProjectDetail -Path $OutPath
         [string[]]$ToCopy = $ProjectDetails.Path
-    }
-    else {
+    } else {
         # Use the standard download path
         [string[]]$ToCopy = $OutPath
     }
@@ -453,21 +440,17 @@ if (($PSDependAction -contains 'Install') -and $ShouldInstall) {
 
     if ($TargetType -eq 'Exact') {
         $Destination = $TargetPath
-    }
-    elseif ($DependencyVersion -match "^\d+(?:\.\d+)+$" -and $PSVersionTable.PSVersion -ge '5.0'  ) {
+    } elseif ($DependencyVersion -match "^\d+(?:\.\d+)+$" -and $PSVersionTable.PSVersion -ge '5.0'  ) {
         # For versioned GitHub tags
         $Destination = Join-Path $TargetPath $DependencyVersion
-    }
-    elseif (($DependencyVersion -eq "latest") -and ($RemoteAvailable) -and $PSVersionTable.PSVersion -ge '5.0' ) {
+    } elseif (($DependencyVersion -eq "latest") -and ($RemoteAvailable) -and $PSVersionTable.PSVersion -ge '5.0' ) {
         # For latest GitHub tags
         $Destination = Join-Path $TargetPath $GitHubVersion
-    }
-    elseif ($PSVersionTable.PSVersion -ge '5.0' -and $TargetType -eq 'Parallel') {
+    } elseif ($PSVersionTable.PSVersion -ge '5.0' -and $TargetType -eq 'Parallel') {
         # For GitHub branches
         $Destination = Join-Path $TargetPath $DependencyVersion
         $Destination = Join-Path $Destination $DependencyName
-    }
-    else {
+    } else {
         $Destination = $TargetPath
     }
 
@@ -489,8 +472,7 @@ if (($PSDependAction -contains 'Install') -and $ShouldInstall) {
 # Conditional import
 if ($ModuleExisting) {
     Import-PSDependModule -Name $TargetPath -Action $PSDependAction
-}
-elseif ($PSDependAction -contains 'Import') {
+} elseif ($PSDependAction -contains 'Import') {
     Write-Warning "[$DependencyName] at [$TargetPath] should be imported, but does not exist"
 }
 

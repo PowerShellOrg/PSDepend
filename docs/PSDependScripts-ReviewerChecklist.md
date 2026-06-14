@@ -8,7 +8,7 @@ Each script implements a single `DependencyType` (e.g. `PSGalleryModule`, `Git`,
 
 ### 1. Standard parameter contract
 
-- First parameter is `[PSTypeName('PSDepend.Dependency')][psobject[]]$Dependency`.
+- First parameter is `[PSTypeName('PSDepend.Dependency')][PSObject[]]$Dependency`.
 - `$PSDependAction` is `[ValidateSet(...)][string[]]` with **only** the actions
   the script actually implements (`Test`, `Install`, `Import`) and defaults to
   `@('Install')`.
@@ -119,7 +119,7 @@ Use this as a PR review checklist when adding or modifying a script under
 
 ### Contract
 
-- [ ] First param is `[PSTypeName('PSDepend.Dependency')][psobject[]]$Dependency`.
+- [ ] First param is `[PSTypeName('PSDepend.Dependency')][PSObject[]]$Dependency`.
 - [ ] `PSDependAction` is `[ValidateSet(...)]` and lists only implemented actions.
 - [ ] Type-specific params are top-level (not buried in
       `$Dependency.Parameters` lookups inside the body).

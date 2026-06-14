@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore ADCS ADRMS DFSN DFSR DISM FSRM GPMC Mgmt RSAT VAMT
+<#
     .SYNOPSIS
         'Install a WindowsRSAT PowerShell module using Add-WindowsCapability or Install-WindowsFeature, depending on OS'
 
@@ -28,10 +29,10 @@
             }
         }
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [ValidateSet('Test', 'Install', 'Import')]
     [string[]]$PSDependAction = @('Install')

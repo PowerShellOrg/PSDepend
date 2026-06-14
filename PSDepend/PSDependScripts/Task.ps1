@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore prestage
+<#
     .SYNOPSIS
         Support dependencies by handling simple tasks.
 
@@ -45,10 +46,10 @@
         # Run Example.ps1 from the current directory
         # Alternatively, you can use $DependencyPath to refer to the folder containing this dependency file
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param (
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [ValidateSet('Install')]
     [string[]]$PSDependAction = @('Install') # No logic for this

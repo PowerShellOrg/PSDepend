@@ -1,4 +1,5 @@
-﻿#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
+﻿# cspell:ignore extensionless newcontainer relbase
+#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeDiscovery {
     Import-Module (Join-Path $PSScriptRoot 'Shared/TestHelpers.psm1') -Force

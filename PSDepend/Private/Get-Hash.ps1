@@ -1,10 +1,11 @@
-﻿function Get-Hash {
+﻿# cspell:ignore procexp procmon pstypenames RIPEMD tcpview
+function Get-Hash {
     <#
         .SYNOPSIS
-            Calculates the hash on a given file based on the seleced hash algorithm.
+            Calculates the hash on a given file based on the selected hash algorithm.
 
         .DESCRIPTION
-            Calculates the hash on a given file based on the seleced hash algorithm. Multiple hashing
+            Calculates the hash on a given file based on the selected hash algorithm. Multiple hashing
             algorithms can be used with this command.
 
         .PARAMETER Path
@@ -21,7 +22,7 @@
             SHA256 (Default)
             SHA384
             SHA512
-            RIPEM160
+            RIPEMD160
 
         .NOTES
             Name: Get-FileHash

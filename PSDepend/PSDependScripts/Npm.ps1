@@ -51,13 +51,13 @@
 
         # Simple syntax
             # The example package, 'gitbook-cli' will be installed
-            at the latest verion from NPM to the current directory.
+            at the latest version from NPM to the current directory.
 
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param (
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [ValidateSet('Test', 'Install')]
     [string[]]$PSDependAction = @('Install'),

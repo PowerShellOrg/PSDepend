@@ -29,19 +29,19 @@ DETAILED DESCRIPTION
 
     Prerequisites
     ============
-    
+
     Each dependency type may have certain prerequisites:
 
       * PSGalleryModule: Requires the PowerShellGet module (WMF 5 or a separate install)
       * PSGalleryNuget:  This requires nuget.exe in your path*.  We handle this for you:
-                         When you import PSDepend, we... 
-                            Look for nuget.exe in your path. 
+                         When you import PSDepend, we...
+                            Look for nuget.exe in your path.
                             If we don't find it... Look in the path specified in PSDepend\PSDepend.Config's NugetPath. Default is PSDepend\nuget.exe
                                 If we don't find it there, we download to that path
                                 If we do find it there, we add the parent container to $ENV:Path
       * Git: Requires git in your path, or in the file path specified in PSDepend\PSDepend.Config's GitPath
       * Npm: Requires npm in your path
-                            
+
     Example use (*.PSDepend.ps1)
     ============================
 
@@ -58,7 +58,7 @@ DETAILED DESCRIPTION
                 buildhelpers = @{
                     Target = 'CurrentUser'
                 }
-                pester = 'latest' 
+                pester = 'latest'
                 psake = '4.6.0'
             }
 
@@ -100,7 +100,7 @@ DETAILED DESCRIPTION
 
         -Repository <String>
             PSRepository to download from.  Defaults to PSGallery
-        
+
             Required?                    false
             Position?                    2
             Default value                PSGallery
@@ -136,15 +136,15 @@ DETAILED DESCRIPTION
             Here's how I implement this:
                 param(
                     [PSTypeName('PSDepend.Dependency')]
-                    [psobject[]]$Dependency
+                    [PSObject[]]$Dependency
                     ...
 
         Include a 'PSDependAction' parameter.
-        
+
             Use ValidateSet to specify whether your type supports Test, Install, Import, or other actions.
 
         Include details on how you use Dependency properties in the comment-based help DESCRIPTION field.
-        
+
             See \\Path\To\PSDepend\PSDependScripts\PSGalleryModule.ps1 DESCRIPTION field for an example
 
         Include parameters and comment based help for any parameters you read from the Dependency Parameter property.

@@ -1,4 +1,5 @@
-﻿<#
+﻿# cspell:ignore Newtonsoft
+<#
     .SYNOPSIS
         Installs a package from a Nuget repository like Nuget.org using nuget.exe
 
@@ -65,10 +66,10 @@
         # Installs the list of Nuget packages from Nuget.org using the Global PSDependOptions to limit repetition. Packages will be downloaded to the Staging directory in the current working directory. Since the DLL included with Portable.BouncyCastle is actually named 'BouncyCastle.Crypto', we specify that in the parameters.
 
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 param(
     [PSTypeName('PSDepend.Dependency')]
-    [psobject[]]$Dependency,
+    [PSObject[]]$Dependency,
 
     [switch]$Force,
 

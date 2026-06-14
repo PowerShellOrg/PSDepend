@@ -1,4 +1,4 @@
-﻿Function Get-PSDependType {
+﻿function Get-PSDependType {
     <#
     .SYNOPSIS
         Get dependency types and related information
@@ -25,7 +25,7 @@
         Show help content for specified dependency types
 
     .PARAMETER SkipHelp
-        Skip retreieving help. Mainly for internl use when it is not required
+        Skip retrieving help. Mainly for internal use when it is not required
 
     .EXAMPLE
         Get-PSDependType -DependencyType PSGalleryModule -ShowHelp
@@ -45,7 +45,7 @@
     .LINK
         https://github.com/PowerShellOrg/PSDepend
     #>
-    [cmdletbinding()]
+    [CmdletBinding()]
     param(
         [string]$DependencyType = '*',
         [validatescript( { Test-Path $_ -PathType Leaf -ErrorAction Stop })]
