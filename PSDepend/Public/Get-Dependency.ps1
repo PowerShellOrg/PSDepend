@@ -147,7 +147,7 @@ function Get-Dependency {
         [hashtable]$Credentials
     )
 
-    # Helper to pick from global psdependoptions, or return a default
+    # Helper to pick from global PSDependOptions, or return a default
     function Get-GlobalOption {
         param(
             $Options = $PSDependOptions,
@@ -159,12 +159,10 @@ function Get-Dependency {
         $Output = $Default
         if ($Prefer) {
             $Output = $Prefer
-        }
-        else {
+        } else {
             try {
                 $Output = $Options[$Name]
-            }
-            catch {
+            } catch {
                 $Output = $Default
             }
         }
@@ -262,7 +260,7 @@ function Get-Dependency {
             elseif ( $DependencyHash -is [string] -and
                 $Dependency -notmatch '/' -and
                 (-not $DependencyType -or
-                    $DependencyType -eq 'PSGalleryModule')) {
+                $DependencyType -eq 'PSGalleryModule')) {
                 [PSCustomObject]@{
                     PSTypeName      = 'PSDepend.Dependency'
                     DependencyFile  = $DependencyFile
@@ -288,7 +286,7 @@ function Get-Dependency {
                 $Dependency -match '/' -and
                 $Dependency.split('/').count -eq 2 -and
                 (-not $DependencyType -or
-                    $DependencyType -eq 'GitHub')) {
+                $DependencyType -eq 'GitHub')) {
                 [PSCustomObject]@{
                     PSTypeName      = 'PSDepend.Dependency'
                     DependencyFile  = $DependencyFile
@@ -312,7 +310,7 @@ function Get-Dependency {
             elseif ($DependencyHash -is [string] -and
                 $Dependency -match '/' -and
                 (-not $DependencyType -or
-                    $DependencyType -eq 'Git')) {
+                $DependencyType -eq 'Git')) {
                 [PSCustomObject]@{
                     PSTypeName      = 'PSDepend.Dependency'
                     DependencyFile  = $DependencyFile
@@ -331,8 +329,7 @@ function Get-Dependency {
                     PSDependOptions = $PSDependOptions
                     Raw             = $null
                 }
-            }
-            else {
+            } else {
                 # Parse dependency hash format
                 # Default type is module, unless it's in a git-style format
                 if (-not $DependencyHash.DependencyType) {
@@ -343,10 +340,10 @@ function Get-Dependency {
                     elseif (
                         # Ugly right? Watch out for split called on hashtable...
                         ($Dependency -match '/' -and -not $Dependency.Name -and
-                            ($Dependency -is [string] -and $Dependency.split('/').count -eq 2)
+                        ($Dependency -is [string] -and $Dependency.split('/').count -eq 2)
                         ) -or
                         ($DependencyHash.Name -match '/' -and
-                            ($DependencyHash -is [string] -and $DependencyHash.split('/').count -eq 2)
+                        ($DependencyHash -is [string] -and $DependencyHash.split('/').count -eq 2)
                         )
                     ) {
                         $DependencyType = 'GitHub'
@@ -357,13 +354,11 @@ function Get-Dependency {
                         $DependencyHash.Name -match '/'
                     ) {
                         $DependencyType = 'Git'
-                    }
-                    else {
+                    } else {
                         # finally, psgallerymodule
                         $DependencyType = 'PSGalleryModule'
                     }
-                }
-                else {
+                } else {
                     $DependencyType = $DependencyHash.DependencyType
                 }
 
@@ -403,8 +398,7 @@ function Get-Dependency {
 
             if ($Credentials.ContainsKey($Name)) {
                 $credential = $Credentials[$Name]
-            }
-            else {
+            } else {
                 Write-Warning "No credential found for the specified name $Name. Was the dependency misconfigured?"
             }
         }
@@ -419,8 +413,7 @@ function Get-Dependency {
 
             if (Test-Path $DependencyPath -PathType Container) {
                 $DependencyFiles = @( Resolve-DependScripts -Path $DependencyPath -Recurse $Recurse )
-            }
-            else {
+            } else {
                 $DependencyFiles = @( $DependencyPath )
             }
             $DependencyFiles = $DependencyFiles | Select-Object -Unique
@@ -434,8 +427,7 @@ function Get-Dependency {
                 Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName
             }
         }
-    }
-    elseif ($PSCmdlet.ParameterSetName -eq 'Hashtable') {
+    } elseif ($PSCmdlet.ParameterSetName -eq 'Hashtable') {
         $DependencyFile = 'Hashtable'
         $ParsedDependencies = foreach ($InputDependency in $InputObject) {
             $Dependencies = $InputDependency.Clone()

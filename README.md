@@ -1,7 +1,5 @@
 [![CI](https://github.com/PowerShellOrg/PSDepend/actions/workflows/ci.yml/badge.svg)](https://github.com/PowerShellOrg/PSDepend/actions/workflows/ci.yml)
 
-<!-- cspell:ignore psdepen -->
-
 # PSDepend
 
 PSDepend is a PowerShell dependency handler. Define your dependencies in a simple `.psd1` file and let `Invoke-PSDepend` install them — similar to `pip install -r requirements.txt` or `bundle install`.

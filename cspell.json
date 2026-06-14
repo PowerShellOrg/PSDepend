@@ -8,27 +8,29 @@
     ],
     "words": [
         "BHPS",
-        "Creds",
-        "Flaticon",
         "RSAT",
+        "choco",
+        "psake",
+        "nuget",
+        "PSDepend"
+    ],
+    "ignoreWords": [
+        "Creds",
         "ContainsKey",
         "Padgett",
         "PSGALLERY",
         "TARGETDIR",
         "addtopath",
         "buildhelpers",
-        "choco",
         "dotnetsdk",
         "gitbook",
         "islatest",
-        "nuget",
         "packagesource",
         "proga",
         "psdependoptions",
         "psdeploy",
         "psgallerymodule",
         "psgallerynuget",
-        "psake",
         "psresourceget",
         "providername",
         "ramblingcookiemonster",
@@ -37,6 +39,5 @@
         "validatescript",
         "whatif"
     ],
-    "ignoreWords": [],
     "import": []
 }

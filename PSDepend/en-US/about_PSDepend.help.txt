@@ -1,6 +1,5 @@
 TOPIC
     about_PSDepend
-# cspell:ignore projectx
 
 SHORT DESCRIPTION
     PSDepend is a module to simplify dependency handling
