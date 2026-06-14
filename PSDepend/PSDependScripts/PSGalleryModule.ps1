@@ -167,8 +167,29 @@ Write-Verbose -Message "Getting dependency [$name] from PowerShell repository [$
 if ($Repository) {
     $validRepo = Get-PSRepository -Name $Repository -Verbose:$false -ErrorAction SilentlyContinue
     if (-not $validRepo) {
-        Write-Error "[$Repository] has not been setup as a valid PowerShell repository."
-        return
+        $repoRegistry = $Dependency.PSDependOptions.Repositories
+        if (-not $repoRegistry -or -not $repoRegistry.ContainsKey($Repository)) {
+            Write-Error "[$Repository] is not registered and no URL was found in PSDependOptions.Repositories. Add an entry to register it automatically."
+            return
+        }
+        $repoUrl = $repoRegistry[$Repository]
+        if ($repoUrl -isnot [string]) {
+            Write-Error "PSDependOptions.Repositories entry for [$Repository] must be a string URL for PSGalleryModule dependencies."
+            return
+        }
+        $registerSplat = @{
+            Name               = $Repository
+            SourceLocation     = $repoUrl
+            InstallationPolicy = 'Trusted'
+        }
+        if ($Credential) { $registerSplat.Credential = $Credential }
+        Write-Verbose "Registering PowerShell repository [$Repository] at [$repoUrl]"
+        Register-PSRepository @registerSplat
+    } elseif ($Dependency.PSDependOptions.Repositories -and $Dependency.PSDependOptions.Repositories.ContainsKey($Repository)) {
+        $declaredUrl = $Dependency.PSDependOptions.Repositories[$Repository]
+        if ($declaredUrl -is [string] -and $validRepo.SourceLocation -ne $declaredUrl) {
+            Write-Warning "Repository [$Repository] is already registered at [$($validRepo.SourceLocation)] but PSDependOptions.Repositories declares [$declaredUrl]. Using existing registration."
+        }
     }
 }
 

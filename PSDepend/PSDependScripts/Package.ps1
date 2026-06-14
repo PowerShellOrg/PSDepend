@@ -77,8 +77,32 @@ if (-not $Version) {
 
 $PackageSources = @( Get-PackageSource )
 if ($PackageSources.Name -notcontains $Source -and -not $PSBoundParameters.ContainsKey('ProviderName')) {
-    Write-Error "PackageSource [$Source] is not valid.  Valid sources:`n$($PackageSources.ProviderName | Out-String)"
-    return
+    $repoRegistry = $Dependency.PSDependOptions.Repositories
+    if (-not $repoRegistry -or -not $repoRegistry.ContainsKey($Source)) {
+        Write-Error "PackageSource [$Source] is not registered and no entry was found in PSDependOptions.Repositories. Add an entry with Url and ProviderName to register it automatically."
+        return
+    }
+    $repoEntry = $repoRegistry[$Source]
+    if ($repoEntry -isnot [hashtable] -or -not $repoEntry.ContainsKey('Url') -or -not $repoEntry.ContainsKey('ProviderName')) {
+        Write-Error "PSDependOptions.Repositories entry for [$Source] must be a hashtable with 'Url' and 'ProviderName' keys for Package dependencies."
+        return
+    }
+    $registerSplat = @{
+        Name         = $Source
+        Location     = $repoEntry.Url
+        ProviderName = $repoEntry.ProviderName
+        Trusted      = $true
+    }
+    if ($Dependency.Credential) { $registerSplat.Credential = $Dependency.Credential }
+    Write-Verbose "Registering PackageSource [$Source] at [$($repoEntry.Url)] with provider [$($repoEntry.ProviderName)]"
+    Register-PackageSource @registerSplat
+    $PackageSources = @( Get-PackageSource )
+} elseif ($repoRegistry -and $repoRegistry.ContainsKey($Source)) {
+    $repoEntry = $repoRegistry[$Source]
+    $existingSource = $PackageSources | Where-Object { $_.Name -eq $Source }
+    if ($existingSource -and $repoEntry -is [hashtable] -and $repoEntry.ContainsKey('Url') -and $existingSource.Location -ne $repoEntry.Url) {
+        Write-Warning "PackageSource [$Source] is already registered at [$($existingSource.Location)] but PSDependOptions.Repositories declares [$($repoEntry.Url)]. Using existing registration."
+    }
 }
 
 $PackageProviders = @( Get-PackageProvider )
