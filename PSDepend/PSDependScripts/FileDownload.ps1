@@ -94,22 +94,22 @@ if (Test-Path $Target -PathType Leaf) {
 }
 elseif ([IO.Path]::GetExtension($Target) -and -not (Test-Path $Target -PathType Container)) {
     # Target has a file extension — treat as a full destination file path
+    $PathToAdd = $TargetParent
     if (-not (Test-Path $TargetParent)) {
         Write-Error "Could not find parent path [$TargetParent] for target [$Target]"
         if ($PSDependAction -contains 'Test') {
             return $False
         }
+        return
     }
-    else {
-        $Path = $Target
-        $ToInstall = $True
-        Write-Verbose "Target has extension, treating as file path [$Target]"
-    }
+    $Path = $Target
+    $ToInstall = $True
+    Write-Verbose "Target has extension, treating as file path [$Target]"
 }
 else {
     # No extension (or already a container) — treat target as a directory
     Write-Verbose "[$Target] is a container, creating path to file"
-    if (-not (Test-Path $Target)) {
+    if (-not (Test-Path $Target) -and $PSDependAction -contains 'Install') {
         New-Item -ItemType Directory -Path $Target -Force | Out-Null
     }
     If ($Name) {
