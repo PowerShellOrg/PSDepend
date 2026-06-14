@@ -1,5 +1,5 @@
 ﻿# cspell:ignore installimport subfolders
-functionInvoke-PSDepend {
+function Invoke-PSDepend {
     <#
     .SYNOPSIS
         Invoke PSDepend

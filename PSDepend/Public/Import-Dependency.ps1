@@ -1,4 +1,4 @@
-﻿functionImport-Dependency {
+﻿function Import-Dependency {
     <#
     .SYNOPSIS
         Import a specific dependency

@@ -1,10 +1,9 @@
-﻿functionGet-NodeModule {
+﻿function Get-NodeModule {
     [CmdletBinding()]
-    Param([switch]$Global)
-    If ($Global -eq $true) {
+    param([switch]$Global)
+    if ($Global -eq $true) {
         (npm ls --json --silent --global | ConvertFrom-Json).dependencies
-    }
-    Else {
+    } else {
         (npm ls --json --silent | ConvertFrom-Json).dependencies
     }
 }

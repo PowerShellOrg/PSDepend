@@ -1,4 +1,4 @@
-﻿# cspell:ignore jdoe trimend
+﻿# cspell:ignore jdoe TrimEnd
 <#
     .SYNOPSIS
         Clone a git repository
@@ -85,7 +85,7 @@ if (-not $Name) {
 if ($Name -match "^[a-zA-Z0-9]+/[a-zA-Z0-9_-]+$") {
     $Name = "https://github.com/$Name.git"
 }
-$GitName = $Name.trimend('/').split('/')[-1] -replace "\.git$", ''
+$GitName = $Name.TrimEnd('/').split('/')[-1] -replace "\.git$", ''
 if ($Dependency.Target -and ($Target = (Get-Item $Dependency.Target -ErrorAction SilentlyContinue).FullName)) {
     Write-Debug "Target resolved to $Target"
 } else {

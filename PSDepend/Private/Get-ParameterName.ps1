@@ -1,5 +1,5 @@
 ﻿# cspell:ignore parameterset
-functionGet-ParameterName {
+function Get-ParameterName {
     #Get parameter names for a specific command
     [CmdletBinding()]
     param(

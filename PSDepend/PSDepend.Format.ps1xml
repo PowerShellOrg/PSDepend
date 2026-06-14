@@ -21,7 +21,7 @@
                             </ListItem>
                             <ListItem>
                                 <Label>Tags</Label>
-                                <ScriptBlock>Try { ($_.Tags | Out-String ).trimend("`n")} Catch {$_.Tags} </ScriptBlock>
+                                <ScriptBlock>Try { ($_.Tags | Out-String ).TrimEnd("`n")} Catch {$_.Tags} </ScriptBlock>
                             </ListItem>
                         </ListItems>
                     </ListEntry>

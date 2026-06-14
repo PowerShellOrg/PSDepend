@@ -1,4 +1,4 @@
-﻿functionInstall-NodeModule {
+﻿function Install-NodeModule {
     [CmdletBinding()]
     Param(
         [string]$Version,

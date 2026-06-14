@@ -1,6 +1,6 @@
 ﻿# cspell:ignore webclient
 # Wrapped for pester mocking...
-functionGet-WebFile {
+function Get-WebFile {
     param($URL, $Path)
     # We have the info, check for file, download it!
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12

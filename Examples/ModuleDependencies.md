@@ -24,7 +24,7 @@ Invoke-PSDepend -Path $PSScriptRoot\Requirements.psd1 -Target $PSScriptRoot\Depe
 
 Import-Module Posh-SSH
 
-functionTest-PSDependExample {
+function Test-PSDependExample {
     Get-ChildItem $PSScriptRoot\Dependencies -Recurse -Depth 1 | Select-Object -ExpandProperty FullName
     Get-Module | Select-Object Name, Path
 }

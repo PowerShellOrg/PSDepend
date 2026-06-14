@@ -1,4 +1,4 @@
-﻿functionGet-PSDependType {
+﻿function Get-PSDependType {
     <#
     .SYNOPSIS
         Get dependency types and related information
