@@ -42,7 +42,7 @@ function Get-ProjectDetail {
         $Path = $PWD.Path
     )
 
-    functionResolve-ProjectDetail {
+    function Resolve-ProjectDetail {
         param(
             $Path = $Path,
             $RelativePath = '\',
