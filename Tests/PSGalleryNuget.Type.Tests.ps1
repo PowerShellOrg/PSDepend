@@ -92,4 +92,39 @@ Describe 'PSGalleryNuget script' {
             Should -Invoke -CommandName BootStrap-Nuget -ModuleName PSDepend -Times 0
         }
     }
+
+    Context 'Version range resolution' {
+        It 'Resolves a range to the highest satisfying version and passes it to nuget install' {
+            InModuleScope PSDepend {
+                Mock Find-NugetPackage {
+                    @(
+                        [PSCustomObject]@{ Version = '1.9.0' }
+                        [PSCustomObject]@{ Version = '2.5.0' }
+                        [PSCustomObject]@{ Version = '3.0.0' }
+                    )
+                }
+            }
+            $targetDir = (New-Item 'TestDrive:/psgnuget-range' -ItemType Directory -Force).FullName
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' -Target $targetDir -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 1 -ParameterFilter {
+                $i = [array]::IndexOf($Arguments, '-version')
+                $i -ge 0 -and $Arguments[$i + 1] -eq '2.5.0'
+            }
+        }
+
+        It 'Errors and skips nuget install when no version satisfies the range' {
+            InModuleScope PSDepend {
+                Mock Find-NugetPackage { @([PSCustomObject]@{ Version = '1.0.0' }) }
+            }
+            $targetDir = (New-Item 'TestDrive:/psgnuget-range-none' -ItemType Directory -Force).FullName
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' -Target $targetDir -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+        }
+    }
 }

@@ -10,6 +10,7 @@
         Relevant Dependency metadata:
             Name: The name for this module
             Version: Used to identify existing installs meeting this criteria, and as RequiredVersion for installation.  Defaults to 'latest'
+                Also accepts a NuGet version range (e.g. '[2.2.3,3.0)', '[2.0,)', '(,3.0)').  A bare version (e.g. '0.1.19') still means that exact version.  When a range is given, the highest available version that satisfies it is installed.
             Source: Source Uri for Nuget.  Defaults to https://www.powershellgallery.com/api/v2/
             Target: Required path to save this module.  No Default
                 Example: To install PSDeploy to C:\temp\PSDeploy, I would specify C:\temp
@@ -123,9 +124,9 @@ if (Test-Path $ModulePath) {
     $ExistingVersion = $ManifestData.ModuleVersion
     $GetGalleryVersion = { (Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential -IsLatest).Version }
 
-    # Version string, and equal to current
+    # Version string (exact or range), and the installed version satisfies it
     if ($Version -and $Version -ne 'latest') {
-        if (Test-VersionEquality $Version $ExistingVersion) {
+        if (Test-VersionInRange -Version $ExistingVersion -Required $Version) {
             Write-Verbose "You have the requested version [$Version] of [$Name]"
             # Conditional import
             Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $ExistingVersion
@@ -139,25 +140,7 @@ if (Test-Path $ModulePath) {
     # latest, and we have latest
     if ($Version -and ($Version -eq 'latest' -or $Version -like '')) {
         $GalleryVersion = & $GetGalleryVersion
-        [System.Version]$parsedExistingVersion = $null
-        [System.Version]$parsedGalleryVersion = $null
-        [System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersion = $null
-        [System.Management.Automation.SemanticVersion]$parsedGallerySemanticVersion = $null
-        $isGalleryVersionLessEquals = if (
-            [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedExistingSemanticVersion) -and
-            [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedGallerySemanticVersion)
-        ) {
-            $parsedGallerySemanticVersion -le $parsedExistingSemanticVersion
-        }
-        elseif (
-            [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedExistingVersion) -and
-            [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
-        ) {
-            $parsedGalleryVersion -le $parsedExistingVersion
-        }
-        else {
-            $false
-        }
+        $isGalleryVersionLessEquals = (Compare-Version -ReferenceVersion ([string]$GalleryVersion) -DifferenceVersion ([string]$ExistingVersion)) -le 0
 
         if ($isGalleryVersionLessEquals) {
             Write-Verbose "You have the latest version of [$Name], with installed version [$ExistingVersion] and PSGallery version [$GalleryVersion]"
@@ -190,6 +173,28 @@ if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $False
 }
 
+# Resolve a version range to the highest available version that satisfies it;
+# nuget.exe -version takes an exact version, not a range.
+$installVersion = $Version
+if ($Version -and $Version -notlike 'latest') {
+    $range = ConvertFrom-VersionRange -Version $Version
+    if ($range -and -not $range.IsExact) {
+        $resolvedVersion = $null
+        foreach ($candidate in (Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential)) {
+            if ((Test-VersionInRange -Version $candidate.Version -Required $Version) -and
+                ($null -eq $resolvedVersion -or (Compare-Version -ReferenceVersion $candidate.Version -DifferenceVersion $resolvedVersion) -gt 0)) {
+                $resolvedVersion = $candidate.Version
+            }
+        }
+        if (-not $resolvedVersion) {
+            Write-Error "No version of [$Name] at source [$Source] satisfies range [$Version]"
+            return
+        }
+        Write-Verbose "Resolved range [$Version] to version [$resolvedVersion] for [$Name]"
+        $installVersion = $resolvedVersion
+    }
+}
+
 if ($PSDependAction -contains 'Install') {
     $TargetExists = Test-Path $Target -PathType Container
 
@@ -200,7 +205,7 @@ if ($PSDependAction -contains 'Install') {
         $Null = New-Item -ItemType Directory -Path $Target -Force -ErrorAction SilentlyContinue
     }
     if ($Version -and $Version -notlike 'latest') {
-        $NugetParams += '-version', $Version
+        $NugetParams += '-version', $installVersion
     }
     $NugetParams = 'install', $Name + $NugetParams
 
@@ -209,6 +214,6 @@ if ($PSDependAction -contains 'Install') {
 
 # Conditional import
 $importVs = if ($Version -and $Version -notlike 'latest') {
-    $Version
+    $installVersion
 }
 Import-PSDependModule -Name $ModulePath -Action $PSDependAction -Version $importVs

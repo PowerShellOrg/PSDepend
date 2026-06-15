@@ -204,4 +204,49 @@ Describe 'PSGalleryModule script' {
                 -ParameterFilter { -not $PSBoundParameters.ContainsKey('Repository') }
         }
     }
+
+    Context 'Version range resolution' {
+        It 'Resolves a range to the highest satisfying version and installs it exactly' {
+            InModuleScope PSDepend {
+                Mock Get-Module { } -ParameterFilter { $ListAvailable }
+                Mock Find-Module {
+                    @(
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'1.9.0' }
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.5.0' }
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'3.0.0' }
+                    )
+                }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep
+            }
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+                $RequiredVersion -eq '2.5.0'
+            }
+        }
+
+        It 'Errors and skips install when no available version satisfies the range' {
+            InModuleScope PSDepend {
+                Mock Get-Module { } -ParameterFilter { $ListAvailable }
+                Mock Find-Module { @([PSCustomObject]@{ Name = 'TestModule'; Version = [version]'1.0.0' }) }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
+        }
+
+        It 'Skips install when an installed version already satisfies the range' {
+            InModuleScope PSDepend {
+                Mock Get-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.5.0' } } -ParameterFilter { $ListAvailable }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep
+            }
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
+        }
+    }
 }

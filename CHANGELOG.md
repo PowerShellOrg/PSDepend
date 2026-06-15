@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Version ranges in the `Version` field using NuGet range syntax (e.g.
+  `'[2.2.3,3.0)'`, `'[2.0,)'`, `'(,3.0)'`) for the `PSGalleryModule`,
+  `PSResourceGet`, and `PSGalleryNuget` dependency types. A bare version
+  (e.g. `'3.2.1'`) still means that exact version; a range installs the
+  highest available version that satisfies it (#65, #91).
 - `FileDownload` is now supported on all platforms (`windows`, `core`,
   `macos`, `linux`); there was no Windows-only code blocking this (#98).
 - `FileDownload` relative `Target` paths are now rooted against `$PWD`

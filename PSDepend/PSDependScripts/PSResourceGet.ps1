@@ -256,10 +256,10 @@ if ($Existing) {
         $FindModuleParams.Add('Prerelease', $true)
     }
 
-    # Version string, and that version is already installed (may not be the maximum)
+    # Version string (exact or range), and a satisfying version is already installed
     $matchedExisting = if ($Version -and $Version -ne 'latest') {
         $Existing | Where-Object {
-            Test-VersionEquality -ReferenceVersion $_.Version -DifferenceVersion $Version
+            Test-VersionInRange -Version $_.Version -Required $Version
         } | Select-Object -First 1
     }
     if ($matchedExisting) {
@@ -273,26 +273,7 @@ if ($Existing) {
     }
 
     $GalleryVersion = Find-PSResource @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
-    # Compare using SemanticVersion first (PSResourceGet uses SemVer); fall back to System.Version
-    [System.Version]$parsedVersion = $null
-    [System.Version]$parsedGalleryVersion = $null
-    [System.Management.Automation.SemanticVersion]$parsedSemanticVersion = $null
-    [System.Management.Automation.SemanticVersion]$parsedTempSemanticVersion = $null
-    $existingIsUpToDate = if (
-        [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedSemanticVersion) -and
-        [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedTempSemanticVersion)
-    ) {
-        $parsedTempSemanticVersion -le $parsedSemanticVersion
-    }
-    elseif (
-        [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedVersion) -and
-        [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
-    ) {
-        $parsedGalleryVersion -le $parsedVersion
-    }
-    else {
-        $false
-    }
+    $existingIsUpToDate = (Compare-Version -ReferenceVersion ([string]$GalleryVersion) -DifferenceVersion ([string]$ExistingVersion)) -le 0
 
     # latest, and we have latest
     if ($Version -and ($Version -eq 'latest' -or $Version -eq '') -and $existingIsUpToDate) {
