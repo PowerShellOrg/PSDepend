@@ -205,7 +205,11 @@ if ($Repository) {
 $versionRange = $null
 if ($Version -and $Version -ne 'latest') {
     $versionRange = ConvertFrom-VersionRange -Version $Version
-    if ($versionRange -and $versionRange.IsExact) {
+    if (-not $versionRange) {
+        Write-Error "Could not parse version [$Version] for [$Name]; expected an exact version or a valid NuGet range."
+        return
+    }
+    if ($versionRange.IsExact) {
         $Params.add('RequiredVersion', $versionRange.Exact)
     }
 }

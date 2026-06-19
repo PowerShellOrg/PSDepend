@@ -248,5 +248,16 @@ Describe 'PSGalleryModule script' {
             }
             Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
         }
+
+        It 'Errors and skips install for a malformed range instead of falling back to latest' {
+            InModuleScope PSDepend {
+                Mock Get-Module { } -ParameterFilter { $ListAvailable }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '[1.0.0,2.0.0'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
+        }
     }
 }
