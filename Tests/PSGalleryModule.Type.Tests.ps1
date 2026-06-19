@@ -215,7 +215,7 @@ Describe 'PSGalleryModule script' {
                         [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.5.0' }
                         [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'3.0.0' }
                     )
-                }
+                } -ParameterFilter { $AllVersions }
             }
             $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '[2.0.0,3.0.0)'
             InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {

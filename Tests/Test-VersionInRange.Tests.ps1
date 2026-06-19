@@ -18,6 +18,12 @@ Describe 'Test-VersionInRange' {
             } | Should -BeFalse
         }
 
+        It 'Returns false when Version is null' {
+            InModuleScope PSDepend {
+                Test-VersionInRange -Version $null -Required '[1.0,2.0)'
+            } | Should -BeFalse
+        }
+
         It 'Returns false when Required is empty' {
             InModuleScope PSDepend {
                 Test-VersionInRange -Version '1.0.0' -Required ''

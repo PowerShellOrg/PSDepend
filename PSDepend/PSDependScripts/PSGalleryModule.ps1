@@ -202,6 +202,8 @@ if ($Repository) {
 
 # Exact versions map straight to RequiredVersion. Ranges have no Install-Module
 # parameter, so they are resolved to a concrete version just before install.
+# $versionRange is kept only to detect exact-vs-range here; the resolution below
+# re-derives the range per candidate via Test-VersionInRange.
 $versionRange = $null
 if ($Version -and $Version -ne 'latest') {
     $versionRange = ConvertFrom-VersionRange -Version $Version
@@ -210,7 +212,7 @@ if ($Version -and $Version -ne 'latest') {
         return
     }
     if ($versionRange.IsExact) {
-        $Params.add('RequiredVersion', $versionRange.Exact)
+        $params.Add('RequiredVersion', $versionRange.Exact)
     }
 }
 
@@ -300,17 +302,12 @@ if ($versionRange -and -not $versionRange.IsExact -and $PSDependAction -contains
     if ($Credential) { $resolveParams.Add('Credential', $Credential) }
     if ($AllowPrerelease) { $resolveParams.Add('AllowPrerelease', $AllowPrerelease) }
 
-    $resolvedVersion = $null
-    foreach ($candidate in (Find-Module @resolveParams -AllVersions)) {
-        $candidateVersion = $candidate.Version.ToString()
-        if ((Test-VersionInRange -Version $candidateVersion -Required $Version) -and
-            ($null -eq $resolvedVersion -or (Compare-Version -ReferenceVersion $candidateVersion -DifferenceVersion $resolvedVersion) -gt 0)) {
-            $resolvedVersion = $candidateVersion
-        }
-    }
+    $candidates = Find-Module @resolveParams -AllVersions | ForEach-Object { $_.Version.ToString() }
+    $resolvedVersion = Resolve-VersionInRange -Candidate $candidates -Required $Version
 
     if (-not $resolvedVersion) {
-        Write-Error "No version of [$Name] in repository [$Repository] satisfies range [$Version]"
+        $repositoryLabel = if ($Repository) { $Repository } else { 'the default repositories' }
+        Write-Error "No version of [$Name] in [$repositoryLabel] satisfies range [$Version]"
         return
     }
     Write-Verbose "Resolved range [$Version] to version [$resolvedVersion] for [$Name]"

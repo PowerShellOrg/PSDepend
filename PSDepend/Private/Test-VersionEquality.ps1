@@ -4,9 +4,11 @@
     Compare two versions by casting and comparing individual components.
 
     .DESCRIPTION
-    Compare two version strings by attempting to parse them as System.Version
-    and System.Management.Automation.SemanticVersion, and comparing their
-    components. If parsing fails, fall back to string comparison.
+    Return $true when two version strings represent the same version. Equality is
+    the zero case of the shared Compare-Version ordering primitive, which tries
+    SemanticVersion first (honouring pre-release labels), falls back to a
+    normalised System.Version (so 1.2.3 equals 1.2.3.0), and finally to an
+    ordinal string comparison. Null or empty inputs are never equal.
 
     .PARAMETER ReferenceVersion
     The reference version string to compare against.

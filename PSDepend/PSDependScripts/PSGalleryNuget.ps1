@@ -178,14 +178,13 @@ if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
 $installVersion = $Version
 if ($Version -and $Version -notlike 'latest') {
     $range = ConvertFrom-VersionRange -Version $Version
-    if ($range -and -not $range.IsExact) {
-        $resolvedVersion = $null
-        foreach ($candidate in (Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential)) {
-            if ((Test-VersionInRange -Version $candidate.Version -Required $Version) -and
-                ($null -eq $resolvedVersion -or (Compare-Version -ReferenceVersion $candidate.Version -DifferenceVersion $resolvedVersion) -gt 0)) {
-                $resolvedVersion = $candidate.Version
-            }
-        }
+    if (-not $range) {
+        Write-Error "Could not parse version [$Version] for [$Name]; expected an exact version or a valid NuGet range."
+        return
+    }
+    if (-not $range.IsExact) {
+        $candidates = (Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential).Version
+        $resolvedVersion = Resolve-VersionInRange -Candidate $candidates -Required $Version
         if (-not $resolvedVersion) {
             Write-Error "No version of [$Name] at source [$Source] satisfies range [$Version]"
             return

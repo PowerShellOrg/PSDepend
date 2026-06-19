@@ -126,5 +126,14 @@ Describe 'PSGalleryNuget script' {
             }
             Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
         }
+
+        It 'Errors and skips nuget install for a malformed range instead of passing it to nuget' {
+            $targetDir = (New-Item 'TestDrive:/psgnuget-range-malformed' -ItemType Directory -Force).FullName
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' -Target $targetDir -Version '[1.0.0,2.0.0'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+        }
     }
 }

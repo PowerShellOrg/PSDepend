@@ -52,7 +52,7 @@ _Avoid_: version spec, version constraint, MinimumVersion/MaximumVersion
 - A **Dependency** may carry zero or more **Tags**
 - A **DependencyScript** receives a **Dependency** and a set of **PSDependAction** flags on each invocation
 - **Target** is a field on a **Dependency** interpreted differently by each **DependencyScript**
-- A **Dependency**'s Version field carries either an exact version or a **VersionRange**; each gallery **DependencyScript** resolves a **VersionRange** to a concrete version to install
+- A **Dependency**'s Version field carries either an exact version or a **VersionRange**; the `PSGalleryModule` and `PSGalleryNuget` **DependencyScripts** resolve a **VersionRange** to a concrete version to install, while `PSResourceGet` passes the range to `Install-PSResource` and lets it resolve
 
 ## Example dialogue
 

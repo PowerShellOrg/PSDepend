@@ -71,6 +71,8 @@ function Compare-Version {
     }
 
     # Neither type parses both: ordinal string comparison, clamped to -1/0/1.
+    # Trace this: a wrong answer here (e.g. a typo'd '1.2.x') is otherwise silent.
+    Write-Verbose "Compare-Version falling back to ordinal string comparison for [$ReferenceVersion] vs [$DifferenceVersion]"
     return [Math]::Sign(
         [string]::Compare($ReferenceVersion, $DifferenceVersion, [System.StringComparison]::OrdinalIgnoreCase)
     )

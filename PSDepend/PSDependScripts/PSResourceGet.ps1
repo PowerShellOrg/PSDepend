@@ -13,7 +13,10 @@
         Relevant Dependency metadata:
             Name:       The name of the module to install
             Version:    Used to identify existing installs and as -Version for installation.
-                        Supports NuGet range syntax (e.g. '[1.0.0, ]'). Defaults to 'latest'.
+                        Also accepts a NuGet version range (e.g. '[2.2.3,3.0)', '[2.0,)',
+                        '(,3.0)'); a bare version (e.g. '3.2.1') still means that exact
+                        version. Ranges are passed through to Install-PSResource, which
+                        resolves them. Defaults to 'latest'.
             Target:     Used as -Scope for Install-PSResource (CurrentUser or AllUsers).
                         If this is a filesystem path, Save-PSResource is used instead.
                         Defaults to 'CurrentUser'.
@@ -117,6 +120,17 @@
         }
 
         # Install the latest version of PowerCLI, allowing prerelease versions.
+
+    .EXAMPLE
+        @{
+            BuildHelpers = @{
+                DependencyType = 'PSResourceGet'
+                Version        = '[2.0.0,3.0.0)'
+            }
+        }
+
+        # Install the highest BuildHelpers version that is >= 2.0.0 and < 3.0.0
+        # (NuGet range syntax). The range is passed to Install-PSResource -Version.
 #>
 
 [CmdletBinding()]
@@ -154,6 +168,18 @@ if (-not $Name) {
 $Version = $Dependency.Version
 if (-not $Version) {
     $Version = 'latest'
+}
+
+# PSResourceGet understands NuGet ranges natively, so a range is passed straight
+# through to Install-PSResource. Parsing here fails fast on malformed input and
+# detects ranges for import resolution, keeping range detection in one place.
+$versionRange = $null
+if ($Version -and $Version -ne 'latest') {
+    $versionRange = ConvertFrom-VersionRange -Version $Version
+    if (-not $versionRange) {
+        Write-Error "Could not parse version [$Version] for [$Name]; expected an exact version or a valid NuGet range."
+        return
+    }
 }
 
 # Target doubles as Scope: AllUsers/CurrentUser = install scope; any other value = filesystem path
@@ -310,7 +336,7 @@ if ($PSDependAction -contains 'Install') {
 
 # Conditional import — params['Version'] may be a NuGet range; resolve to a concrete installed version
 $importVs = $params['Version']
-if ($importVs -and $importVs -match '[\[\](,]') {
+if ($versionRange -and -not $versionRange.IsExact) {
     $importVs = Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue |
         Measure-Object -Property Version -Maximum |
         Select-Object -ExpandProperty Maximum
