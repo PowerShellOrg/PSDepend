@@ -282,4 +282,37 @@ Describe 'PSResourceGet script' {
                 -ParameterFilter { $TrustRepository -eq $true }
         }
     }
+
+    Context 'Version range (pass-through)' {
+        It 'Forwards a NuGet range straight to Install-PSResource -Version' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep
+            }
+            Should -Invoke -CommandName Install-PSResource -ModuleName PSDepend -Times 1 -Exactly `
+                -ParameterFilter { $Version -eq '[2.0.0,3.0.0)' }
+            # Pass-through: PSResourceGet resolves the range itself, so we must not pre-resolve it.
+            Should -Invoke -CommandName Find-PSResource -ModuleName PSDepend -Times 0
+        }
+
+        It 'Errors and skips install for a malformed range instead of forwarding it' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version '[1.0.0,2.0.0'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Install-PSResource -ModuleName PSDepend -Times 0
+        }
+
+        It 'Skips install when an installed version already satisfies the range' {
+            InModuleScope PSDepend {
+                Mock Get-Module { [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.5.0' } } `
+                    -ParameterFilter { $ListAvailable }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep
+            }
+            Should -Invoke -CommandName Install-PSResource -ModuleName PSDepend -Times 0
+        }
+    }
 }

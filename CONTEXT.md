@@ -40,6 +40,10 @@ _Avoid_: dependency (to avoid confusion with the Dependency concept), requiremen
 A label on a Dependency that controls inclusion when `Invoke-PSDepend` is called with `-Tags`.
 _Avoid_: filter, category, label
 
+**VersionRange**:
+A constraint on which versions of a Dependency satisfy it, expressed in NuGet range syntax (e.g. `[2.2.3,3.0)`, `[2.0,)`) inside the Version field. A bare version (`3.2.1`) is not a range — it means exactly that version.
+_Avoid_: version spec, version constraint, MinimumVersion/MaximumVersion
+
 ## Relationships
 
 - A **DependencyFile** contains one or more **Dependencies** and at most one **PSDependOptions** block
@@ -48,6 +52,7 @@ _Avoid_: filter, category, label
 - A **Dependency** may carry zero or more **Tags**
 - A **DependencyScript** receives a **Dependency** and a set of **PSDependAction** flags on each invocation
 - **Target** is a field on a **Dependency** interpreted differently by each **DependencyScript**
+- A **Dependency**'s Version field carries either an exact version or a **VersionRange**; the `PSGalleryModule` and `PSGalleryNuget` **DependencyScripts** resolve a **VersionRange** to a concrete version to install, while `PSResourceGet` passes the range to `Install-PSResource` and lets it resolve
 
 ## Example dialogue
 

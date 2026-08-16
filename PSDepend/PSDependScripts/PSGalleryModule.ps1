@@ -8,6 +8,7 @@
         Relevant Dependency metadata:
             Name: The name for this module
             Version: Used to identify existing installs meeting this criteria, and as RequiredVersion for installation.  Defaults to 'latest'
+                Also accepts a NuGet version range (e.g. '[2.2.3,3.0)', '[2.0,)', '(,3.0)').  A bare version (e.g. '3.2.1') still means that exact version.  When a range is given, the highest available version that satisfies it is installed.
             Target: Used as 'Scope' for Install-Module.  If this is a path, we use Save-Module with this path.  On reruns, PSDepend checks existing modules first and skips reinstalling when the requested version is already present.  Defaults to 'AllUsers'
             AddToPath: If target is used as a path, prepend that path to ENV:PSModulePath
             Credential: The username and password used to authenticate against the private repository
@@ -90,6 +91,13 @@
             }
         }
         # Install the latest version of PowerCLI, allowing for prerelease
+
+    .EXAMPLE
+        @{
+            BuildHelpers = '[2.0.0,3.0.0)'
+        }
+
+        # Install the highest BuildHelpers version that is >= 2.0.0 and < 3.0.0 (NuGet range syntax)
 #>
 [CmdletBinding()]
 param(
@@ -192,8 +200,20 @@ if ($Repository) {
     $params.Add('Repository', $Repository)
 }
 
+# Exact versions map straight to RequiredVersion. Ranges have no Install-Module
+# parameter, so they are resolved to a concrete version just before install.
+# $versionRange is kept only to detect exact-vs-range here; the resolution below
+# re-derives the range per candidate via Test-VersionInRange.
+$versionRange = $null
 if ($Version -and $Version -ne 'latest') {
-    $Params.add('RequiredVersion', $Version)
+    $versionRange = ConvertFrom-VersionRange -Version $Version
+    if (-not $versionRange) {
+        Write-Error "Could not parse version [$Version] for [$Name]; expected an exact version or a valid NuGet range."
+        return
+    }
+    if ($versionRange.IsExact) {
+        $params.Add('RequiredVersion', $versionRange.Exact)
+    }
 }
 
 if ($Credential) {
@@ -230,7 +250,7 @@ if ($Existing) {
     Write-Verbose "Found existing module [$Name]"
 
     if ($Version -and $Version -ne 'latest') {
-        $matchedInstall = $Existing | Where-Object { Test-VersionEquality $Version $_.Version.ToString() } | Select-Object -First 1
+        $matchedInstall = $Existing | Where-Object { Test-VersionInRange -Version $_.Version.ToString() -Required $Version } | Select-Object -First 1
         if ($matchedInstall) {
             Write-Verbose "You have the requested version [$Version] of [$Name]"
             Import-PSDependModule -Name $ModuleName -Action $PSDependAction -Version $matchedInstall.Version
@@ -253,25 +273,7 @@ if ($Existing) {
     }
 
     $GalleryVersion = Find-Module @FindModuleParams | Measure-Object -Property Version -Maximum | Select-Object -ExpandProperty Maximum
-    [System.Version]$parsedExistingVersion = $null
-    [System.Version]$parsedGalleryVersion = $null
-    [System.Management.Automation.SemanticVersion]$parsedExistingSemanticVersion = $null
-    [System.Management.Automation.SemanticVersion]$parsedGallerySemanticVersion = $null
-    $isGalleryVersionLessEquals = if (
-        [System.Management.Automation.SemanticVersion]::TryParse([string]$ExistingVersion, [ref]$parsedExistingSemanticVersion) -and
-        [System.Management.Automation.SemanticVersion]::TryParse([string]$GalleryVersion, [ref]$parsedGallerySemanticVersion)
-    ) {
-        $parsedGallerySemanticVersion -le $parsedExistingSemanticVersion
-    }
-    elseif (
-        [System.Version]::TryParse([string]$ExistingVersion, [ref]$parsedExistingVersion) -and
-        [System.Version]::TryParse([string]$GalleryVersion, [ref]$parsedGalleryVersion)
-    ) {
-        $parsedGalleryVersion -le $parsedExistingVersion
-    }
-    else {
-        $false
-    }
+    $isGalleryVersionLessEquals = (Compare-Version -ReferenceVersion ([string]$GalleryVersion) -DifferenceVersion ([string]$ExistingVersion)) -le 0
 
     # latest, and we have latest
     if ( $Version -and ($Version -eq 'latest' -or $Version -eq '') -and $isGalleryVersionLessEquals) {
@@ -290,6 +292,26 @@ if ($Existing) {
 #No dependency found, return false if we're testing alone...
 if ( $PSDependAction -contains 'Test' -and $PSDependAction.count -eq 1) {
     return $False
+}
+
+# Resolve a version range to the highest available version that satisfies it,
+# then install that exact version (Install-Module has no native range parameter).
+if ($versionRange -and -not $versionRange.IsExact -and $PSDependAction -contains 'Install') {
+    $resolveParams = @{ Name = $Name }
+    if ($Repository) { $resolveParams.Add('Repository', $Repository) }
+    if ($Credential) { $resolveParams.Add('Credential', $Credential) }
+    if ($AllowPrerelease) { $resolveParams.Add('AllowPrerelease', $AllowPrerelease) }
+
+    $candidates = Find-Module @resolveParams -AllVersions | ForEach-Object { $_.Version.ToString() }
+    $resolvedVersion = Resolve-VersionInRange -Candidate $candidates -Required $Version
+
+    if (-not $resolvedVersion) {
+        $repositoryLabel = if ($Repository) { $Repository } else { 'the default repositories' }
+        Write-Error "No version of [$Name] in [$repositoryLabel] satisfies range [$Version]"
+        return
+    }
+    Write-Verbose "Resolved range [$Version] to version [$resolvedVersion] for [$Name]"
+    $params['RequiredVersion'] = $resolvedVersion
 }
 
 if ($PSDependAction -contains 'Install') {
