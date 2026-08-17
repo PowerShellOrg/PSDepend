@@ -9,31 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-16
+
 ### Added
 
 - Version ranges in the `Version` field using NuGet range syntax (e.g.
   `'[2.2.3,3.0)'`, `'[2.0,)'`, `'(,3.0)'`) for the `PSGalleryModule`,
   `PSResourceGet`, and `PSGalleryNuget` dependency types. A bare version
   (e.g. `'3.2.1'`) still means that exact version; a range installs the
-  highest available version that satisfies it (#65, #91).
+  highest available version that satisfies it (#65, #91, #199).
 - `FileDownload` is now supported on all platforms (`windows`, `core`,
-  `macos`, `linux`); there was no Windows-only code blocking this (#98).
+  `macos`, `linux`); there was no Windows-only code blocking this
+  (#98, #193).
 - `FileDownload` relative `Target` paths are now rooted against `$PWD`
-  before resolution, matching the intuitive expectation of callers (#49).
+  before resolution, matching the intuitive expectation of callers
+  (#49, #193).
 
 ### Fixed
 
 - `Get-Dependency -InputObject` no longer mutates the caller's hashtable:
   `PSDependOptions` is now preserved after the call, so a second invocation
-  with the same object still honors global options such as `Target` (#35).
+  with the same object still honors global options such as `Target`
+  (#35, #192).
 - `FileDownload` no longer misidentifies a directory-like `Target` (no
   file extension, or trailing slash) as a full file path when its parent
   happens to exist; the handler now uses a file-extension heuristic to
   distinguish file targets from container targets and creates the directory
-  when it does not yet exist (#49).
+  when it does not yet exist (#49, #193).
 - `Git` handler no longer silently ignores a pre-existing directory at
   the clone target that is not a valid git repository; it now emits a
-  `Write-Warning` so the user knows why the install was skipped (#86).
+  `Write-Warning` so the user knows why the install was skipped
+  (#86, #194).
 
 ## [0.4.1] - 2026-06-12
 
