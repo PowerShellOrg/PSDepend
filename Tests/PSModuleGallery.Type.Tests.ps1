@@ -496,6 +496,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Pop-Location {} -ModuleName PSDepend
                 Mock Set-Location {} -ModuleName PSDepend
                 Mock Test-Path { return $False } -ModuleName PSDepend -ParameterFilter { $Path -match "Invoke-Build$|PSDeploy$" }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
 
                 $script:Dependencies = Get-Dependency @Verbose -Path "$TestDepends\git.depend.psd1"
                 $script:Results = Invoke-PSDepend @Verbose -Path "$TestDepends\git.depend.psd1" -Force
@@ -520,6 +521,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Pop-Location {} -ModuleName PSDepend
                 Mock Set-Location {} -ModuleName PSDepend
                 Mock Test-Path { return $False } -ModuleName PSDepend -ParameterFilter { $Path -match 'buildhelpers' }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
                 Mock New-Item { [PSCustomObject]@{ FullName = $Path } } -ModuleName PSDepend
                 $null = Invoke-PSDepend @Verbose -Path "$TestDepends\git.depend.psd1" -Force
             }
@@ -538,6 +540,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 Mock Pop-Location {} -ModuleName PSDepend
                 Mock Set-Location {} -ModuleName PSDepend
                 Mock Invoke-ExternalCommand -ModuleName PSDepend -ParameterFilter { $Arguments -contains 'checkout' -or $Arguments -contains 'clone' }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
             }
 
             It 'Returns $false if git repo does not exist' {
@@ -623,6 +626,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Installs Modules' {
             BeforeAll {
                 Mock Test-Path { return $true } -ModuleName PSDepend -ParameterFilter { $PathType -eq 'Container' }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
                 Mock Invoke-ExternalCommand { return $true } -ModuleName PSDepend
                 Mock Find-NugetPackage { return $true } -ModuleName PSDepend
                 $script:Results = Invoke-PSDepend @Verbose -Path "$TestDepends\psgallerynuget.depend.psd1" -Force
@@ -640,19 +644,21 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Same module version exists' {
             BeforeAll {
                 Mock Test-Path { return $True } -ModuleName PSDepend -ParameterFilter { $Path -match 'jenkins' }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
                 Mock Invoke-ExternalCommand {} -ModuleName PSDepend
                 Mock Import-LocalizedData {
                     [PSCustomObject]@{
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
+                Mock Import-LocalizedData { Microsoft.PowerShell.Utility\Import-LocalizedData @PesterBoundParameters } -ModuleName PSDepend
                 Mock Find-NugetPackage -ModuleName PSDepend
             }
 
             It 'Skips Invoke-ExternalCommand' {
                 Invoke-PSDepend @Verbose -Path "$TestDepends\psgallerynuget.sameversion.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Import-LocalizedData -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Import-LocalizedData -Times 1 -Exactly -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
                 Should -Invoke Find-NugetPackage -Times 0 -Exactly -ModuleName PSDepend
                 Should -Invoke Invoke-ExternalCommand -Times 0 -Exactly -ModuleName PSDepend
             }
@@ -661,12 +667,14 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Latest module required, and already installed' {
             BeforeAll {
                 Mock Test-Path { return $True } -ModuleName PSDepend -ParameterFilter { $Path -match 'jenkins' }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
                 Mock Invoke-ExternalCommand {} -ModuleName PSDepend
                 Mock Import-LocalizedData {
                     [PSCustomObject]@{
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
+                Mock Import-LocalizedData { Microsoft.PowerShell.Utility\Import-LocalizedData @PesterBoundParameters } -ModuleName PSDepend
                 Mock Find-NugetPackage {
                     [PSCustomObject]@{
                         Version = '1.2.5'
@@ -677,7 +685,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             It 'Skips Invoke-ExternalCommand' {
                 Invoke-PSDepend @Verbose -Path "$TestDepends\psgallerynuget.latestversion.depend.psd1" -Force -ErrorAction Stop
 
-                Should -Invoke Import-LocalizedData -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Import-LocalizedData -Times 1 -Exactly -ModuleName PSDepend -ParameterFilter { $FileName -eq 'jenkins.psd1' }
                 Should -Invoke Find-NugetPackage -Times 1 -Exactly -ModuleName PSDepend
                 Should -Invoke Invoke-ExternalCommand -Times 0 -Exactly -ModuleName PSDepend
             }
@@ -688,7 +696,9 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             BeforeEach {
                 Mock Invoke-ExternalCommand {} -ModuleName PSDepend
                 Mock Test-Path { return $True } -ModuleName PSDepend -ParameterFilter { $Path -match 'jenkins' }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
                 Mock Find-NugetPackage {} -ModuleName PSDepend
+                Mock Import-LocalizedData { Microsoft.PowerShell.Utility\Import-LocalizedData @PesterBoundParameters } -ModuleName PSDepend
             }
 
             It 'Returns $true when it finds an existing module' {
@@ -804,6 +814,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             BeforeAll {
                 Mock Test-Path { return $True } -ModuleName PSDepend -ParameterFilter { $Path -match 'imaginary' }
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
                 Mock Invoke-ExternalCommand {} -ModuleName PSDepend
                 Mock Import-Module -ModuleName PSDepend
                 Mock Import-LocalizedData {
@@ -811,6 +822,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                         ModuleVersion = '1.2.5'
                     }
                 } -ModuleName PSDepend -ParameterFilter { $FileName -eq 'imaginary.psd1' }
+                Mock Import-LocalizedData { Microsoft.PowerShell.Utility\Import-LocalizedData @PesterBoundParameters } -ModuleName PSDepend
                 Mock Find-NugetPackage {
                     [PSCustomObject]@{
                         Version = '1.2.5'
@@ -1211,6 +1223,8 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
             BeforeAll {
                 Mock Get-Command { return $false } -ParameterFilter { $Name -eq 'dotnet' } -ModuleName PSDepend
                 Mock Test-Path { return $true } -ParameterFilter { $Path -eq (Join-Path $script:GlobalDotnetSdkLocation $script:DotnetFile) } -ModuleName PSDepend
+                Mock Test-Path { Microsoft.PowerShell.Management\Test-Path @PesterBoundParameters } -ModuleName PSDepend
+                Mock Get-Command { Microsoft.PowerShell.Core\Get-Command @PesterBoundParameters } -ModuleName PSDepend
                 Mock Get-DotnetVersion { return '2.1.330-rc1' } -ModuleName PSDepend
             }
 
@@ -1225,6 +1239,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
         Context 'Imports Dependency' {
             BeforeAll {
                 Mock Get-Command { return $false } -ParameterFilter { $Name -eq 'dotnet' } -ModuleName PSDepend
+                Mock Get-Command { Microsoft.PowerShell.Core\Get-Command @PesterBoundParameters } -ModuleName PSDepend
                 $script:originalPath = $env:PATH
             }
 
@@ -1258,6 +1273,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
 
             # Simulate choco.exe being present so tests don't hit the install-chocolatey branch by default
             Mock Get-Command -ParameterFilter { $Name -eq 'choco.exe' } -MockWith { [PSCustomObject]@{Name = 'choco.exe' } } -ModuleName PSDepend
+            Mock Get-Command { Microsoft.PowerShell.Core\Get-Command @PesterBoundParameters } -ModuleName PSDepend
             # Default catch-all for Invoke-ExternalCommand; individual tests register specific ParameterFilter mocks
             Mock Invoke-ExternalCommand -ModuleName PSDepend
         }
@@ -1271,7 +1287,7 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 # this will throw as the source is invalid - lets catch that
                 { Invoke-PSDepend @Verbose -Path "$TestDepends\chocolatey.specificversionrequested.depend.psd1" -Force -ErrorAction Stop } | Should -Throw
 
-                Should -Invoke Get-Command -Times 1 -Exactly -ModuleName PSDepend
+                Should -Invoke Get-Command -Times 1 -Exactly -ModuleName PSDepend -ParameterFilter { $Name -eq 'choco.exe' }
                 Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ModuleName PSDepend
             }
         }
