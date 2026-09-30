@@ -7,6 +7,10 @@
 
         Note: We require npm in your path.
 
+        Lock behaviour (Resolve): PSDepend's lock pins only the declared package to an
+        exact version. Transitive node dependencies are not resolved by PSDepend; npm's
+        own package-lock.json governs the package's subtree.
+
         Relevant Dependency metadata:
             DependencyName (Key): Node Package Name
             Version: Version of the node package to install; defaults to latest.
@@ -23,10 +27,11 @@
         If specified, the node package will be installed globally.
 
     .PARAMETER PSDependAction
-        Test or Install the dependency.  Defaults to Install
+        Test, Install or Resolve the dependency.  Defaults to Install
 
         Test: Return true or false on whether the dependency is in place
         Install: Install the dependency
+        Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
 
     .EXAMPLE
         @{
@@ -59,7 +64,7 @@ param (
     [PSTypeName('PSDepend.Dependency')]
     [PSObject[]]$Dependency,
 
-    [ValidateSet('Test', 'Install')]
+    [ValidateSet('Test', 'Install', 'Resolve')]
     [string[]]$PSDependAction = @('Install'),
     [switch]$Force,
     [switch]$Global
@@ -81,6 +86,28 @@ If (-not [string]::IsNullOrEmpty($Target) -and $Target -ne 'global') {
     }
 }
 #endregion Extract Dependency Data
+#region    Resolve Action
+If ($PSDependAction -contains 'Resolve') {
+    $Candidates = @(Find-NodeModule -PackageName $Name -Version $Version)
+    $Resolved = $null
+    foreach ($Candidate in $Candidates) {
+        if ($null -eq $Resolved -or (Compare-Version -ReferenceVersion $Candidate -DifferenceVersion $Resolved) -gt 0) {
+            $Resolved = $Candidate
+        }
+    }
+    if ($null -eq $Resolved) {
+        Write-Error "No version of [$Name] at [npm] satisfies [$Version]"
+        return
+    }
+    [PSCustomObject]@{
+        PSTypeName   = 'PSDepend.ResolvedDependency'
+        Name         = $Name
+        Version      = $Resolved
+        Dependencies = @{}
+    }
+    return
+}
+#endregion Resolve Action
 #region    Test Action
 If ($PSDependAction -contains 'Test') {
     If ([string]::IsNullOrEmpty($Target)) {

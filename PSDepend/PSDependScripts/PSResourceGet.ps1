@@ -58,12 +58,14 @@
         removed in a future release.
 
     .PARAMETER PSDependAction
-        Test, Install, or Import the module.
+        Test, Install, Import, or Resolve the module.
         Defaults to Install.
 
         Test:    Returns $true or $false depending on whether the dependency is present
         Install: Installs the dependency
         Import:  Imports the dependency
+        Resolve: Query the source for the highest version satisfying Version and report
+                 its dependencies. Used by Update-PSDependLock; performs no installation.
 
     .EXAMPLE
         @{
@@ -149,7 +151,7 @@ param(
 
     [switch]$Import,
 
-    [ValidateSet('Test', 'Install', 'Import')]
+    [ValidateSet('Test', 'Install', 'Import', 'Resolve')]
     [string[]]$PSDependAction = @('Install')
 )
 
@@ -262,6 +264,75 @@ foreach ($thisParameter in $params.Keys) {
     }
 }
 $params = $tempParams.Clone()
+
+if ($PSDependAction -contains 'Resolve') {
+    $FindModuleParams = @{ Name = $Name; Version = '*' }
+    if ($Repository) {
+        $FindModuleParams.Add('Repository', $Repository)
+    }
+    if ($Credential) {
+        $FindModuleParams.Add('Credential', $Credential)
+    }
+    if ($Prerelease) {
+        $FindModuleParams.Add('Prerelease', $true)
+    }
+
+    $available = @(Find-PSResource @FindModuleParams -ErrorAction SilentlyContinue)
+    $candidates = @{}
+    foreach ($found in $available) {
+        $candidateVersion = $found.Version.ToString()
+        if ($found.Prerelease) {
+            $candidateVersion = "$candidateVersion-$($found.Prerelease)"
+        }
+        $candidates[$candidateVersion] = $found
+    }
+
+    $resolvedVersion = $null
+    if ($Version -eq 'latest') {
+        foreach ($candidateVersion in $candidates.Keys) {
+            if ($null -eq $resolvedVersion -or (Compare-Version -ReferenceVersion $candidateVersion -DifferenceVersion $resolvedVersion) -gt 0) {
+                $resolvedVersion = $candidateVersion
+            }
+        }
+    }
+    elseif ($candidates.Count -gt 0) {
+        $resolvedVersion = Resolve-VersionInRange -Candidate @($candidates.Keys) -Required $Version
+    }
+
+    if (-not $resolvedVersion) {
+        Write-Error "No version of [$Name] at [$Repository] satisfies [$Version]"
+        return
+    }
+
+    $selected = $candidates[$resolvedVersion]
+
+    # Dependency.VersionRange is a NuGet.Versioning.VersionRange; ToString() yields the
+    # normalized bracketed form ('[1.0.0, )'), so a nuspec bare '1.0.0' (meaning >= 1.0.0)
+    # never leaks through as a PSDepend exact version. Unbounded ranges collapse to 'latest'.
+    $childDependencies = @{}
+    foreach ($child in @($selected.Dependencies)) {
+        if (-not $child.Name) {
+            continue
+        }
+        $childRange = 'latest'
+        if ($null -ne $child.VersionRange) {
+            $rangeString = $child.VersionRange.ToString() -replace '\s', ''
+            if ($rangeString -and $rangeString -ne '(,)' -and $rangeString -notmatch '\*') {
+                $childRange = $rangeString
+            }
+        }
+        $childDependencies[$child.Name] = $childRange
+    }
+
+    $resolvedName = if ($selected.Name) { $selected.Name } else { $Name }
+    [PSCustomObject]@{
+        PSTypeName   = 'PSDepend.ResolvedDependency'
+        Name         = $resolvedName
+        Version      = $resolvedVersion
+        Dependencies = $childDependencies
+    }
+    return
+}
 
 Add-ToPsModulePathIfRequired -Dependency $Dependency -Action $PSDependAction
 

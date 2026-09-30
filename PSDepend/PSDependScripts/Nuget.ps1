@@ -17,10 +17,11 @@
         If specified and Target already exists, remove existing item before saving
 
     .PARAMETER PSDependAction
-        Test, or Install the package.  Defaults to Install
+        Test, Install, or Resolve the package.  Defaults to Install
 
         Test: Return true or false on whether the dependency is in place
         Install: Install the dependency
+        Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
 
     .EXAMPLE
 
@@ -73,7 +74,7 @@ param(
 
     [switch]$Force,
 
-    [ValidateSet('Test', 'Install')]
+    [ValidateSet('Test', 'Install', 'Resolve')]
     [string[]]$PSDependAction = @('Install'),
 
     [Alias('DLLName')]
@@ -95,14 +96,42 @@ if (-not $Dependency.Source) {
     $Source = 'https://www.nuget.org/api/v2/'
 }
 
+$Credential = $Dependency.Credential
+
+if ($PSDependAction -contains 'Resolve') {
+    $packages = @(Find-NugetPackage -Name $DependencyName -PackageSourceUrl $Source -Credential $Credential)
+    $resolvedVersion = $null
+    if ($Version -eq 'latest') {
+        $stable = @($packages | Where-Object { $_.Properties.IsPrerelease -ne 'true' })
+        foreach ($package in $stable) {
+            if (-not $resolvedVersion -or (Compare-Version $package.Version $resolvedVersion) -gt 0) {
+                $resolvedVersion = $package.Version
+            }
+        }
+    }
+    else {
+        $resolvedVersion = Resolve-VersionInRange -Candidate @($packages.Version) -Required $Version
+    }
+    if (-not $resolvedVersion) {
+        Write-Error "No version of [$DependencyName] at [$Source] satisfies [$Version]"
+        return
+    }
+    $resolved = $packages | Where-Object { $_.Version -eq $resolvedVersion } | Select-Object -First 1
+    [PSCustomObject]@{
+        PSTypeName   = 'PSDepend.ResolvedDependency'
+        Name         = $DependencyName
+        Version      = $resolvedVersion
+        Dependencies = ConvertFrom-NugetDependencyString -Dependencies $resolved.Properties.Dependencies
+    }
+    return
+}
+
 # We use target as a proxy for Scope
 $Target = $Dependency.Target
 if (-not $Dependency.Target) {
     Write-Error "Nuget requires a Dependency Target. Skipping [$DependencyName]"
     return
 }
-
-$Credential = $Dependency.Credential
 
 if (-not (Get-Command Nuget -ErrorAction SilentlyContinue)) {
     if (Test-PlatformSupport -Type 'Nuget' -Support 'windows', 'core') {

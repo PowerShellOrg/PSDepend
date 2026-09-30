@@ -121,6 +121,14 @@ function Get-Dependency {
                 AnotherPrivatePackage = $morePrivateCredentials
             }
 
+    .PARAMETER IgnoreLock
+        Skip any <name>.lock.json next to a dependency file and return the dependencies exactly as declared.
+
+        By default, when a lock written by Update-PSDependLock exists, each locked dependency's Version is
+        replaced with the locked version and locked transitive packages are returned as additional
+        dependencies (named Name@Version) that the declaring dependency DependsOn. A lock that no longer
+        matches its dependency file is an error.
+
     .EXAMPLE
         Get-Dependency -Path C:\requirements.psd1
 
@@ -144,7 +152,10 @@ function Get-Dependency {
 
         [parameter(ParameterSetName = 'File')]
         [parameter(ParameterSetName = 'Hashtable')]
-        [hashtable]$Credentials
+        [hashtable]$Credentials,
+
+        [parameter(ParameterSetName = 'File')]
+        [switch]$IgnoreLock
     )
 
     # Helper to pick from global PSDependOptions, or return a default
@@ -424,7 +435,16 @@ function Get-Dependency {
                 $File = Split-Path $DependencyFile -Leaf
                 $Dependencies = Import-LocalizedData -BaseDirectory $Base -FileName $File
 
-                Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName
+                $FileDependencies = @( Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName )
+
+                $LockPath = Get-PSDependLockPath -DependencyFile $DependencyFile
+                if (-not $IgnoreLock -and $FileDependencies.Count -gt 0 -and (Test-Path -LiteralPath $LockPath -PathType Leaf)) {
+                    Write-Verbose "Applying lock [$LockPath] to [$DependencyFile]"
+                    $Lock = Import-PSDependLock -Path $LockPath
+                    Merge-PSDependLock -Dependency $FileDependencies -Lock $Lock -LockPath $LockPath
+                } else {
+                    $FileDependencies
+                }
             }
         }
     } elseif ($PSCmdlet.ParameterSetName -eq 'Hashtable') {

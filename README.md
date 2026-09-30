@@ -149,6 +149,21 @@ Invoke-PSDepend -Path C:\requirements.psd1 -Credentials @{ 'my_gallery' = $creds
 
 The credential key must match between the dependency definition and the hashtable passed to `-Credentials`.
 
+## Locking Dependencies
+
+Like npm's `package-lock.json`, PSDepend can pin every dependency — and the dependencies *they* pull in — to exact versions so that every machine installs the same thing:
+
+```powershell
+Update-PSDependLock -Path .\requirements.psd1   # writes requirements.lock.json
+Invoke-PSDepend -Path .\requirements.psd1       # installs the locked versions
+```
+
+`Update-PSDependLock` asks each dependency type that supports the `Resolve` action (`PSGalleryModule`, `PSResourceGet`, `PSGalleryNuget`, `Nuget`, `Chocolatey`, `Npm`) for the highest version that satisfies the declared `Version` (exact, `latest`, or a NuGet range) and walks that package's own dependencies the same way. A package required by several dependencies is locked to one version that satisfies all of their constraints; conflicting constraints fail the update. `Npm` pins only the declared package — npm's own `package-lock.json` governs its subtree.
+
+Once a lock exists next to a dependency file, `Invoke-PSDepend` and `Get-Dependency` use it automatically: each dependency installs at its locked version, and locked transitive packages install first. If the dependency file changes (a version constraint edited, a dependency added or removed), the lock is reported as out of date until you run `Update-PSDependLock` again. Pass `-IgnoreLock` to resolve without it. Commit the `.lock.json` alongside the dependency file.
+
+Dependency types without a `Resolve` action (`Git`, `GitHub`, `FileDownload`, ...) are recorded in the lock for drift detection but install exactly as declared.
+
 ## Getting Help
 
 Each dependency type may handle standard properties differently and expose its own parameters. Use `Get-PSDependType` to see what is available:

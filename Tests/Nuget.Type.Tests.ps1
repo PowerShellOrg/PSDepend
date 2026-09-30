@@ -93,4 +93,64 @@ Describe 'Nuget script' {
             Should -Invoke -CommandName BootStrap-Nuget -ModuleName PSDepend -Times 0
         }
     }
+
+    Context 'PSDependAction = Resolve' {
+        BeforeAll {
+            InModuleScope PSDepend {
+                Mock Get-Command { $null } -ParameterFilter { $Name -eq 'Nuget' }
+                Mock BootStrap-Nuget { }
+                Mock Find-NugetPackage {
+                    @(
+                        [PSCustomObject]@{ Version = '1.9.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = '' } }
+                        [PSCustomObject]@{ Version = '2.5.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'System.Memory:4.5.4:net45|Foo::|::netstandard2.0' } }
+                        [PSCustomObject]@{ Version = '3.0.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'System.Memory:[4.5.4, ):' } }
+                        [PSCustomObject]@{ Version = '3.1.0-beta1'; Properties = @{ IsPrerelease = 'true'; Dependencies = '' } }
+                    )
+                }
+            }
+        }
+
+        It 'Resolves a range to the highest in-range version without a Target or nuget.exe' {
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget' -Version '[2.0.0,3.0.0)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Name | Should -Be 'Newtonsoft.Json'
+            $result.Version | Should -Be '2.5.0'
+            $result.Dependencies['System.Memory'] | Should -Be '[4.5.4,)'
+            $result.Dependencies['Foo'] | Should -Be 'latest'
+            $result.Dependencies.Count | Should -Be 2
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName BootStrap-Nuget -ModuleName PSDepend -Times 0
+        }
+
+        It 'Resolves latest to the highest stable version, skipping prerelease' {
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Version | Should -Be '3.0.0'
+            $result.Dependencies['System.Memory'] | Should -Be '[4.5.4,)'
+        }
+
+        It 'Uses the Name parameter override as the package id' {
+            $dep = New-PSDependFixture -DependencyName 'Portable.BouncyCastle' -DependencyType 'Nuget' -Name 'BouncyCastle.Crypto'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Name | Should -Be 'BouncyCastle.Crypto'
+            Should -Invoke -CommandName Find-NugetPackage -ModuleName PSDepend -Times 1 -ParameterFilter { $Name -eq 'BouncyCastle.Crypto' }
+        }
+
+        It 'Errors with no output when nothing satisfies the range' {
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget' -Version '[5.0.0,)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable e
+                $e.Count | Should -Be 1
+                $e[0] | Should -Match 'No version of \[Newtonsoft.Json\]'
+            }
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+        }
+    }
 }

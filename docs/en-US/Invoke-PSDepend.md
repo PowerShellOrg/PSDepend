@@ -19,7 +19,7 @@ Install, import, or test dependencies defined in a PSDepend file.
 
 ```
 Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Recurse <Boolean>]
- [-Import] [-Install] [-Force] [-Target <String>] [-Credentials <Hashtable>]
+ [-Import] [-Install] [-Force] [-Target <String>] [-Credentials <Hashtable>] [-IgnoreLock]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -27,8 +27,8 @@ Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String
 
 ```
 Invoke-PSDepend [[-Path] <String[]>] [-PSDependTypePath <String>] [-Tags <String[]>] [-Recurse <Boolean>]
- [-Test] [-Quiet] [-Force] [-Target <String>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+ [-Test] [-Quiet] [-Force] [-Target <String>] [-IgnoreLock] [-ProgressAction <ActionPreference>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ### test-hashtable
@@ -310,6 +310,24 @@ Aliases: cf
 Required: False
 Position: Named
 Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -IgnoreLock
+
+Skip any `<name>.lock.json` next to a dependency file and resolve versions as declared. By default a lock
+written by `Update-PSDependLock` pins each dependency to its locked version and installs locked transitive
+packages first; a lock that no longer matches its dependency file is an error.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: installimport-file, test-file
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

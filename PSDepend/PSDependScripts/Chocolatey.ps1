@@ -1,4 +1,4 @@
-﻿# cspell:ignore lessmsi
+# cspell:ignore lessmsi
 <#
     .SYNOPSIS
     Installs a package from a Chocolatey repository.
@@ -24,10 +24,11 @@
     Defaults to https://community.chocolatey.org/install.ps1
 
     .PARAMETER PSDependAction
-    Test, or Install the package. Defaults to Install
+    Test, Install, or Resolve the package. Defaults to Install
 
     Test: Return true or false on whether the dependency is in place
     Install: Install the dependency
+    Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
 
     .EXAMPLE
     @{
@@ -76,7 +77,7 @@ param(
 
     [string]$ChocoInstallScriptUrl = 'https://community.chocolatey.org/install.ps1',
 
-    [ValidateSet('Test', 'Install')]
+    [ValidateSet('Test', 'Install', 'Resolve')]
     [string[]]$PSDependAction = @('Install')
 )
 
@@ -236,6 +237,51 @@ if (-not $Dependency.Source -or $Source -eq '') {
 }
 
 $Credential = $Dependency.Credential
+
+if ($PSDependAction -contains 'Resolve') {
+    # Chocolatey feeds are NuGet v2 OData; query the feed directly so Resolve never needs choco.exe.
+    if ($Source -notmatch '^https?://') {
+        Write-Error "Resolve for [$Name] requires a NuGet v2 feed URL as Source; got [$Source]"
+        return
+    }
+
+    $findParams = @{
+        Name             = $Name
+        PackageSourceUrl = $Source
+    }
+    if ($Credential) {
+        $findParams.Credential = $Credential
+    }
+    # choco install/upgrade never picks a prerelease without --pre, so Resolve ignores them too.
+    $packages = @(Find-NugetPackage @findParams | Where-Object { $_.Version -and $_.Properties.IsPrerelease -ne 'true' })
+
+    $selected = $null
+    if ($Version -eq 'latest') {
+        foreach ($package in $packages) {
+            if ($null -eq $selected -or (Compare-Version -ReferenceVersion $package.Version -DifferenceVersion $selected.Version) -gt 0) {
+                $selected = $package
+            }
+        }
+    } else {
+        $resolvedVersion = Resolve-VersionInRange -Candidate $packages.Version -Required $Version
+        if ($resolvedVersion) {
+            $selected = $packages | Where-Object { $_.Version -eq $resolvedVersion } | Select-Object -First 1
+        }
+    }
+
+    if ($null -eq $selected) {
+        Write-Error "No version of [$Name] at [$Source] satisfies [$Version]"
+        return
+    }
+
+    [PSCustomObject]@{
+        PSTypeName   = 'PSDepend.ResolvedDependency'
+        Name         = $Name
+        Version      = $selected.Version
+        Dependencies = ConvertFrom-NugetDependencyString -Dependencies ([string]$selected.Properties.Dependencies)
+    }
+    return
+}
 
 $versionRange = $null
 if ($Version -ne 'latest') {

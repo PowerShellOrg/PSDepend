@@ -44,6 +44,14 @@ _Avoid_: filter, category, label
 A constraint on which versions of a Dependency satisfy it, expressed in NuGet range syntax (e.g. `[2.2.3,3.0)`, `[2.0,)`) inside the Version field. A bare version (`3.2.1`) is not a range — it means exactly that version.
 _Avoid_: version spec, version constraint, MinimumVersion/MaximumVersion
 
+**Lock**:
+A `<name>.lock.json` file next to a DependencyFile, written by `Update-PSDependLock`, that records one exact version per `DependencyType::Name` for every Dependency (and its transitive dependencies) whose DependencyScript supports the Resolve PSDependAction. Consumed automatically by `Get-Dependency`/`Invoke-PSDepend`; out of date when the DependencyFile no longer matches.
+_Avoid_: lockfile (npm's), pin file, freeze
+
+**Resolve**:
+The PSDependAction that asks a DependencyScript for the highest version satisfying a Version (or VersionRange) at its source, plus that version's own dependencies as VersionRanges, without installing. Runs alone; only DependencyScripts that opt in support it.
+_Avoid_: lookup, query, find
+
 ## Relationships
 
 - A **DependencyFile** contains one or more **Dependencies** and at most one **PSDependOptions** block
@@ -53,6 +61,7 @@ _Avoid_: version spec, version constraint, MinimumVersion/MaximumVersion
 - A **DependencyScript** receives a **Dependency** and a set of **PSDependAction** flags on each invocation
 - **Target** is a field on a **Dependency** interpreted differently by each **DependencyScript**
 - A **Dependency**'s Version field carries either an exact version or a **VersionRange**; the `PSGalleryModule` and `PSGalleryNuget` **DependencyScripts** resolve a **VersionRange** to a concrete version to install, while `PSResourceGet` passes the range to `Install-PSResource` and lets it resolve
+- A **Lock** belongs to exactly one **DependencyFile**; it is produced by invoking **Resolve** on each **DependencyScript** that supports it and, when applied, pins each **Dependency**'s Version and adds locked transitive packages as **Prerequisites** of the **Dependency** that pulled them in
 
 ## Example dialogue
 

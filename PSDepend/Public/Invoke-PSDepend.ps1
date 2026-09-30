@@ -81,6 +81,13 @@ function Invoke-PSDepend {
                 AnotherPrivatePackage = $morePrivateCredentials
         }
 
+    .PARAMETER IgnoreLock
+        Skip any <name>.lock.json next to a dependency file and resolve versions as declared.
+
+        By default, a lock written by Update-PSDependLock pins each dependency to its locked version
+        and installs locked transitive packages first. A lock that no longer matches its dependency
+        file is an error; run Update-PSDependLock to refresh it.
+
     .EXAMPLE
         Invoke-PSDepend
 
@@ -156,7 +163,11 @@ function Invoke-PSDepend {
 
         [parameter(ParameterSetName = 'installimport-file')]
         [parameter(ParameterSetName = 'installimport-hashtable')]
-        [hashtable]$Credentials
+        [hashtable]$Credentials,
+
+        [parameter(ParameterSetName = 'installimport-file')]
+        [parameter(ParameterSetName = 'test-file')]
+        [switch]$IgnoreLock
     )
     Begin {
         # Build parameters
@@ -193,6 +204,9 @@ function Invoke-PSDepend {
                 }
             }
             $GetPSDependParams.add('Path', $DependencyFiles)
+            if ($IgnoreLock) {
+                $GetPSDependParams.Add('IgnoreLock', $true)
+            }
         }
         elseif ($PSCmdlet.ParameterSetName -like '*-hashtable') {
             $GetPSDependParams.add('InputObject', $InputObject)

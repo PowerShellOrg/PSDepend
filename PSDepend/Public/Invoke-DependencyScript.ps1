@@ -22,7 +22,7 @@
     .PARAMETER PSDependAction
         PSDependAction to run.  Test, Install, and Import are the most common.
 
-        Test can only be run by itself.
+        Test can only be run by itself.  Resolve (used by Update-PSDependLock) can only be run by itself.
 
     .PARAMETER Quiet
         If PSDependAction is Test, and Quiet is specified, we return $true or $false based on whether a dependency exists
@@ -55,13 +55,13 @@
     begin {
         # This script reads a depend.psd1, installs dependencies as defined
         Write-Verbose "Running Invoke-DependencyScript with ParameterSetName '$($PSCmdlet.ParameterSetName)' and params: $($PSBoundParameters | Out-String)"
-        $PSDependTypes = Get-PSDependType -SkipHelp
+        $PSDependTypes = Get-PSDependType -Path $PSDependTypePath -SkipHelp
     }
     process {
         Write-Verbose "Dependencies:`n$($Dependency | Select-Object -Property * | Out-String)"
 
         #Get definitions, and dependencies in this particular psd1
-        $DependencyDefs = Get-PSDependScript
+        $DependencyDefs = Get-PSDependScript -Path $PSDependTypePath
         $TheseDependencyTypes = @( $Dependency.DependencyType | Sort-Object -Unique )
 
         #Build up hash, we call each DependencyType script for applicable dependencies
@@ -109,6 +109,11 @@
                 $PSDependActions = $PSDependActions | Where-Object { $_ -ne 'Test' }
             }
 
+            if ($PSDependActions -contains 'Resolve' -and $PSDependActions.Count -gt 1) {
+                Write-Error "Removing [Resolve] from PSDependActions.  The Resolve action must run on its own."
+                $PSDependActions = $PSDependActions | Where-Object { $_ -ne 'Resolve' }
+            }
+
             foreach ($ThisDependency in $TheseDependencies) {
                 #Parameters for dependency types.  Only accept valid params...
                 if ($ThisDependency.Parameters.keys.count -gt 0) {
@@ -121,7 +126,7 @@
                         }
                     }
 
-                    if ($ThisDependency.Parameters.Import -and $PSDependActions -notcontains 'Test') {
+                    if ($ThisDependency.Parameters.Import -and $PSDependActions -notcontains 'Test' -and $PSDependActions -notcontains 'Resolve') {
                         $PSDependActions += 'Import'
                         $PSDependActions = $PSDependActions | Sort-Object -Unique
                     }

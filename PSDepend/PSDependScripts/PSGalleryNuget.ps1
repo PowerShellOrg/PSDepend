@@ -23,11 +23,12 @@
         If specified, import the module in the global scope
 
     .PARAMETER PSDependAction
-        Test, Install, or Import the module.  Defaults to Install
+        Test, Install, Import, or Resolve the module.  Defaults to Install
 
         Test: Return true or false on whether the dependency is in place
         Install: Install the dependency
         Import: Import the dependency
+        Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
 
     .EXAMPLE
 
@@ -63,7 +64,7 @@ param(
 
     [switch]$Import,
 
-    [ValidateSet('Test', 'Install', 'Import')]
+    [ValidateSet('Test', 'Install', 'Import', 'Resolve')]
     [string[]]$PSDependAction = @('Install')
 )
 # Extract data from Dependency
@@ -83,14 +84,42 @@ if (-not $Dependency.Source) {
     $Source = 'https://www.powershellgallery.com/api/v2/'
 }
 
+$Credential = $Dependency.Credential
+
+if ($PSDependAction -contains 'Resolve') {
+    $packages = @(Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential)
+    $resolvedVersion = $null
+    if ($Version -eq 'latest') {
+        $stable = @($packages | Where-Object { $_.Properties.IsPrerelease -ne 'true' })
+        foreach ($package in $stable) {
+            if (-not $resolvedVersion -or (Compare-Version $package.Version $resolvedVersion) -gt 0) {
+                $resolvedVersion = $package.Version
+            }
+        }
+    }
+    else {
+        $resolvedVersion = Resolve-VersionInRange -Candidate @($packages.Version) -Required $Version
+    }
+    if (-not $resolvedVersion) {
+        Write-Error "No version of [$Name] at [$Source] satisfies [$Version]"
+        return
+    }
+    $resolved = $packages | Where-Object { $_.Version -eq $resolvedVersion } | Select-Object -First 1
+    [PSCustomObject]@{
+        PSTypeName   = 'PSDepend.ResolvedDependency'
+        Name         = $Name
+        Version      = $resolvedVersion
+        Dependencies = ConvertFrom-NugetDependencyString -Dependencies $resolved.Properties.Dependencies
+    }
+    return
+}
+
 # We use target as a proxy for Scope
 $Target = $Dependency.Target
 if (-not $Dependency.Target) {
     Write-Error "PSGalleryNuget requires a Dependency Target. Skipping [$DependencyName]"
     return
 }
-
-$Credential = $Dependency.Credential
 
 if (-not (Get-Command Nuget -ErrorAction SilentlyContinue)) {
     if (Test-PlatformSupport -Type 'PSGalleryNuget' -Support 'windows', 'core') {
