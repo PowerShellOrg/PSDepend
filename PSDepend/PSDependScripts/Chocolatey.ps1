@@ -242,10 +242,17 @@ if ($Version -ne 'latest') {
     $versionRange = ConvertFrom-VersionRange -Version $Version
     if (-not $versionRange) {
         Write-Error "Could not parse version [$Version] for [$Name]; expected an exact version or a valid NuGet range."
+        if ($PSDependAction -contains 'Test') {
+            return $false
+        }
         return
     }
 }
-$installVersion = $Version
+$installVersion = if ($versionRange -and $versionRange.IsExact) {
+    $versionRange.Exact
+} else {
+    $Version
+}
 
 if (-not (Get-Command -Name 'choco.exe' -ErrorAction SilentlyContinue)) {
     Write-Verbose "Chocolatey is not installed. Installing from [$ChocoInstallScriptUrl]"
@@ -273,6 +280,9 @@ if ($Force.IsPresent -and $PSDependAction -contains 'Install') {
         $installVersion = Resolve-VersionInRange -Candidate $availableVersions -Required $Version
         if (-not $installVersion) {
             Write-Error "No version of [$Name] at source [$Source] satisfies range [$Version]"
+            if ($PSDependAction -contains 'Test') {
+                return $false
+            }
             return
         }
         Write-Verbose "Resolved range [$Version] to version [$installVersion] for [$Name]"
@@ -330,6 +340,9 @@ if ($versionRange -and -not $versionRange.IsExact) {
     $installVersion = Resolve-VersionInRange -Candidate $availableVersions -Required $Version
     if (-not $installVersion) {
         Write-Error "No version of [$Name] at source [$Source] satisfies range [$Version]"
+        if ($PSDependAction -contains 'Test') {
+            return $false
+        }
         return
     }
     Write-Verbose "Resolved range [$Version] to version [$installVersion] for [$Name]"

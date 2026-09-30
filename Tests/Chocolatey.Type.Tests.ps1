@@ -105,6 +105,16 @@ Describe 'Chocolatey script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
             }
         }
 
+        It 'Passes a bracketed exact range as a concrete version' {
+            $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0]'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -Force
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+                $Arguments -contains 'upgrade' -and $Arguments -contains "--version='2.0.0'"
+            }
+        }
+
         It 'Accepts an installed version that satisfies the range' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0,3.0.0)'
             InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
@@ -117,13 +127,13 @@ Describe 'Chocolatey script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
             }
         }
 
-        It 'Skips installation when no available version satisfies the range' {
+        It 'Returns false when no available version satisfies the range during testing' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0,3.0.0)'
             InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 Mock Invoke-ExternalCommand { 'git|1.9.0' } -ParameterFilter { $Arguments -contains '--all-versions' }
 
-                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
-            }
+                & $ScriptPath -Dependency $Dep -PSDependAction Test -ErrorAction SilentlyContinue
+            } | Should -BeFalse
             Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -Exactly -ParameterFilter {
                 $Arguments -contains 'upgrade'
             }
