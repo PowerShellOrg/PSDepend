@@ -337,9 +337,7 @@ Describe 'PSResourceGet script' {
                     return [PSCustomObject]@{ Name = $Name; VersionRange = $null }
                 }
                 $normalized = @{ '4.9.0' = '[4.9.0, )'; '(, )' = '(, )' }[$Range]
-                $range = [PSCustomObject]@{ Normalized = $normalized }
-                $range = $range | Add-Member ScriptMethod ToString { $this.Normalized } -Force -PassThru
-                [PSCustomObject]@{ Name = $Name; VersionRange = $range }
+                [PSCustomObject]@{ Name = $Name; VersionRange = $normalized }
             }
 
             function script:New-ResolveCatalogue {

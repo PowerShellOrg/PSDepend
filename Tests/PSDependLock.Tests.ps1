@@ -48,6 +48,16 @@ BeforeAll {
     }
 }
 '@
+
+    $script:ResolvableBody = @'
+@{
+    App = @{
+        DependencyType = 'FakeResolver'
+        Version        = '[1.0,2.0)'
+        Target         = '$DependencyFolder/target'
+    }
+}
+'@
 }
 
 Describe 'Update-PSDependLock' {
@@ -269,7 +279,7 @@ Describe 'Get-Dependency with a lock' {
 Describe 'Invoke-PSDepend with a lock' {
 
     It 'Installs locked versions, children first' {
-        $file = Initialize-LockProject -Name 'install' -Body $script:AppBody
+        $file = Initialize-LockProject -Name 'install' -Body $script:ResolvableBody
         $null = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath
 
         Invoke-PSDepend -Path $file -PSDependTypePath $script:MapPath -Force -WarningAction SilentlyContinue
@@ -302,7 +312,7 @@ Describe 'Invoke-PSDepend with a lock' {
     }
 
     It 'Passes the declared range through with -IgnoreLock' {
-        $file = Initialize-LockProject -Name 'installignore' -Body $script:AppBody
+        $file = Initialize-LockProject -Name 'installignore' -Body $script:ResolvableBody
         $null = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath
 
         Invoke-PSDepend -Path $file -PSDependTypePath $script:MapPath -Force -IgnoreLock -WarningAction SilentlyContinue
