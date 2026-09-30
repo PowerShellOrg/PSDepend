@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-30
+
+### Added
+
+- NuGet version-range support for Chocolatey dependencies. Ranges resolve to
+  the highest matching package version before installation.
+
+### Fixed
+
+- Build initialization now explicitly loads the pinned Pester 5 version before
+  importing PowerShellBuild and uses a Pester 5-compatible test task, preventing
+  a newer installed Pester version from being loaded.
+
 ## [0.5.0] - 2026-08-16
 
 ### Added

@@ -8,7 +8,9 @@
 
     Relevant Dependency metadata:
         Name: The name of the package
-        Version: Used to identify existing installs meeting this criteria. Defaults to 'latest'
+        Version: Used to identify existing installs meeting this criteria. Defaults to 'latest'.
+            Also accepts a NuGet version range (e.g. '[2.2.3,3.0)', '[2.0,)', '(,3.0)').
+            A bare version remains an exact version. Ranges resolve to the highest matching version.
         Source: Source Uri. Defaults to https://community.chocolatey.org/api/v2/
 
     .PARAMETER Dependency
@@ -127,19 +129,24 @@ function Get-ChocoInstalledPackage {
     Invoke-ExternalCommand @invokeExternalCommandSplat | ConvertFrom-Csv @convertFromCsvSplat
 }
 
-function Get-ChocoLatestPackage {
+function Get-ChocoPackage {
     [CmdletBinding()]
     param (
         [string]$Name,
 
         [string]$Source,
 
-        [Management.Automation.PSCredential]$Credential
+        [Management.Automation.PSCredential]$Credential,
+
+        [switch]$AllVersions
     )
 
     # 'choco search' queries remote sources on both 1.x and 2.x; 'choco list' stopped
     # querying remote sources in Chocolatey 2.0 and rejects URL sources (issue #187)
     $chocoParams = @('search', "$Name", '--limit-output', '--exact')
+    if ($AllVersions.IsPresent) {
+        $chocoParams += '--all-versions'
+    }
     if ($Source) {
         $chocoParams += "--source='$Source'"
     }
@@ -230,6 +237,23 @@ if (-not $Dependency.Source -or $Source -eq '') {
 
 $Credential = $Dependency.Credential
 
+$versionRange = $null
+if ($Version -ne 'latest') {
+    $versionRange = ConvertFrom-VersionRange -Version $Version
+    if (-not $versionRange) {
+        Write-Error "Could not parse version [$Version] for [$Name]; expected an exact version or a valid NuGet range."
+        if ($PSDependAction -contains 'Test') {
+            return $false
+        }
+        return
+    }
+}
+$installVersion = if ($versionRange -and $versionRange.IsExact) {
+    $versionRange.Exact
+} else {
+    $Version
+}
+
 if (-not (Get-Command -Name 'choco.exe' -ErrorAction SilentlyContinue)) {
     Write-Verbose "Chocolatey is not installed. Installing from [$ChocoInstallScriptUrl]"
     # download and run the Chocolatey script
@@ -251,9 +275,22 @@ if (-not (Get-Command -Name 'choco.exe' -ErrorAction SilentlyContinue)) {
 # If this is a forced install we don't need to check anything,
 # just install the package version requested
 if ($Force.IsPresent -and $PSDependAction -contains 'Install') {
+    if ($versionRange -and -not $versionRange.IsExact) {
+        $availableVersions = (Get-ChocoPackage -Name $Name -Source $Source -Credential $Credential -AllVersions).Version
+        $installVersion = Resolve-VersionInRange -Candidate $availableVersions -Required $Version
+        if (-not $installVersion) {
+            Write-Error "No version of [$Name] at source [$Source] satisfies range [$Version]"
+            if ($PSDependAction -contains 'Test') {
+                return $false
+            }
+            return
+        }
+        Write-Verbose "Resolved range [$Version] to version [$installVersion] for [$Name]"
+    }
+
     $params = @{
         Name    = $Name
-        Version = $Version
+        Version = $installVersion
         Source  = $Source
         Force   = $Force.IsPresent
     }
@@ -278,7 +315,7 @@ if ($existingVersion) {
 }
 
 # Specific version requested, and equal to current
-if ($Version -ne 'latest' -and (Test-VersionEquality -ReferenceVersion $Version -DifferenceVersion $existingVersion)) {
+if ($Version -ne 'latest' -and (Test-VersionInRange -Version $existingVersion -Required $Version)) {
     Write-Verbose "You have the requested version [$Version] of [$Name]"
     if ($PSDependAction -contains 'Test') {
         return $true
@@ -287,7 +324,8 @@ if ($Version -ne 'latest' -and (Test-VersionEquality -ReferenceVersion $Version 
     return
 }
 
-# get the latest version from the source
+# Resolve a range to the highest available version. Chocolatey requires an exact
+# version for --version.
 $repoParams = @{
     Name   = $Name
     Source = $Source
@@ -296,13 +334,27 @@ if ($Credential) {
     $repoParams.Credential = $Credential
 }
 
-Write-Verbose "Getting latest package [$Name] version from source [$Source]."
-$repositoryVersion = (Get-ChocoLatestPackage @repoParams).Version
-if ($repositoryVersion) {
-    Write-Verbose "Found package [$Name] version [$repositoryVersion] on source [$Source]."
+if ($versionRange -and -not $versionRange.IsExact) {
+    Write-Verbose "Getting available package [$Name] versions from source [$Source]."
+    $availableVersions = (Get-ChocoPackage @repoParams -AllVersions).Version
+    $installVersion = Resolve-VersionInRange -Candidate $availableVersions -Required $Version
+    if (-not $installVersion) {
+        Write-Error "No version of [$Name] at source [$Source] satisfies range [$Version]"
+        if ($PSDependAction -contains 'Test') {
+            return $false
+        }
+        return
+    }
+    Write-Verbose "Resolved range [$Version] to version [$installVersion] for [$Name]"
 } else {
-    Write-Verbose "Package [$Name] not found on source [$Source]. Nothing more can be done."
-    return  # cannot continue
+    Write-Verbose "Getting latest package [$Name] version from source [$Source]."
+    $repositoryVersion = (Get-ChocoPackage @repoParams).Version
+    if ($repositoryVersion) {
+        Write-Verbose "Found package [$Name] version [$repositoryVersion] on source [$Source]."
+    } else {
+        Write-Verbose "Package [$Name] not found on source [$Source]. Nothing more can be done."
+        return  # cannot continue
+    }
 }
 
 # If the version in the remote repository is less than or equal to the version installed, then we have the latest already
@@ -338,7 +390,7 @@ Write-Verbose "You do not have the version requested of [$Name]: Requested versi
 if ($PSDependAction -contains 'Install') {
     $params = @{
         Name    = $Name
-        Version = $Version
+        Version = $installVersion
         Source  = $Source
         Force   = $Force.IsPresent
     }
