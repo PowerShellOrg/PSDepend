@@ -70,4 +70,56 @@ Describe 'Chocolatey script' -Tag 'WindowsOnly' -Skip:$SkipUnsupported {
             ($Arguments -join ' ') -match "--username='feeduser'" -and ($Arguments -join ' ') -match "--password='feedpass'"
         }
     }
+
+    Context 'NuGet version ranges' {
+        It 'Installs the highest available version that satisfies the range' {
+            $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                Mock Invoke-ExternalCommand {
+                    'git|1.9.0'
+                    'git|2.5.0'
+                    'git|3.0.0'
+                } -ParameterFilter { $Arguments -contains '--all-versions' }
+
+                & $ScriptPath -Dependency $Dep
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+                $Arguments -contains 'upgrade' -and $Arguments -contains "--version='2.5.0'"
+            }
+        }
+
+        It 'Accepts an installed version that satisfies the range' {
+            $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                Mock Invoke-ExternalCommand { 'git|2.4.0' } -ParameterFilter { $Arguments -contains 'list' }
+
+                & $ScriptPath -Dependency $Dep -PSDependAction Test
+            } | Should -BeTrue
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -Exactly -ParameterFilter {
+                $Arguments -contains 'search'
+            }
+        }
+
+        It 'Skips installation when no available version satisfies the range' {
+            $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0,3.0.0)'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                Mock Invoke-ExternalCommand { 'git|1.9.0' } -ParameterFilter { $Arguments -contains '--all-versions' }
+
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -Exactly -ParameterFilter {
+                $Arguments -contains 'upgrade'
+            }
+        }
+
+        It 'Skips installation for a malformed range' {
+            $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0,3.0.0'
+            InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
+            }
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0 -Exactly -ParameterFilter {
+                $Arguments -contains 'upgrade'
+            }
+        }
+    }
 }
