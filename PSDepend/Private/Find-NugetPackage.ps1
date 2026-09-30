@@ -18,18 +18,21 @@ function Find-NugetPackage {
         [PSCredential]$Credential = $null
     )
 
+
+    $escapedName = ([string]$Name).Replace("'", "''")
+    $escapedVersion = ([string]$Version).Replace("'", "''")
     #Ugly way to do this.  Prefer islatest, otherwise look for version, otherwise grab all matching modules
     if ($IsLatest) {
         Write-Verbose "Searching for latest [$name] module"
-        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and IsLatestVersion"
+        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$escapedName' and IsLatestVersion"
     }
     elseif ($PSBoundParameters.ContainsKey('Version')) {
         Write-Verbose "Searching for version [$version] of [$name]"
-        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and Version eq '$Version'"
+        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$escapedName' and Version eq '$escapedVersion'"
     }
     else {
         Write-Verbose "Searching for all versions of [$name] module"
-        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name'"
+        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$escapedName'"
     }
 
     $headers = @{}

@@ -7,13 +7,14 @@
 
         Note: We require npm in your path.
 
-        Lock behaviour (Resolve): PSDepend's lock pins only the declared package to an
+        Lock behavior (Resolve): PSDepend's lock pins only the declared package to an
         exact version. Transitive node dependencies are not resolved by PSDepend; npm's
         own package-lock.json governs the package's subtree.
 
         Relevant Dependency metadata:
             DependencyName (Key): Node Package Name
-            Version: Version of the node package to install; defaults to latest.
+            Version: Exact version or npm semver range (for example, '^1.2.0' or
+                     '>=1 <2'); defaults to latest. NuGet range syntax is not supported.
             Target: Path to place the node_modules folder, and all relevant packages, in.
                     You can specify a full path, a UNC path, or a relative path from the
                     current directory. You can also specify the special keyword, 'Global',
@@ -31,7 +32,8 @@
 
         Test: Return true or false on whether the dependency is in place
         Install: Install the dependency
-        Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
+        Resolve: Query npm for the highest version satisfying Version and report it.
+                 NuGet range syntax is rejected. Performs no installation.
 
     .EXAMPLE
         @{
@@ -88,6 +90,10 @@ If (-not [string]::IsNullOrEmpty($Target) -and $Target -ne 'global') {
 #endregion Extract Dependency Data
 #region    Resolve Action
 If ($PSDependAction -contains 'Resolve') {
+    if ($Version -match '[\[\]\(\),]') {
+        Write-Error "Npm dependency [$Name] uses NuGet range syntax [$Version]; use an npm semver range instead"
+        return
+    }
     $Candidates = @(Find-NodeModule -PackageName $Name -Version $Version)
     $Resolved = $null
     foreach ($Candidate in $Candidates) {

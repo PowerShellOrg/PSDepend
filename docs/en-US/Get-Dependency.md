@@ -133,10 +133,10 @@ Accept wildcard characters: False
 
 ### -IgnoreLock
 
-Skip any `<name>.lock.json` next to a dependency file and return the dependencies exactly as declared.
-By default an existing lock (see `Update-PSDependLock`) pins each locked dependency's Version and adds the
-locked transitive packages as additional `Name@Version` dependencies; a lock that no longer matches its
-dependency file is an error.
+Skip any `<name>.lock.json` next to a dependency file and return the Dependencies as declared.
+By default an existing lock pins root versions and adds locked transitive packages as Prerequisites.
+Their names normally use `Name@Version`; duplicate installation contexts receive a `#RootName` suffix.
+A changed dependency, version, resolution source, or DependencyScript parameter makes the lock stale.
 
 ```yaml
 Type: SwitchParameter

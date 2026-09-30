@@ -146,6 +146,7 @@ Describe 'PSGalleryNuget script' {
                     @(
                         [PSCustomObject]@{ Version = '1.9.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = '' } }
                         [PSCustomObject]@{ Version = '2.5.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'PSDeploy:0.2.5:|BuildHelpers:[2.0.0, ):' } }
+                        [PSCustomObject]@{ Version = '2.9.0-beta1'; Properties = @{ IsPrerelease = 'true'; Dependencies = '' } }
                         [PSCustomObject]@{ Version = '3.0.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'BuildHelpers::' } }
                         [PSCustomObject]@{ Version = '3.1.0-beta1'; Properties = @{ IsPrerelease = 'true'; Dependencies = '' } }
                     )

@@ -1,28 +1,30 @@
 function Update-PSDependLock {
     <#
     .SYNOPSIS
-        Resolve a DependencyFile's full dependency graph and write a lock file
+        Resolve a DependencyFile's full dependency graph and write a lock file.
 
     .DESCRIPTION
         Resolve a DependencyFile's full dependency graph and write a lock file
 
         Works like npm's package-lock.json: every dependency whose DependencyType
-        supports the Resolve action is resolved to the highest version that
-        satisfies its Version (exact, 'latest', or a NuGet range), its own
-        dependencies are resolved the same way recursively, and the result is
-        written next to the DependencyFile as <name>.lock.json
-        (requirements.psd1 -> requirements.lock.json).
+        supports Resolve is resolved to the highest version satisfying Version,
+        and its dependencies are resolved recursively. Gallery, NuGet and
+        Chocolatey types accept NuGet ranges; Npm accepts npm semver ranges.
 
-        A package required by several dependencies is locked to one version that
-        satisfies all of their constraints; conflicting constraints fail the update.
+        One version is locked per DependencyType::Name. Resolution is greedy:
+        child constraints are intersected, but PSDepend does not backtrack to an
+        older parent version. Narrow a parent range when an older version is
+        required. Incompatible constraints fail the update.
 
-        Once a lock exists, Invoke-PSDepend and Get-Dependency use it automatically:
-        each dependency installs at its locked version and locked transitive
-        packages install first. If the DependencyFile changes, the lock is reported
-        as out of date until you run Update-PSDependLock again (or pass -IgnoreLock).
+        The result is written next to the DependencyFile as <name>.lock.json
+        (requirements.psd1 -> requirements.lock.json). Invoke-PSDepend and
+        Get-Dependency then use it automatically. A changed Dependency, Version,
+        resolution Source, or DependencyScript parameter makes the lock stale.
 
-        DependencyTypes without a Resolve action (Git, GitHub, FileDownload, ...) are
-        recorded in the lock so drift is detected, but install exactly as before.
+        DependencyTypes without Resolve (Git, GitHub, FileDownload, ...) are
+        recorded for drift detection but install exactly as declared. Lock files
+        should be committed and reviewed like code; format version 1 validates
+        exact versions but does not contain package content hashes.
 
         See Get-Help about_PSDepend for more information.
 

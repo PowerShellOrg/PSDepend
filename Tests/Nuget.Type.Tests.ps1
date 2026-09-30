@@ -103,6 +103,7 @@ Describe 'Nuget script' {
                     @(
                         [PSCustomObject]@{ Version = '1.9.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = '' } }
                         [PSCustomObject]@{ Version = '2.5.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'System.Memory:4.5.4:net45|Foo::|::netstandard2.0' } }
+                        [PSCustomObject]@{ Version = '2.9.0-beta1'; Properties = @{ IsPrerelease = 'true'; Dependencies = '' } }
                         [PSCustomObject]@{ Version = '3.0.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'System.Memory:[4.5.4, ):' } }
                         [PSCustomObject]@{ Version = '3.1.0-beta1'; Properties = @{ IsPrerelease = 'true'; Dependencies = '' } }
                     )

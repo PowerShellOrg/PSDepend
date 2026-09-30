@@ -41,15 +41,15 @@ A label on a Dependency that controls inclusion when `Invoke-PSDepend` is called
 _Avoid_: filter, category, label
 
 **VersionRange**:
-A constraint on which versions of a Dependency satisfy it, expressed in NuGet range syntax (e.g. `[2.2.3,3.0)`, `[2.0,)`) inside the Version field. A bare version (`3.2.1`) is not a range — it means exactly that version.
-_Avoid_: version spec, version constraint, MinimumVersion/MaximumVersion
+A constraint on which versions satisfy a Dependency, expressed in the DependencyScript's syntax inside Version. Gallery, NuGet, and Chocolatey Dependencies use NuGet range syntax (for example `[2.2.3,3.0)`); Npm uses npm semver. A bare version (`3.2.1`) means exactly that version.
+_Avoid_: version spec, MinimumVersion/MaximumVersion
 
 **Lock**:
-A `<name>.lock.json` file next to a DependencyFile, written by `Update-PSDependLock`, that records one exact version per `DependencyType::Name` for every Dependency (and its transitive dependencies) whose DependencyScript supports the Resolve PSDependAction. Consumed automatically by `Get-Dependency`/`Invoke-PSDepend`; out of date when the DependencyFile no longer matches.
+A `<name>.lock.json` file next to a DependencyFile, written by `Update-PSDependLock`, that records one exact version per `DependencyType::Name` for every Dependency whose DependencyScript supports Resolve, including transitive dependencies. Root entries also fingerprint resolution Source and Parameters. Consumed automatically by `Get-Dependency`/`Invoke-PSDepend`; malformed, unsafe, or stale locks are rejected.
 _Avoid_: lockfile (npm's), pin file, freeze
 
 **Resolve**:
-The PSDependAction that asks a DependencyScript for the highest version satisfying a Version (or VersionRange) at its source, plus that version's own dependencies as VersionRanges, without installing. Runs alone; only DependencyScripts that opt in support it.
+The PSDependAction that asks a DependencyScript for the highest version satisfying Version at its source, plus direct dependencies as ranges, without installing. Runs alone; only DependencyScripts that opt in support it. The graph engine is greedy and does not backtrack to older parent versions.
 _Avoid_: lookup, query, find
 
 ## Relationships

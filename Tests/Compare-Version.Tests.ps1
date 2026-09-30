@@ -43,7 +43,7 @@ Describe 'Compare-Version' {
         }
     }
 
-    Context 'System.Version fallback and normalisation' {
+    Context 'System.Version fallback and normalization' {
 
         It 'Compares four-part versions SemVer rejects' {
             InModuleScope PSDepend {

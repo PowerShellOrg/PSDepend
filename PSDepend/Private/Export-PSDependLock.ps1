@@ -4,7 +4,7 @@ function Export-PSDependLock {
     Write a lock object to disk as JSON.
 
     .DESCRIPTION
-    Serialises the ordered lock object produced by Resolve-PSDependLock. Keys are
+    Serializes the ordered lock object produced by Resolve-PSDependLock. Keys are
     already sorted by the producer so the file diffs cleanly under source
     control. The file is written as UTF-8 without a BOM.
 

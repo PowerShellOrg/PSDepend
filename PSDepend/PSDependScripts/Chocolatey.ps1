@@ -1,4 +1,4 @@
-# cspell:ignore lessmsi
+﻿# cspell:ignore lessmsi
 <#
     .SYNOPSIS
     Installs a package from a Chocolatey repository.
@@ -28,7 +28,8 @@
 
     Test: Return true or false on whether the dependency is in place
     Install: Install the dependency
-    Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
+    Resolve: Query the source for the highest version satisfying Version and report
+             its dependencies. Requires an HTTP(S) NuGet v2 feed URL and performs no installation.
 
     .EXAMPLE
     @{
@@ -242,6 +243,10 @@ if ($PSDependAction -contains 'Resolve') {
     # Chocolatey feeds are NuGet v2 OData; query the feed directly so Resolve never needs choco.exe.
     if ($Source -notmatch '^https?://') {
         Write-Error "Resolve for [$Name] requires a NuGet v2 feed URL as Source; got [$Source]"
+        return
+    }
+    if ($Credential -and $Source -notmatch '^https://') {
+        Write-Error "Resolve for [$Name] requires an HTTPS Source when Credential is supplied; got [$Source]"
         return
     }
 

@@ -8,11 +8,17 @@
     ],
     "words": [
         "BHPS",
+        "Depen",
         "RSAT",
         "choco",
+        "hashtables",
+        "inclusivity",
         "psake",
         "nuget",
-        "PSDepend"
+        "netstandard",
+        "Newtonsoft",
+        "PSDepend",
+        "unparseable"
     ],
     "ignoreWords": [
         "Creds",

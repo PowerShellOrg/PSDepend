@@ -45,7 +45,8 @@
         Test: Return true or false on whether the dependency is in place
         Install: Install the dependency
         Import: Import the dependency
-        Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
+        Resolve: Query the source for the highest version satisfying Version and report
+                 its dependencies. Honors AllowPrerelease and performs no installation.
 
     .EXAMPLE
         @{
@@ -151,22 +152,24 @@ else {
     $command = 'install'
 }
 
-$nugetProvider = @(Get-PackageProvider -ErrorAction SilentlyContinue) |
-    Where-Object { $_.Name -eq 'NuGet' } |
-    Select-Object -First 1
+if ($PSDependAction -notcontains 'Resolve') {
+    $nugetProvider = @(Get-PackageProvider -ErrorAction SilentlyContinue) |
+        Where-Object { $_.Name -eq 'NuGet' } |
+        Select-Object -First 1
 
-if (-not $nugetProvider) {
-    Write-Debug 'NuGet provider not found. Attempting to install NuGet provider.'
-    # Bootstrap NuGet provider for Windows PowerShell 5.1 and PowerShell 7+.
-    $installPackageProviderSplat = @{
-        Name           = 'NuGet'
-        ForceBootstrap = $true
-        Force          = $true
-        Scope          = 'CurrentUser'
-        ErrorAction    = 'SilentlyContinue'
+    if (-not $nugetProvider) {
+        Write-Debug 'NuGet provider not found. Attempting to install NuGet provider.'
+        # Bootstrap NuGet provider for Windows PowerShell 5.1 and PowerShell 7+.
+        $installPackageProviderSplat = @{
+            Name           = 'NuGet'
+            ForceBootstrap = $true
+            Force          = $true
+            Scope          = 'CurrentUser'
+            ErrorAction    = 'SilentlyContinue'
+        }
+
+        $null = Install-PackageProvider @installPackageProviderSplat
     }
-
-    $null = Install-PackageProvider @installPackageProviderSplat
 }
 
 Write-Verbose -Message "Getting dependency [$name] from PowerShell repository [$Repository]"
@@ -259,12 +262,22 @@ if ($PSDependAction -contains 'Resolve') {
         if (-not $dep -or -not $dep['Name']) { continue }
         $min = $dep['MinimumVersion']
         $max = $dep['MaximumVersion']
-        $childDependencies[$dep['Name']] =
-            if ($dep['RequiredVersion']) { [string]$dep['RequiredVersion'] }
-            elseif ($min -and $max)      { "[$min,$max]" }
-            elseif ($min)                { "[$min,)" }
-            elseif ($max)                { "(,$max]" }
-            else                         { 'latest' }
+        if ($dep['RequiredVersion']) {
+            $range = [string]$dep['RequiredVersion']
+        }
+        elseif ($min -and $max) {
+            $range = "[$min,$max]"
+        }
+        elseif ($min) {
+            $range = "[$min,)"
+        }
+        elseif ($max) {
+            $range = "(,$max]"
+        }
+        else {
+            $range = 'latest'
+        }
+        $childDependencies[$dep['Name']] = $range
     }
 
     $canonicalName = if ($selected.Name) { $selected.Name } else { $Name }

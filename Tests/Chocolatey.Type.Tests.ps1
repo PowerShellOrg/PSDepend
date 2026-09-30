@@ -180,7 +180,7 @@ Describe 'Chocolatey script Resolve' {
 
     Context 'PSDependAction = Resolve' {
 
-        It 'latest picks the highest stable version and skips prerelease' {
+        It 'Latest picks the highest stable version and skips prerelease' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version 'latest'
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Resolve
@@ -190,7 +190,7 @@ Describe 'Chocolatey script Resolve' {
             $result.Version | Should -Be '3.0.0'
         }
 
-        It 'range picks the highest stable in-range version, skipping prerelease' {
+        It 'Range picks the highest stable in-range version, skipping prerelease' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[2.0.0,3.0.0)'
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Resolve
@@ -198,7 +198,7 @@ Describe 'Chocolatey script Resolve' {
             $result.Version | Should -Be '2.45.0'
         }
 
-        It 'converts the feed Dependencies string to a NuGet-range map' {
+        It 'Converts the feed Dependencies string to a NuGet-range map' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '2.44.0'
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Resolve
@@ -210,7 +210,7 @@ Describe 'Chocolatey script Resolve' {
             $result.Dependencies['chocolatey-core.extension'] | Should -Be '[1.3.3,)'
         }
 
-        It 'converts a bare dependency version to a minimum-inclusive range' {
+        It 'Converts a bare dependency version to a minimum-inclusive range' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '3.0.0'
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Resolve
@@ -219,7 +219,7 @@ Describe 'Chocolatey script Resolve' {
             $result.Dependencies['git.install'] | Should -Be '[3.0.0,)'
         }
 
-        It 'writes an error and emits nothing when no version satisfies' {
+        It 'Writes an error and emits nothing when no version satisfies' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version '[4.0.0,)'
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable err
@@ -229,7 +229,7 @@ Describe 'Chocolatey script Resolve' {
             $result | Should -BeNullOrEmpty
         }
 
-        It 'writes an error and emits nothing when Source is not a feed URL' {
+        It 'Writes an error and emits nothing when Source is not a feed URL' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Source 'C:\LocalFeed'
             $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable err
@@ -239,7 +239,21 @@ Describe 'Chocolatey script Resolve' {
             Should -Invoke -CommandName Find-NugetPackage -ModuleName PSDepend -Times 0 -Exactly
         }
 
-        It 'never invokes choco during Resolve' {
+        It 'Rejects an HTTP source when credentials would be transmitted' {
+            $credential = New-TestCredential -UserName 'feeduser' -Password 'feedpass'
+            $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' `
+                -Source 'http://packages.example.test/api/v2/' -Credential $credential
+
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable err
+                $err[0].ToString() | Should -Match 'requires an HTTPS Source'
+            }
+
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Find-NugetPackage -ModuleName PSDepend -Times 0 -Exactly
+        }
+
+        It 'Never invokes choco during Resolve' {
             $dep = New-PSDependFixture -DependencyName 'git' -DependencyType 'Chocolatey' -Version 'latest'
             InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
                 & $ScriptPath -Dependency $Dep -PSDependAction Resolve

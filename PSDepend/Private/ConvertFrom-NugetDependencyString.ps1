@@ -1,3 +1,4 @@
+# cspell:ignore Newtonsoft
 function ConvertFrom-NugetDependencyString {
     <#
     .SYNOPSIS

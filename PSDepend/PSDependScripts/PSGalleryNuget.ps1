@@ -28,7 +28,8 @@
         Test: Return true or false on whether the dependency is in place
         Install: Install the dependency
         Import: Import the dependency
-        Resolve: Query the source for the highest version satisfying Version and report its dependencies. Used by Update-PSDependLock; performs no installation.
+        Resolve: Query the source for the highest version satisfying Version and report
+                 its dependencies. Used by Update-PSDependLock; performs no installation.
 
     .EXAMPLE
 
@@ -88,17 +89,17 @@ $Credential = $Dependency.Credential
 
 if ($PSDependAction -contains 'Resolve') {
     $packages = @(Find-NugetPackage -Name $Name -PackageSourceUrl $Source -Credential $Credential)
+    $stable = @($packages | Where-Object { $_.Properties.IsPrerelease -ne 'true' })
     $resolvedVersion = $null
     if ($Version -eq 'latest') {
-        $stable = @($packages | Where-Object { $_.Properties.IsPrerelease -ne 'true' })
         foreach ($package in $stable) {
-            if (-not $resolvedVersion -or (Compare-Version $package.Version $resolvedVersion) -gt 0) {
+            if (-not $resolvedVersion -or (Compare-Version -ReferenceVersion $package.Version -DifferenceVersion $resolvedVersion) -gt 0) {
                 $resolvedVersion = $package.Version
             }
         }
     }
     else {
-        $resolvedVersion = Resolve-VersionInRange -Candidate @($packages.Version) -Required $Version
+        $resolvedVersion = Resolve-VersionInRange -Candidate @($stable.Version) -Required $Version
     }
     if (-not $resolvedVersion) {
         Write-Error "No version of [$Name] at [$Source] satisfies [$Version]"
@@ -109,7 +110,7 @@ if ($PSDependAction -contains 'Resolve') {
         PSTypeName   = 'PSDepend.ResolvedDependency'
         Name         = $Name
         Version      = $resolvedVersion
-        Dependencies = ConvertFrom-NugetDependencyString -Dependencies $resolved.Properties.Dependencies
+        Dependencies = ConvertFrom-NugetDependencyString -Dependencies ([string]$resolved.Properties.Dependencies)
     }
     return
 }

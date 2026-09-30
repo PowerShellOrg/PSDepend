@@ -12,7 +12,7 @@ function Resolve-PSDependLock {
     constraints (Join-VersionRange), so the lock holds exactly one version per
     DependencyType::Name. When a parent is re-resolved its previous child
     constraints are dropped and the loop continues until no node violates a
-    constraint (a fixpoint), then unreachable nodes are pruned.
+    constraint (a fixed point), then unreachable nodes are pruned.
 
     Dependencies whose DependencyType cannot Resolve (or is unsupported on this
     platform) are recorded without a resolved package so a later run can still
@@ -42,7 +42,8 @@ function Resolve-PSDependLock {
         [string]$PSDependTypePath = $(Join-Path $ModuleRoot PSDependMap.psd1)
     )
 
-    $maxIterations = 10000
+    $maxIterations = 1000
+    $resolutionStates = @{}
 
     $types = Get-PSDependType -Path $PSDependTypePath -SkipHelp
     $scripts = Get-PSDependScript -Path $PSDependTypePath
@@ -66,22 +67,19 @@ function Resolve-PSDependLock {
         $resolvable[$DependencyType]
     }
 
-    function Get-Requested {
-        param($Version)
-        if ([string]::IsNullOrEmpty($Version)) { 'latest' } else { [string]$Version }
-    }
-
     $roots = [ordered]@{}
-    $nodes = @{}        # key -> @{ Name; DependencyType; Version; Dependencies; Template; Constraints = @{ source -> range } }
+    $nodes = @{}        # key -> resolved node with constraints and resolution context
     $queue = New-Object System.Collections.Generic.Queue[string]
 
     foreach ($root in $Dependency) {
         $name = if ($root.Name) { $root.Name } else { $root.DependencyName }
-        $requested = Get-Requested $root.Version
+        $requested = Get-PSDependRequestedVersion -Version $root.Version
+        $contextHash = Get-PSDependResolutionContext -Dependency $root
         $entry = [ordered]@{
             dependencyType = $root.DependencyType
             name           = $name
             requested      = $requested
+            contextHash   = $contextHash
         }
         if (Test-Resolvable -DependencyType $root.DependencyType) {
             $key = "$($root.DependencyType)::$name"
@@ -93,8 +91,11 @@ function Resolve-PSDependLock {
                     Version        = $null
                     Dependencies   = @{}
                     Template       = $root
+                    ContextHash    = $contextHash
                     Constraints    = @{}
                 }
+            } elseif ($nodes[$key].ContextHash -ne $contextHash) {
+                throw "Cannot lock [$key] from different resolution sources or parameters; declare a single source and parameter set for each DependencyType::Name"
             }
             $nodes[$key].Constraints["root:$($root.DependencyName)"] = $requested
             $queue.Enqueue($key)
@@ -104,8 +105,8 @@ function Resolve-PSDependLock {
 
     $iterations = 0
     while ($queue.Count -gt 0) {
-        if (++$iterations -gt $maxIterations) {
-            throw "Dependency resolution did not converge after [$maxIterations] steps; the dependency graph is probably cyclic with conflicting constraints"
+        if (++$iterations -gt ($maxIterations + (20 * $nodes.Count))) {
+            throw "Dependency resolution did not converge; repeated constraints or a cyclic dependency kept changing the selected versions"
         }
         $key = $queue.Dequeue()
         $node = $nodes[$key]
@@ -130,6 +131,12 @@ function Resolve-PSDependLock {
             }
             Write-Verbose "Re-resolving [$key]: version [$($node.Version)] no longer satisfies [$combined]"
         }
+
+        $stateKey = "$key`n$combined`n$($node.Version)"
+        if ($resolutionStates.ContainsKey($stateKey)) {
+            throw "Dependency resolution for [$key] repeated the same unsatisfied state; the resolver is greedy and does not backtrack to older parent versions"
+        }
+        $resolutionStates[$stateKey] = $true
 
         $template = $node.Template
         $probe = [PSCustomObject]@{
@@ -162,6 +169,9 @@ function Resolve-PSDependLock {
         if ($resolved.Count -ne 1 -or [string]::IsNullOrEmpty($resolved[0].Version)) {
             throw "Cannot lock [$key] with constraint [$combined]: the [$($node.DependencyType)] DependencyScript did not return a resolved version"
         }
+        if (-not (Test-PSDependExactVersion -Version ([string]$resolved[0].Version))) {
+            throw "Cannot lock [$key] with constraint [$combined]: the DependencyScript returned non-exact version [$($resolved[0].Version)]"
+        }
         $result = $resolved[0]
 
         # Drop the constraints this node imposed on its previous children
@@ -173,13 +183,14 @@ function Resolve-PSDependLock {
         $node.Dependencies = @{}
         if ($result.Dependencies) {
             foreach ($childName in $result.Dependencies.Keys) {
-                $node.Dependencies[$childName] = Get-Requested $result.Dependencies[$childName]
+                $node.Dependencies[$childName] = Get-PSDependRequestedVersion -Version $result.Dependencies[$childName]
             }
         }
         Write-Verbose "Locked [$key] at [$($node.Version)] with [$($node.Dependencies.Count)] dependencies"
 
         foreach ($childName in $node.Dependencies.Keys) {
             $childKey = "$($node.DependencyType)::$childName"
+            $childContextHash = Get-PSDependResolutionContext -Dependency $template
             if (-not $nodes.ContainsKey($childKey)) {
                 $nodes[$childKey] = @{
                     Name           = $childName
@@ -187,8 +198,11 @@ function Resolve-PSDependLock {
                     Version        = $null
                     Dependencies   = @{}
                     Template       = $template
+                    ContextHash    = $childContextHash
                     Constraints    = @{}
                 }
+            } elseif ($nodes[$childKey].ContextHash -ne $childContextHash) {
+                throw "Cannot lock [$childKey] from different resolution sources or parameters; declare a single source and parameter set for each DependencyType::Name"
             }
             $nodes[$childKey].Constraints["node:$key"] = $node.Dependencies[$childName]
             $queue.Enqueue($childKey)

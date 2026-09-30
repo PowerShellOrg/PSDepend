@@ -5,10 +5,10 @@ function Compare-Version {
 
     .DESCRIPTION
     Coerce both version strings to a common comparable type and compare them via
-    [IComparable]. SemanticVersion is tried first so pre-release ordering is
-    honoured (e.g. 1.0.0-alpha sorts below 1.0.0); System.Version is the
+    [IComparable]. SemanticVersion is tried first so prerelease ordering is
+    honored (e.g. 1.0.0-alpha sorts below 1.0.0); System.Version is the
     fallback so four-part versions (1.2.3.4) still compare. Missing System.Version
-    components are normalised to 0 so 1.2.3 and 1.2.3.0 compare equal. If neither
+    components are normalized to 0 so 1.2.3 and 1.2.3.0 compare equal. If neither
     type can parse both inputs, fall back to an ordinal string comparison.
 
     Both operands must coerce to the same type - a SemanticVersion cannot be
@@ -48,26 +48,26 @@ function Compare-Version {
     }
 
     # System.Version fallback handles four-part versions SemVer rejects.
-    # Normalise absent components (-1) to 0 so 1.2.3 equals 1.2.3.0.
+    # Normalize absent components (-1) to 0 so 1.2.3 equals 1.2.3.0.
     [System.Version]$refVer = $null
     [System.Version]$diffVer = $null
     if (
         [System.Version]::TryParse($ReferenceVersion, [ref]$refVer) -and
         [System.Version]::TryParse($DifferenceVersion, [ref]$diffVer)
     ) {
-        $refNormalised = [System.Version]::new(
+        $refNormalized = [System.Version]::new(
             [Math]::Max($refVer.Major, 0),
             [Math]::Max($refVer.Minor, 0),
             [Math]::Max($refVer.Build, 0),
             [Math]::Max($refVer.Revision, 0)
         )
-        $diffNormalised = [System.Version]::new(
+        $diffNormalized = [System.Version]::new(
             [Math]::Max($diffVer.Major, 0),
             [Math]::Max($diffVer.Minor, 0),
             [Math]::Max($diffVer.Build, 0),
             [Math]::Max($diffVer.Revision, 0)
         )
-        return $refNormalised.CompareTo($diffNormalised)
+        return $refNormalized.CompareTo($diffNormalized)
     }
 
     # Neither type parses both: ordinal string comparison, clamped to -1/0/1.

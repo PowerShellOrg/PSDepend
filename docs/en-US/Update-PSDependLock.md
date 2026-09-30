@@ -21,21 +21,24 @@ Update-PSDependLock [[-Path] <String[]>] [-Recurse <Boolean>] [-PSDependTypePath
 
 ## DESCRIPTION
 
-Works like npm's package-lock.json. Every dependency whose type supports the `Resolve` action
+Works like npm's package-lock.json. Every dependency whose type supports `Resolve`
 (`PSGalleryModule`, `PSResourceGet`, `PSGalleryNuget`, `Nuget`, `Chocolatey`, `Npm`) is resolved to the
-highest version that satisfies its Version (exact, `latest`, or a NuGet range); its own dependencies are
-resolved the same way recursively, and the result is written next to the dependency file as
-`<name>.lock.json` (`requirements.psd1` -> `requirements.lock.json`).
+highest version satisfying its Version, and its dependencies are resolved recursively. The gallery,
+NuGet, and Chocolatey types accept NuGet ranges. `Npm` accepts npm semver ranges and rejects NuGet syntax;
+it pins only the declared package because npm's own `package-lock.json` governs its subtree.
 
-A package required by several dependencies is locked to one version that satisfies all of their
-constraints; conflicting constraints fail the update. `Npm` pins only the declared package and leaves
-its subtree to npm's own package-lock.json.
+One version is locked per `DependencyType::Name`. Resolution is greedy: PSDepend intersects child
+constraints but does not backtrack to an older parent version. Narrow the parent's range when an older
+version is required. Packages reached from roots with different installation contexts are installed once
+per root.
 
-Once a lock exists, `Invoke-PSDepend` and `Get-Dependency` use it automatically: each dependency
-installs at its locked version and locked transitive packages install first. If the dependency file
-changes, the lock is reported as out of date until you run `Update-PSDependLock` again (or pass
-`-IgnoreLock`). Dependency types without a `Resolve` action are recorded in the lock so drift is
-detected, but install exactly as declared.
+The lock is written next to the dependency file as `<name>.lock.json`. `Invoke-PSDepend` and
+`Get-Dependency` use it automatically. A changed dependency, version, resolution source, or
+DependencyScript parameter makes it out of date; removing every dependency does too. Dependency types
+without `Resolve` are recorded for drift detection but install exactly as declared.
+
+Commit and review locks like code. Format version 1 validates its structure and exact versions before
+use, but does not contain package content hashes.
 
 ## EXAMPLES
 

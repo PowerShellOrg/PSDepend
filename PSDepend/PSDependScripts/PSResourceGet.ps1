@@ -266,18 +266,18 @@ foreach ($thisParameter in $params.Keys) {
 $params = $tempParams.Clone()
 
 if ($PSDependAction -contains 'Resolve') {
-    $FindModuleParams = @{ Name = $Name; Version = '*' }
+    $findModuleParams = @{ Name = $Name; Version = '*' }
     if ($Repository) {
-        $FindModuleParams.Add('Repository', $Repository)
+        $findModuleParams.Add('Repository', $Repository)
     }
     if ($Credential) {
-        $FindModuleParams.Add('Credential', $Credential)
+        $findModuleParams.Add('Credential', $Credential)
     }
     if ($Prerelease) {
-        $FindModuleParams.Add('Prerelease', $true)
+        $findModuleParams.Add('Prerelease', $true)
     }
 
-    $available = @(Find-PSResource @FindModuleParams -ErrorAction SilentlyContinue)
+    $available = @(Find-PSResource @findModuleParams -ErrorAction SilentlyContinue)
     $candidates = @{}
     foreach ($found in $available) {
         $candidateVersion = $found.Version.ToString()

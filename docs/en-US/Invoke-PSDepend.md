@@ -316,9 +316,9 @@ Accept wildcard characters: False
 
 ### -IgnoreLock
 
-Skip any `<name>.lock.json` next to a dependency file and resolve versions as declared. By default a lock
-written by `Update-PSDependLock` pins each dependency to its locked version and installs locked transitive
-packages first; a lock that no longer matches its dependency file is an error.
+Skip any `<name>.lock.json` next to a dependency file and use versions as declared. By default a lock
+pins roots and transitive packages. With `-Test`, those locked versions are tested rather than installed.
+A changed dependency, version, resolution source, or DependencyScript parameter makes the lock stale.
 
 ```yaml
 Type: SwitchParameter

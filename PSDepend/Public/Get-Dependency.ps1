@@ -122,17 +122,21 @@ function Get-Dependency {
             }
 
     .PARAMETER IgnoreLock
-        Skip any <name>.lock.json next to a dependency file and return the dependencies exactly as declared.
+        Skip any <name>.lock.json next to a DependencyFile and return Dependencies as declared.
 
-        By default, when a lock written by Update-PSDependLock exists, each locked dependency's Version is
-        replaced with the locked version and locked transitive packages are returned as additional
-        dependencies (named Name@Version) that the declaring dependency DependsOn. A lock that no longer
-        matches its dependency file is an error.
+        By default, a lock pins root Versions and adds transitive packages as
+        Prerequisites. Their names normally use Name@Version; duplicate installation
+        contexts receive a #RootName suffix. Stale locks are errors.
 
     .EXAMPLE
         Get-Dependency -Path C:\requirements.psd1
 
         Get dependencies defined in C:\requirements.psd1
+
+    .EXAMPLE
+        Get-Dependency -Path .\requirements.psd1 -IgnoreLock
+
+        Return declared ranges without applying requirements.lock.json
 
     .LINK
         https://github.com/PowerShellOrg/PSDepend
@@ -438,10 +442,11 @@ function Get-Dependency {
                 $FileDependencies = @( Parse-Dependency -ParamSet $PSCmdlet.ParameterSetName )
 
                 $LockPath = Get-PSDependLockPath -DependencyFile $DependencyFile
-                if (-not $IgnoreLock -and $FileDependencies.Count -gt 0 -and (Test-Path -LiteralPath $LockPath -PathType Leaf)) {
+                if (-not $IgnoreLock -and (Test-Path -LiteralPath $LockPath -PathType Leaf)) {
                     Write-Verbose "Applying lock [$LockPath] to [$DependencyFile]"
                     $Lock = Import-PSDependLock -Path $LockPath
-                    Merge-PSDependLock -Dependency $FileDependencies -Lock $Lock -LockPath $LockPath
+                    Merge-PSDependLock -Dependency $FileDependencies -Lock $Lock -LockPath $LockPath `
+                        -DependencyFile $DependencyFile
                 } else {
                     $FileDependencies
                 }

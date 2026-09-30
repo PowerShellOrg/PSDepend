@@ -1,3 +1,4 @@
+# cspell:ignore installignore nomatch
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
@@ -69,6 +70,24 @@ Describe 'Update-PSDependLock' {
         @($lock.packages.PSObject.Properties.Name).Count | Should -Be 4
     }
 
+    It 'Writes byte-identical output when resolution has not changed' {
+        $file = Initialize-LockProject -Name 'stable-output' -Body $script:AppBody
+        $lockPath = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath -PassThru
+        $first = Get-Content -LiteralPath $lockPath -Raw
+
+        $null = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath
+
+        Get-Content -LiteralPath $lockPath -Raw | Should -BeExactly $first
+    }
+
+    It 'Does not write a lock with WhatIf' {
+        $file = Initialize-LockProject -Name 'whatif' -Body $script:AppBody
+
+        $null = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath -WhatIf
+
+        Test-Path (Join-Path (Split-Path $file) 'requirements.lock.json') | Should -BeFalse
+    }
+
     It 'Records dependencies whose type cannot Resolve without a resolved package' {
         $file = Initialize-LockProject -Name 'unresolvable' -Body $script:AppBody
         $lockPath = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath -PassThru
@@ -86,7 +105,8 @@ Describe 'Update-PSDependLock' {
     Util = @{ DependencyType = 'FakeResolver'; Version = 'latest' }
 }
 '@
-        { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } | Should -Throw -ExpectedMessage '*FakeResolver::Lib*'
+        { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } |
+            Should -Throw -ExpectedMessage '*FakeResolver::Lib*requires*'
         Test-Path (Join-Path (Split-Path $file) 'requirements.lock.json') | Should -BeFalse
     }
 
@@ -96,7 +116,76 @@ Describe 'Update-PSDependLock' {
     App = @{ DependencyType = 'FakeResolver'; Version = '[5.0,)' }
 }
 '@
-        { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } | Should -Throw -ExpectedMessage '*FakeResolver::App*'
+        { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } |
+            Should -Throw -ExpectedMessage '*FakeResolver::App*constraint*'
+    }
+}
+
+Describe 'Import-PSDependLock validation' {
+
+    It 'Rejects malformed JSON' {
+        $path = Join-Path $TestDrive 'malformed.lock.json'
+        Set-Content -LiteralPath $path -Value '{'
+
+        InModuleScope PSDepend -Parameters @{ Path = $path } {
+            { Import-PSDependLock -Path $Path } | Should -Throw -ExpectedMessage '*not valid JSON*'
+        }
+    }
+
+    It 'Rejects a JSON array instead of a lock object' {
+        $path = Join-Path $TestDrive 'array.lock.json'
+        Set-Content -LiteralPath $path -Value '[]'
+
+        InModuleScope PSDepend -Parameters @{ Path = $path } {
+            { Import-PSDependLock -Path $Path } | Should -Throw -ExpectedMessage '*not a PSDepend lock file*'
+        }
+    }
+
+    It 'Rejects an unsupported lock format' {
+        $path = Join-Path $TestDrive 'newer.lock.json'
+        Set-Content -LiteralPath $path -Value '{"lockfileVersion":2,"dependencies":{},"packages":{}}'
+
+        InModuleScope PSDepend -Parameters @{ Path = $path } {
+            { Import-PSDependLock -Path $Path } | Should -Throw -ExpectedMessage '*supports lockfileVersion 1*'
+        }
+    }
+
+    It 'Rejects a root that resolves to a different package' {
+        $path = Join-Path $TestDrive 'redirect.lock.json'
+        Set-Content -LiteralPath $path -Value @'
+{
+  "lockfileVersion": 1,
+  "dependencies": {
+    "App": { "dependencyType": "Npm", "name": "App", "requested": "latest", "resolved": "Npm::Injected" }
+  },
+  "packages": {
+    "Npm::Injected": { "version": "1.0.0", "dependencies": {} }
+  }
+}
+'@
+
+        InModuleScope PSDepend -Parameters @{ Path = $path } {
+            { Import-PSDependLock -Path $Path } | Should -Throw -ExpectedMessage '*resolved key*'
+        }
+    }
+
+    It 'Rejects a locked version that is not an exact package version' {
+        $path = Join-Path $TestDrive 'unsafe-version.lock.json'
+        Set-Content -LiteralPath $path -Value @'
+{
+  "lockfileVersion": 1,
+  "dependencies": {
+    "App": { "dependencyType": "Npm", "name": "App", "requested": "latest", "resolved": "Npm::App" }
+  },
+  "packages": {
+    "Npm::App": { "version": "https://example.invalid/package.tgz", "dependencies": {} }
+  }
+}
+'@
+
+        InModuleScope PSDepend -Parameters @{ Path = $path } {
+            { Import-PSDependLock -Path $Path } | Should -Throw -ExpectedMessage '*exact version*'
+        }
     }
 }
 
@@ -112,7 +201,7 @@ Describe 'Get-Dependency with a lock' {
         ($deps | Where-Object DependencyName -eq 'App').Version | Should -Be '1.1.0'
     }
 
-    It 'Materialises locked transitive packages as dependencies that install before their parent' {
+    It 'Materializes locked transitive packages as dependencies that install before their parent' {
         $deps = @(Get-Dependency -Path $script:LockedFile)
         $names = $deps.DependencyName
         $names | Should -Contain 'Lib@1.5.0'
@@ -158,6 +247,23 @@ Describe 'Get-Dependency with a lock' {
 
         { Get-Dependency -Path $file } | Should -Throw -ExpectedMessage '*`[Extra`] is not in the lock*'
     }
+
+    It 'Fails when the dependency file has removed every dependency in the lock' {
+        $file = Initialize-LockProject -Name 'empty' -Body $script:AppBody
+        $null = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath
+        Set-Content -LiteralPath $file -Value '@{}'
+
+        { Get-Dependency -Path $file } | Should -Throw -ExpectedMessage '*is in the lock but not in the DependencyFile*'
+    }
+
+    It 'Fails when the source used for resolution changes' {
+        $body = $script:AppBody -replace "Target         = '", "Source         = 'feed-a'`n        Target         = '"
+        $file = Initialize-LockProject -Name 'source' -Body $body
+        $null = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath
+        Set-Content -LiteralPath $file -Value ($body -replace "Source         = 'feed-a'", "Source         = 'feed-b'")
+
+        { Get-Dependency -Path $file } | Should -Throw -ExpectedMessage '*resolution source or parameters changed*'
+    }
 }
 
 Describe 'Invoke-PSDepend with a lock' {
@@ -170,6 +276,29 @@ Describe 'Invoke-PSDepend with a lock' {
 
         $log = Get-Content (Join-Path (Split-Path $file) 'target/installed.log')
         $log | Should -Be @('Core@2.0.0', 'Lib@1.5.0', 'Util@2.0.0', 'App@1.1.0')
+    }
+
+    It 'Installs a shared child into each root target' {
+        $file = Initialize-LockProject -Name 'targets' -Body @'
+@{
+    App = @{
+        DependencyType = 'FakeResolver'
+        Version        = '1.0.0'
+        Target         = '$DependencyFolder/app-target'
+    }
+    Util = @{
+        DependencyType = 'FakeResolver'
+        Version        = '1.0.0'
+        Target         = '$DependencyFolder/util-target'
+    }
+}
+'@
+        $null = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath
+
+        Invoke-PSDepend -Path $file -PSDependTypePath $script:MapPath -Force -WarningAction SilentlyContinue
+
+        Get-Content (Join-Path (Split-Path $file) 'app-target/installed.log') | Should -Contain 'Lib@1.5.0'
+        Get-Content (Join-Path (Split-Path $file) 'util-target/installed.log') | Should -Contain 'Lib@1.5.0'
     }
 
     It 'Passes the declared range through with -IgnoreLock' {

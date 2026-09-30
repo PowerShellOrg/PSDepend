@@ -295,6 +295,7 @@ Describe 'PSGalleryModule script' {
             $result.Dependencies['BuildHelpers'] | Should -Be '2.0.1'
             Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
             Should -Invoke -CommandName Save-Module -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName Get-PackageProvider -ModuleName PSDepend -Times 0
         }
 
         It 'Resolves latest to the highest available version with an empty dependency map' {

@@ -6,7 +6,7 @@ function Find-NodeModule {
     .DESCRIPTION
     Runs `npm view <package>[@<version>] version --json` and returns the matching
     version strings. npm prints a single JSON string when one version matches and a
-    JSON array when several do; both are normalised to [string[]].
+    JSON array when several do; both are normalized to [string[]].
 
     Writes an error and returns nothing when npm is not on PATH.
 
@@ -34,9 +34,9 @@ function Find-NodeModule {
     }
 
     if ([string]::IsNullOrEmpty($Version) -or $Version -eq 'latest') {
-        $json = npm view $PackageName version --json
+        $json = npm view --json -- $PackageName version
     } else {
-        $json = npm view "$PackageName@$Version" version --json
+        $json = npm view --json -- "$PackageName@$Version" version
     }
 
     if ([string]::IsNullOrWhiteSpace(($json -join ''))) {

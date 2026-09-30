@@ -319,8 +319,8 @@ Describe 'PSResourceGet script' {
     Context 'PSDependAction = Resolve' {
         BeforeAll {
             # Build child dependencies from the real PSResourceGet types when the module is installed
-            # so the VersionRange.ToString() normalisation is exercised for real; otherwise fall back
-            # to objects with the same property names whose ToString() yields the normalised form.
+            # so the VersionRange.ToString() normalization is exercised for real; otherwise fall back
+            # to objects with the same property names whose ToString() yields the normalized form.
             Import-Module Microsoft.PowerShell.PSResourceGet -ErrorAction SilentlyContinue
             function script:New-ResolveDependency {
                 param([string]$Name, [string]$Range)
@@ -333,8 +333,12 @@ Describe 'PSResourceGet script' {
                     $parsed = $rangeType.GetMethod('Parse', [type[]]@([string])).Invoke($null, @($Range))
                     return $depType::new($Name, $parsed)
                 }
+                if (-not $Range) {
+                    return [PSCustomObject]@{ Name = $Name; VersionRange = $null }
+                }
                 $normalized = @{ '4.9.0' = '[4.9.0, )'; '(, )' = '(, )' }[$Range]
-                $range = if ($Range) { [PSCustomObject]@{ Normalized = $normalized } | Add-Member ScriptMethod ToString { $this.Normalized } -Force -PassThru } else { $null }
+                $range = [PSCustomObject]@{ Normalized = $normalized }
+                $range = $range | Add-Member ScriptMethod ToString { $this.Normalized } -Force -PassThru
                 [PSCustomObject]@{ Name = $Name; VersionRange = $range }
             }
 
