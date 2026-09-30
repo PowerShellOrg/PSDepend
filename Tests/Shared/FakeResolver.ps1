@@ -45,6 +45,12 @@ $Graph = @{
         '1.0.0' = @{}
         '2.0.0' = @{}
     }
+    CycleA = [ordered]@{
+        '1.0.0' = @{ CycleB = '1.0.0' }
+    }
+    CycleB = [ordered]@{
+        '1.0.0' = @{ CycleA = '1.0.0' }
+    }
 }
 
 $Name = if ($Dependency.Name) { $Dependency.Name } else { $Dependency.DependencyName }

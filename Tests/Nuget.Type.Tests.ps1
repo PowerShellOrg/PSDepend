@@ -153,5 +153,19 @@ Describe 'Nuget script' {
             $result | Should -BeNullOrEmpty
             Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
         }
+
+        It 'Rejects an HTTP source when credentials would be transmitted' {
+            $credential = New-TestCredential -UserName 'feeduser' -Password 'feedpass'
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget' `
+                -Source 'http://packages.example.test/api/v2/' -Credential $credential
+
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable err
+                $err[0].ToString() | Should -Match 'requires an HTTPS Source'
+            }
+
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Find-NugetPackage -ModuleName PSDepend -Times 0 -Exactly
+        }
     }
 }

@@ -224,6 +224,35 @@ function Resolve-PSDependLock {
         }
     }
 
+    # A cyclic lock cannot be materialized into PSDepend's prerequisite DAG.
+    # Reject it here so Update-PSDependLock never writes a lock that consumers
+    # cannot sort.
+    $visitState = @{}
+    function Test-LockNodeCycle {
+        param([string]$Key, [string[]]$Path)
+
+        if ($visitState[$Key] -eq 1) {
+            $cycleStart = [Array]::IndexOf($Path, $Key)
+            $cycle = @($Path[$cycleStart..($Path.Count - 1)]) + $Key
+            throw "Cannot lock dependency cycle [$($cycle -join ' -> ')]"
+        }
+        if ($visitState[$Key] -eq 2) { return }
+
+        $visitState[$Key] = 1
+        $nextPath = @($Path) + $Key
+        foreach ($childName in $nodes[$Key].Dependencies.Keys) {
+            $childKey = "$($nodes[$Key].DependencyType)::$childName"
+            if ($reachable.ContainsKey($childKey)) {
+                Test-LockNodeCycle -Key $childKey -Path $nextPath
+            }
+        }
+        $visitState[$Key] = 2
+    }
+
+    foreach ($key in ($reachable.Keys | Sort-Object)) {
+        Test-LockNodeCycle -Key $key -Path @()
+    }
+
     $packages = [ordered]@{}
     foreach ($key in ($reachable.Keys | Sort-Object)) {
         $node = $nodes[$key]

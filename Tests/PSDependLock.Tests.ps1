@@ -129,7 +129,20 @@ Describe 'Update-PSDependLock' {
         { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } |
             Should -Throw -ExpectedMessage '*FakeResolver::App*constraint*'
     }
+
+    It 'Rejects a dependency cycle before writing the lock' {
+        $file = Initialize-LockProject -Name 'cycle' -Body @'
+@{
+    CycleA = @{ DependencyType = 'FakeResolver'; Version = '1.0.0' }
 }
+'@
+
+        { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } |
+            Should -Throw -ExpectedMessage '*dependency cycle*CycleA*CycleB*CycleA*'
+        Test-Path (Join-Path (Split-Path $file) 'requirements.lock.json') | Should -BeFalse
+    }
+}
+
 
 Describe 'Import-PSDependLock validation' {
 

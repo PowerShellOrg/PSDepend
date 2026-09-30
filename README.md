@@ -208,7 +208,7 @@ PSDepend is extensible. To add a new dependency type, create a script in the [PS
 Your script must:
 
 - Include comment-based help describing how it uses `Dependency` metadata
-- Accept a `PSDependAction` parameter with any actions it implements (`Install`, `Test`, `Import`, and optionally `Resolve`)
+- Accept `Install`, `Test`, and `Import` in `PSDependAction`; optionally accept `Resolve` as a fourth action
 - For `Resolve`, query only and emit one `PSDepend.ResolvedDependency` with an exact `Version` and direct `Dependencies`; do not install
 
 See [Git.ps1](https://github.com/PowerShellOrg/PSDepend/blob/main/PSDepend/PSDependScripts/Git.ps1) and [PSGalleryModule.ps1](https://github.com/PowerShellOrg/PSDepend/blob/main/PSDepend/PSDependScripts/PSGalleryModule.ps1) for reference implementations.

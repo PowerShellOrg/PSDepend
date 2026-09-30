@@ -100,6 +100,10 @@ if (-not $Dependency.Source) {
 $Credential = $Dependency.Credential
 
 if ($PSDependAction -contains 'Resolve') {
+    if ($Credential -and $Source -notmatch '^https://') {
+        Write-Error "Resolve for [$DependencyName] requires an HTTPS Source when Credential is supplied; got [$Source]"
+        return
+    }
     $packages = @(Find-NugetPackage -Name $DependencyName -PackageSourceUrl $Source -Credential $Credential)
     $stable = @($packages | Where-Object { $_.Properties.IsPrerelease -ne 'true' })
     $resolvedVersion = $null
