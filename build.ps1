@@ -39,7 +39,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$psakeFile = './psakeFile.ps1'
+$requirementsFile = Join-Path $PSScriptRoot 'requirements.psd1'
+$psakeFile = Join-Path $PSScriptRoot 'psakeFile.ps1'
+
+$requirements = Import-PowerShellDataFile -Path $requirementsFile
+$pesterRequirement = $requirements.Pester
+$requirements.Remove('Pester')
 
 if ($Bootstrap) {
     if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
@@ -49,12 +54,17 @@ if ($Bootstrap) {
     if (-not (Get-Module -Name PSDepend -ListAvailable)) {
         Install-Module -Name PSDepend -Repository PSGallery -Scope CurrentUser -Force -RequiredVersion '0.3.8'
     }
-    Import-Module -Name PSDepend -Verbose:$false
-    Invoke-PSDepend -Path './requirements.psd1' -Install -Import -Force -WarningAction SilentlyContinue
 }
-else {
-    Invoke-PSDepend -Path './requirements.psd1' -Import -Force -WarningAction SilentlyContinue
+
+Import-Module -Name PSDepend -Verbose:$false
+if ($Bootstrap) {
+    Invoke-PSDepend -Path $requirementsFile -Install -Force -WarningAction SilentlyContinue
 }
+
+# PowerShellBuild requires Pester without an upper bound. Load the pinned version
+# first, then import the remaining dependencies without re-importing Pester.
+Import-Module -Name Pester -RequiredVersion $pesterRequirement.Version
+Invoke-PSDepend -InputObject $requirements -Import -Force -WarningAction SilentlyContinue
 
 if ($PSCmdlet.ParameterSetName -eq 'Help') {
     Get-PSakeScriptTasks -BuildFile $psakeFile |

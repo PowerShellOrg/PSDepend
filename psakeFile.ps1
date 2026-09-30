@@ -30,6 +30,31 @@ Properties {
 # Skips BuildHelp (GenerateMarkdown) — doc generation is not needed in the test pipeline
 # and Build-PSBuildMarkdown has a Remove-Module scope bug specific to PSDepend.
 $PSBBuildDependency = @('StageFiles')
+$PSBTestDependency = @('Pester5', 'Analyze')
+
+Task Pester5 -Depends $PSBBuildDependency {
+    $moduleManifest = Join-Path $PSBPreference.Build.ModuleOutDir "$($PSBPreference.General.ModuleName).psd1"
+
+    Import-Module -Name $moduleManifest -Force
+    Push-Location -LiteralPath $PSBPreference.Test.RootDir
+    try {
+        $configuration = [PesterConfiguration]::Default
+        $configuration.Output.Verbosity = 'Detailed'
+        $configuration.Run.PassThru = $true
+        $configuration.TestResult.Enabled = $true
+        $configuration.TestResult.OutputPath = $PSBPreference.Test.OutputFile
+        $configuration.TestResult.OutputFormat = $PSBPreference.Test.OutputFormat
+
+        $testResult = Invoke-Pester -Configuration $configuration
+        if ($testResult.Result -eq 'Failed') {
+            throw 'One or more Pester tests failed.'
+        }
+    }
+    finally {
+        Pop-Location
+        Remove-Module -Name $PSBPreference.General.ModuleName -ErrorAction SilentlyContinue
+    }
+} -Description 'Executes Pester 5 tests'
 
 # Override with: .\build.ps1 InstallLocal -Properties @{PreReleaseLabel='rc1'}
 Task InstallLocal -Depends StageFiles {
