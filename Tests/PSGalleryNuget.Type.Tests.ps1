@@ -1,4 +1,4 @@
-﻿﻿# cspell:ignore feedpass feeduser noplatform psgnuget
+﻿# cspell:ignore feedpass feeduser noplatform psgnuget
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {

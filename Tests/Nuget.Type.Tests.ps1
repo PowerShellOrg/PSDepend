@@ -1,4 +1,4 @@
-﻿﻿# cspell:ignore feedpass feeduser Newtonsoft noplatform
+﻿# cspell:ignore feedpass feeduser Newtonsoft noplatform
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
