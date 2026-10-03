@@ -6,8 +6,8 @@
     .DESCRIPTION
     Return $true when two version strings represent the same version. Equality is
     the zero case of the shared Compare-Version ordering primitive, which tries
-    SemanticVersion first (honouring pre-release labels), falls back to a
-    normalised System.Version (so 1.2.3 equals 1.2.3.0), and finally to an
+    SemanticVersion first (honoring prerelease labels), falls back to a
+    normalized System.Version (so 1.2.3 equals 1.2.3.0), and finally to an
     ordinal string comparison. Null or empty inputs are never equal.
 
     .PARAMETER ReferenceVersion
@@ -47,7 +47,7 @@
         return $false
     }
 
-    # Equality is the zero case of the shared ordering primitive. Compare-Version
-    # handles SemanticVersion, normalised System.Version, and string fallback.
+    # Equality is the zero case of the shared Compare-Version ordering primitive.
+    # It handles SemanticVersion, normalized System.Version, and string fallback.
     return (Compare-Version -ReferenceVersion $ReferenceVersion -DifferenceVersion $DifferenceVersion) -eq 0
 }

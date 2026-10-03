@@ -105,6 +105,37 @@ DETAILED DESCRIPTION
             Position?                    2
             Default value                PSGallery
 
+    Locking dependencies
+    ====================
+    Like npm's package-lock.json, PSDepend can pin every dependency, and the
+    dependencies they pull in, to exact versions:
+
+        Update-PSDependLock -Path .\requirements.psd1   # writes requirements.lock.json
+        Invoke-PSDepend -Path .\requirements.psd1       # installs the locked versions
+
+    Update-PSDependLock asks each DependencyType that supports Resolve for the
+    highest version satisfying Version and walks direct dependencies recursively.
+    Gallery, NuGet and Chocolatey types use NuGet ranges; Npm uses npm semver
+    ranges and pins only the declared package. npm's package-lock.json governs
+    its subtree.
+
+    One version is locked per DependencyType::Name. Resolution is greedy: child
+    constraints are intersected, but PSDepend does not backtrack to an older
+    parent. Narrow the parent range when an older version is required.
+
+    Invoke-PSDepend and Get-Dependency apply a neighboring lock automatically.
+    Locked transitive packages install first and are materialized once per root
+    installation context. A changed Dependency, Version, resolution Source, or
+    DependencyScript parameter makes the lock stale; -IgnoreLock opts out. With
+    -Test, locked roots and transitive packages are tested.
+
+    Commit and review locks like code. PSDepend validates structure and exact
+    versions before use, but lock format version 1 has no package content hashes.
+
+    A DependencyScript opts in by accepting Resolve in PSDependAction and emits
+    one PSDepend.ResolvedDependency (Name, exact Version, direct Dependencies)
+    after querying its source without installing anything.
+
     Extending PSDepend
     ==================
     PSDepend is somewhat extensible. To add a new dependency type:

@@ -32,7 +32,7 @@ Describe 'PSResourceGet script' {
             }
             function Find-PSResource {
                 [CmdletBinding()] param(
-                    [string]$Name, [string]$Repository,
+                    [string]$Name, [string]$Version, [string]$Repository,
                     [PSCredential]$Credential, [switch]$Prerelease
                 )
             }
@@ -313,6 +313,97 @@ Describe 'PSResourceGet script' {
                 & $ScriptPath -Dependency $Dep
             }
             Should -Invoke -CommandName Install-PSResource -ModuleName PSDepend -Times 0
+        }
+    }
+
+    Context 'PSDependAction = Resolve' {
+        BeforeAll {
+            # Build child dependencies from the real PSResourceGet types when the module is installed
+            # so the VersionRange.ToString() normalization is exercised for real; otherwise fall back
+            # to objects with the same property names whose ToString() yields the normalized form.
+            Import-Module Microsoft.PowerShell.PSResourceGet -ErrorAction SilentlyContinue
+            function script:New-ResolveDependency {
+                param([string]$Name, [string]$Range)
+                $depType = 'Microsoft.PowerShell.PSResourceGet.UtilClasses.Dependency' -as [type]
+                if ($depType) {
+                    if (-not $Range) {
+                        return $depType::new($Name, $null)
+                    }
+                    $rangeType = $depType.GetProperty('VersionRange').PropertyType
+                    $parsed = $rangeType.GetMethod('Parse', [type[]]@([string])).Invoke($null, @($Range))
+                    return $depType::new($Name, $parsed)
+                }
+                if (-not $Range) {
+                    return [PSCustomObject]@{ Name = $Name; VersionRange = $null }
+                }
+                $normalized = @{ '4.9.0' = '[4.9.0, )'; '(, )' = '(, )' }[$Range]
+                [PSCustomObject]@{ Name = $Name; VersionRange = $normalized }
+            }
+
+            function script:New-ResolveCatalogue {
+                @(
+                    [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'1.5.0'; Prerelease = ''; Dependencies = @() }
+                    [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'2.7.0'; Prerelease = ''; Dependencies = @(
+                            (New-ResolveDependency -Name 'psake' -Range '4.9.0'),
+                            (New-ResolveDependency -Name 'PSDeploy' -Range '(, )'),
+                            (New-ResolveDependency -Name 'BuildHelpers' -Range $null)
+                        )
+                    }
+                    [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'3.1.0'; Prerelease = ''; Dependencies = @() }
+                )
+            }
+
+            # The mock body runs in the caller's scope (the DependencyScript file), so hand the
+            # catalogue over via a module-scope variable found by dynamic scoping.
+            $catalogue = New-ResolveCatalogue
+            InModuleScope PSDepend -Parameters @{ Catalogue = $catalogue } {
+                $script:ResolveTestCatalogue = $Catalogue
+                Mock Find-PSResource { $ResolveTestCatalogue } -ParameterFilter { $Version -eq '*' }
+            }
+        }
+
+        It 'Selects the highest version inside a range, skipping a higher one outside it' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version '[2.0.0,3.0.0)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.PSTypeNames | Should -Contain 'PSDepend.ResolvedDependency'
+            $result.Name | Should -Be 'TestModule'
+            $result.Version | Should -Be '2.7.0'
+        }
+
+        It 'Selects the highest available version for latest' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version 'latest'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Version | Should -Be '3.1.0'
+            $result.Dependencies.Count | Should -Be 0
+        }
+
+        It 'Converts dependency metadata to a NuGet-range map (bare nuspec version => lower bound; unbounded/null => latest)' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version '2.7.0'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Version | Should -Be '2.7.0'
+            $result.Dependencies | Should -BeOfType [hashtable]
+            $result.Dependencies.Count | Should -Be 3
+            $result.Dependencies['psake'] | Should -BeExactly '[4.9.0,)'
+            $result.Dependencies['PSDeploy'] | Should -BeExactly 'latest'
+            $result.Dependencies['BuildHelpers'] | Should -BeExactly 'latest'
+        }
+
+        It 'Writes an error and emits nothing when no version satisfies the request, without installing' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -DependencyType 'PSResourceGet' -Version '[4.0.0,)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable resolveErr
+                $resolveErr | Should -HaveCount 1
+                $resolveErr[0].ToString() | Should -Match 'No version of \[TestModule\] at \[PSGallery\] satisfies \[\[4\.0\.0,\)\]'
+            }
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Install-PSResource -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName Save-PSResource -ModuleName PSDepend -Times 0
         }
     }
 }

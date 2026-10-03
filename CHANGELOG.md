@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- npm-style lock files. `Update-PSDependLock` resolves supported Dependencies
+  and their transitive dependencies to exact versions in `<name>.lock.json`.
+  `Invoke-PSDepend` and `Get-Dependency` honor locks automatically, install
+  transitive packages first, preserve separate root installation contexts,
+  reject malformed or unsafe lock data, and detect changes to Dependencies,
+  versions, resolution sources, and DependencyScript parameters. `-IgnoreLock`
+  opts out. Resolution is greedy and does not backtrack to older parent versions.
+- New `Resolve` PSDependAction for `PSGalleryModule`, `PSResourceGet`,
+  `PSGalleryNuget`, `Nuget`, `Chocolatey` and `Npm`: query the source and return
+  an exact version without installing. `Npm` accepts npm semver ranges and pins
+  only the declared package; its subtree remains under npm's `package-lock.json`.
+
+### Fixed
+
+- `Invoke-DependencyScript -PSDependTypePath` is now passed through to the
+  type/script lookup instead of always reading the module's `PSDependMap.psd1`.
+- Lock resolution now exhausts paged NuGet v2 feeds, honors exact prerelease
+  requests, rejects ambiguous framework-specific dependency constraints, and
+  re-resolves whenever a combined constraint changes so the highest matching
+  version remains locked.
+
 ## [0.6.0] - 2026-09-30
 
 ### Added

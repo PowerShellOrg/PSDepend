@@ -67,7 +67,8 @@
         'Install-Dependency',
         'Invoke-DependencyScript',
         'Invoke-PSDepend',
-        'Test-Dependency'
+        'Test-Dependency',
+        'Update-PSDependLock'
     )
 
     # Cmdlets to export from this module

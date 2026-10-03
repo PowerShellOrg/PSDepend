@@ -61,4 +61,62 @@ Describe 'Npm script' {
         }
         $result | Should -Be $true
     }
+
+    Context 'PSDependAction = Resolve' {
+        It 'Picks the highest version satisfying an npm semver range' {
+            InModuleScope PSDepend {
+                Mock Find-NodeModule { [string[]]@('0.9.0', '0.10.0') }
+            }
+            $dep = New-PSDependFixture -DependencyName 'left-pad' -DependencyType 'Npm' -Version '>=0.9.0 <0.11.0'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Name | Should -Be 'left-pad'
+            $result.Version | Should -Be '0.10.0'
+            $result.Dependencies.Count | Should -Be 0
+            Should -Invoke -CommandName Find-NodeModule -ModuleName PSDepend -Times 1 -Exactly -ParameterFilter {
+                $PackageName -eq 'left-pad' -and $Version -eq '>=0.9.0 <0.11.0'
+            }
+        }
+
+        It 'Rejects NuGet range syntax before querying npm' {
+            InModuleScope PSDepend {
+                Mock Find-NodeModule { throw 'Find-NodeModule must not run for invalid syntax' }
+            }
+            $dep = New-PSDependFixture -DependencyName 'left-pad' -DependencyType 'Npm' -Version '[0.1.0,0.4.0)'
+
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable err
+                $err | Should -Not -BeNullOrEmpty
+            }
+
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Find-NodeModule -ModuleName PSDepend -Times 0
+        }
+
+        It 'Returns the single version npm reports for latest' {
+            InModuleScope PSDepend {
+                Mock Find-NodeModule { [string[]]@('1.3.0') }
+            }
+            $dep = New-PSDependFixture -DependencyName 'left-pad' -DependencyType 'Npm'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            @($result).Count | Should -Be 1
+            $result.Version | Should -Be '1.3.0'
+        }
+
+        It 'Writes an error and emits nothing when npm returns no versions' {
+            InModuleScope PSDepend {
+                Mock Find-NodeModule { }
+            }
+            $dep = New-PSDependFixture -DependencyName 'left-pad' -DependencyType 'Npm' -Version '9.9.9'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable err
+                $err | Should -Not -BeNullOrEmpty
+            }
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Install-NodeModule -ModuleName PSDepend -Times 0
+        }
+    }
 }

@@ -149,6 +149,27 @@ Invoke-PSDepend -Path C:\requirements.psd1 -Credentials @{ 'my_gallery' = $creds
 
 The credential key must match between the dependency definition and the hashtable passed to `-Credentials`.
 
+## Locking Dependencies
+
+Like npm's `package-lock.json`, PSDepend can pin every dependency — and the dependencies *they* pull in — to exact versions so that every machine installs the same thing:
+
+```powershell
+Update-PSDependLock -Path .\requirements.psd1   # writes requirements.lock.json
+Invoke-PSDepend -Path .\requirements.psd1       # installs the locked versions
+```
+
+`Update-PSDependLock` asks each dependency type that supports the `Resolve` action (`PSGalleryModule`, `PSResourceGet`, `PSGalleryNuget`, `Nuget`, `Chocolatey`, `Npm`) for the highest version that satisfies the declared `Version` and walks that package's own dependencies. The gallery, NuGet, and Chocolatey types accept NuGet ranges; `Npm` accepts npm semver ranges such as `^1.2.0` or `>=1 <2` and rejects NuGet range syntax. `Npm` pins only the declared package because npm's own `package-lock.json` governs its subtree.
+
+One version is locked per `DependencyType::Name`. Resolution is greedy: after selecting a parent version, PSDepend intersects child constraints but does not backtrack to an older parent version. Narrow the parent's range if an older version is required. Packages reached from roots with different installation contexts are installed once per root.
+
+Once a lock exists next to a dependency file, `Invoke-PSDepend` and `Get-Dependency` use it automatically. Locked transitive packages install first. A changed dependency, version, resolution source, or DependencyScript parameter makes the lock out of date; removing every dependency does too. Pass `-IgnoreLock` to use the DependencyFile without the lock. With `Invoke-PSDepend -Test`, locked root and transitive versions are tested.
+
+Commit the `.lock.json` alongside the DependencyFile and review lock changes like code. PSDepend validates its structure and exact versions before use, but version 1 does not contain package content hashes.
+
+The JSON contains `lockfileVersion`, `dependencies`, and `packages`. Root entries record the requested version, `DependencyType::Name` package key, and a hash of resolution Source/Parameters. Package entries record an exact `version` and direct dependency ranges. Synthesized transitive Dependency names normally use `Name@Version`; a `#RootName` suffix disambiguates a package installed for another root context.
+
+Dependency types without a `Resolve` action (`Git`, `GitHub`, `FileDownload`, ...) are recorded in the lock for drift detection but install exactly as declared.
+
 ## Getting Help
 
 Each dependency type may handle standard properties differently and expose its own parameters. Use `Get-PSDependType` to see what is available:
@@ -187,8 +208,8 @@ PSDepend is extensible. To add a new dependency type, create a script in the [PS
 Your script must:
 
 - Include comment-based help describing how it uses `Dependency` metadata
-- Accept a `PSDependAction` parameter with values `Install`, `Test`, and/or `Import`
-- Implement the expected behavior for each action (`Install` installs, `Test` returns a boolean, `Import` loads the dependency)
+- Accept `Install`, `Test`, and `Import` in `PSDependAction`; optionally accept `Resolve` as a fourth action
+- For `Resolve`, query only and emit one `PSDepend.ResolvedDependency` with an exact `Version` and direct `Dependencies`; do not install
 
 See [Git.ps1](https://github.com/PowerShellOrg/PSDepend/blob/main/PSDepend/PSDependScripts/Git.ps1) and [PSGalleryModule.ps1](https://github.com/PowerShellOrg/PSDepend/blob/main/PSDepend/PSDependScripts/PSGalleryModule.ps1) for reference implementations.
 
