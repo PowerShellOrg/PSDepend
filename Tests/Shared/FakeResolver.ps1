@@ -1,3 +1,4 @@
+# cspell:ignore Npmish Restrictor
 <#
     .SYNOPSIS
         Test double for a DependencyScript that supports the Resolve action.
@@ -51,6 +52,16 @@ $Graph = @{
     CycleB = [ordered]@{
         '1.0.0' = @{ CycleA = '1.0.0' }
     }
+    ChangingParent = [ordered]@{
+        '1.0.0' = @{ Lib = '[1.0,)' }
+        '2.0.0' = @{ Lib = '[1.0,2.0)' }
+    }
+    Restrictor = [ordered]@{
+        '1.0.0' = @{ ChangingParent = '[1.0,2.0)' }
+    }
+    Npmish = [ordered]@{
+        '1.5.0' = @{}
+    }
 }
 
 $Name = if ($Dependency.Name) { $Dependency.Name } else { $Dependency.DependencyName }
@@ -64,7 +75,11 @@ if ($PSDependAction -contains 'Resolve') {
     $candidates = @($Graph[$Name].Keys)
     $resolved = if ($Version -eq 'latest') {
         $candidates[-1]
-    } else {
+    }
+    elseif ($Name -eq 'Npmish' -and $Version -eq '^1.2.0') {
+        '1.5.0'
+    }
+    else {
         Resolve-VersionInRange -Candidate $candidates -Required $Version
     }
     if (-not $resolved) {

@@ -15,8 +15,9 @@ function ConvertFrom-NugetDependencyString {
         bracketed/parens   -> kept, with internal whitespace removed ('[1.3.3, )' -> '[1.3.3,)')
         bare version 1.0.0 -> '[1.0.0,)'  (NuGet bare means minimum inclusive; PSDepend bare means exact)
 
-    When the same id appears under several target frameworks, the first
-    occurrence wins. Null or empty input returns an empty hashtable.
+    When the same id appears under several target frameworks, identical ranges
+    are collapsed. Different ranges are rejected because PSDepend cannot know
+    which target framework the eventual NuGet installation will select.
 
     .PARAMETER Dependencies
     The raw Dependencies string from the feed's package metadata.
@@ -40,6 +41,7 @@ function ConvertFrom-NugetDependencyString {
     )
 
     $map = @{}
+    $frameworks = @{}
     if ([string]::IsNullOrWhiteSpace($Dependencies)) {
         return $map
     }
@@ -47,7 +49,7 @@ function ConvertFrom-NugetDependencyString {
     foreach ($entry in $Dependencies -split '\|') {
         $parts = $entry -split ':', 3
         $id = $parts[0].Trim()
-        if (-not $id -or $map.ContainsKey($id)) {
+        if (-not $id) {
             continue
         }
 
@@ -59,7 +61,16 @@ function ConvertFrom-NugetDependencyString {
             $range = "[$range,)"
         }
 
+        $framework = if ($parts.Count -gt 2 -and $parts[2]) { $parts[2].Trim() } else { '<any>' }
+        if ($map.ContainsKey($id)) {
+            if ($map[$id] -ne $range) {
+                throw "NuGet dependency [$id] has different constraints [$($map[$id])] for [$($frameworks[$id])] and [$range] for [$framework]; target-framework-specific dependency groups cannot be locked safely"
+            }
+            continue
+        }
+
         $map[$id] = $range
+        $frameworks[$id] = $framework
     }
 
     $map

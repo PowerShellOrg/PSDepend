@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Invoke-DependencyScript -PSDependTypePath` is now passed through to the
   type/script lookup instead of always reading the module's `PSDependMap.psd1`.
+- Lock resolution now exhausts paged NuGet v2 feeds, honors exact prerelease
+  requests, rejects ambiguous framework-specific dependency constraints, and
+  re-resolves whenever a combined constraint changes so the highest matching
+  version remains locked.
 
 ## [0.6.0] - 2026-09-30
 

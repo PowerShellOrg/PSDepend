@@ -80,11 +80,18 @@ Describe 'ConvertFrom-NugetDependencyString' {
             }
         }
 
-        It 'Keeps the first occurrence when an id appears under several frameworks' {
+        It 'Keeps one constraint when duplicate framework groups agree' {
             InModuleScope PSDepend {
-                $r = ConvertFrom-NugetDependencyString -Dependencies 'Foo:1.0.0:net45|Foo:2.0.0:netstandard2.0'
+                $r = ConvertFrom-NugetDependencyString -Dependencies 'Foo:1.0.0:net45|Foo:1.0.0:netstandard2.0'
                 $r.Count | Should -Be 1
                 $r['Foo'] | Should -Be '[1.0.0,)'
+            }
+        }
+
+        It 'Rejects different constraints for the same id across framework groups' {
+            InModuleScope PSDepend {
+                { ConvertFrom-NugetDependencyString -Dependencies 'Foo:1.0.0:net45|Foo:2.0.0:netstandard2.0' } |
+                    Should -Throw -ExpectedMessage '*Foo*different constraints*net45*netstandard2.0*'
             }
         }
 

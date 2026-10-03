@@ -115,7 +115,9 @@ if ($PSDependAction -contains 'Resolve') {
         }
     }
     else {
-        $resolvedVersion = Resolve-VersionInRange -Candidate @($stable.Version) -Required $Version
+        $requestedRange = ConvertFrom-VersionRange -Version $Version
+        $candidates = if ($requestedRange.IsExact) { $packages } else { $stable }
+        $resolvedVersion = Resolve-VersionInRange -Candidate @($candidates.Version) -Required $Version
     }
     if (-not $resolvedVersion) {
         Write-Error "No version of [$DependencyName] at [$Source] satisfies [$Version]"

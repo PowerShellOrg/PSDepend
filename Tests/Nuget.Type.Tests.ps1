@@ -1,4 +1,4 @@
-﻿# cspell:ignore Newtonsoft noplatform
+﻿﻿# cspell:ignore feedpass feeduser Newtonsoft noplatform
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
@@ -132,6 +132,15 @@ Describe 'Nuget script' {
             }
             $result.Version | Should -Be '3.0.0'
             $result.Dependencies['System.Memory'] | Should -Be '[4.5.4,)'
+        }
+
+        It 'Resolves an explicitly requested prerelease version' {
+            $dep = New-PSDependFixture -DependencyName 'Newtonsoft.Json' -DependencyType 'Nuget' -Version '2.9.0-beta1'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+
+            $result.Version | Should -Be '2.9.0-beta1'
         }
 
         It 'Uses the Name parameter override as the package id' {

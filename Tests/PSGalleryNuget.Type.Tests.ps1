@@ -1,4 +1,4 @@
-﻿# cspell:ignore noplatform psgnuget
+﻿﻿# cspell:ignore feedpass feeduser noplatform psgnuget
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
@@ -176,6 +176,15 @@ Describe 'PSGalleryNuget script' {
             }
             $result.Version | Should -Be '3.0.0'
             $result.Dependencies['BuildHelpers'] | Should -Be 'latest'
+        }
+
+        It 'Resolves an explicitly requested prerelease version' {
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' -Version '2.9.0-beta1'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+
+            $result.Version | Should -Be '2.9.0-beta1'
         }
 
         It 'Errors with no output when nothing satisfies the range' {

@@ -86,13 +86,14 @@ function Resolve-PSDependLock {
             $entry.resolved = $key
             if (-not $nodes.ContainsKey($key)) {
                 $nodes[$key] = @{
-                    Name           = $name
-                    DependencyType = $root.DependencyType
-                    Version        = $null
-                    Dependencies   = @{}
-                    Template       = $root
-                    ContextHash    = $contextHash
-                    Constraints    = @{}
+                    Name               = $name
+                    DependencyType     = $root.DependencyType
+                    Version            = $null
+                    ResolvedConstraint = $null
+                    Dependencies       = @{}
+                    Template           = $root
+                    ContextHash        = $contextHash
+                    Constraints        = @{}
                 }
             } elseif ($nodes[$key].ContextHash -ne $contextHash) {
                 throw "Cannot lock [$key] from different resolution sources or parameters; declare a single source and parameter set for each DependencyType::Name"
@@ -110,7 +111,7 @@ function Resolve-PSDependLock {
         }
         $key = $queue.Dequeue()
         $node = $nodes[$key]
-        $constraints = @($node.Constraints.Values)
+        $constraints = @($node.Constraints.Values | Sort-Object -Unique)
 
         # A single constraint is passed through verbatim so DependencyTypes with
         # their own range syntax (npm semver) still work; several are intersected.
@@ -124,12 +125,11 @@ function Resolve-PSDependLock {
             }
         }
 
+        if ($node.Version -and $node.ResolvedConstraint -ceq $combined) {
+            continue
+        }
         if ($node.Version) {
-            $satisfied = if ($combined -eq 'latest') { $true } else { Test-VersionInRange -Version $node.Version -Required $combined }
-            if ($satisfied) {
-                continue
-            }
-            Write-Verbose "Re-resolving [$key]: version [$($node.Version)] no longer satisfies [$combined]"
+            Write-Verbose "Re-resolving [$key]: constraint changed from [$($node.ResolvedConstraint)] to [$combined]"
         }
 
         $stateKey = "$key`n$combined`n$($node.Version)"
@@ -180,6 +180,7 @@ function Resolve-PSDependLock {
         }
 
         $node.Version = [string]$result.Version
+        $node.ResolvedConstraint = [string]$combined
         $node.Dependencies = @{}
         if ($result.Dependencies) {
             foreach ($childName in $result.Dependencies.Keys) {
@@ -193,13 +194,14 @@ function Resolve-PSDependLock {
             $childContextHash = Get-PSDependResolutionContext -Dependency $template
             if (-not $nodes.ContainsKey($childKey)) {
                 $nodes[$childKey] = @{
-                    Name           = $childName
-                    DependencyType = $node.DependencyType
-                    Version        = $null
-                    Dependencies   = @{}
-                    Template       = $template
-                    ContextHash    = $childContextHash
-                    Constraints    = @{}
+                    Name               = $childName
+                    DependencyType     = $node.DependencyType
+                    Version            = $null
+                    ResolvedConstraint = $null
+                    Dependencies       = @{}
+                    Template           = $template
+                    ContextHash        = $childContextHash
+                    Constraints        = @{}
                 }
             } elseif ($nodes[$childKey].ContextHash -ne $childContextHash) {
                 throw "Cannot lock [$childKey] from different resolution sources or parameters; declare a single source and parameter set for each DependencyType::Name"

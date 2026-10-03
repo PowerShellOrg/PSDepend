@@ -1,4 +1,4 @@
-# cspell:ignore installignore nomatch
+# cspell:ignore installignore nomatch Npmish Restrictor
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
@@ -128,6 +128,36 @@ Describe 'Update-PSDependLock' {
 '@
         { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } |
             Should -Throw -ExpectedMessage '*FakeResolver::App*constraint*'
+    }
+
+    It 'Re-resolves to the highest version whenever a combined constraint changes' {
+        $file = Initialize-LockProject -Name 'broadened-constraint' -Body @'
+@{
+    ChangingParent = @{ DependencyType = 'FakeResolver'; Version = 'latest' }
+    Restrictor = @{ DependencyType = 'FakeResolver'; Version = '1.0.0' }
+}
+'@
+
+        $lockPath = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath -PassThru
+        $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
+
+        $lock.packages.'FakeResolver::ChangingParent'.version | Should -Be '1.0.0'
+        $lock.packages.'FakeResolver::Lib'.version | Should -Be '2.0.0'
+    }
+
+    It 'Passes repeated identical non-NuGet constraints through unchanged' {
+        $file = Initialize-LockProject -Name 'same-native-constraint' -Body @'
+@{
+    First = @{ DependencyType = 'FakeResolver'; Name = 'Npmish'; Version = '^1.2.0' }
+    Second = @{ DependencyType = 'FakeResolver'; Name = 'Npmish'; Version = '^1.2.0' }
+    Third = @{ DependencyType = 'FakeResolver'; Name = 'Npmish'; Version = '^1.2.0' }
+}
+'@
+
+        $lockPath = Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath -PassThru
+        $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
+
+        $lock.packages.'FakeResolver::Npmish'.version | Should -Be '1.5.0'
     }
 
     It 'Rejects a dependency cycle before writing the lock' {

@@ -12,9 +12,10 @@ A Lock belongs to one DependencyFile and uses `DependencyType::Name` as package
 identity. It records one exact version for that identity across the file.
 Resolution selects the highest version satisfying the constraints currently
 known, intersects constraints from every parent, and re-resolves invalidated
-children until reaching a fixed point. It does not backtrack to an older parent
-version. Users must narrow a parent range when greedy selection hides a valid
-older solution.
+children until reaching a fixed point. A selected version is reused only while
+its combined constraint is unchanged, preserving highest-version resolution if
+a constraint broadens. It does not backtrack to an older parent version. Users
+must narrow a parent range when greedy selection hides a valid older solution.
 
 Source and DependencyScript Parameters affect resolution. Root entries store a
 SHA-256 fingerprint of that context, without exposing its values, and a changed
@@ -32,6 +33,12 @@ runs alone, must only query its source, and emits exactly one
 of direct dependency names to ranges. Npm ranges pass through as npm semver;
 multiple constraints use the shared NuGet intersection logic, so incompatible
 cross-parent npm ranges fail rather than being reinterpreted.
+
+NuGet v2 version catalogues are read to exhaustion across OData pages. Exact
+prerelease requests are allowed, while `latest` and range resolution exclude
+prereleases. Because PSDepend has no target-framework input, identical NuGet
+dependency constraints across framework groups are collapsed and differing
+constraints are rejected rather than selecting a group arbitrarily.
 
 Lock format version 1 validates object shape, package references, names, and
 exact versions before consumption. It does not record artifact URLs or content
