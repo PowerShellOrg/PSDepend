@@ -90,6 +90,74 @@ Describe 'Update-PSDependLock' {
         Get-Content -LiteralPath $lockPath -Raw | Should -BeExactly $first
     }
 
+    It 'Keeps conflicting <Case> isolated to their dependency files' -TestCases @(
+        @{
+            Case           = 'exact versions'
+            FirstRequest   = '1.0.0'
+            FirstResolved  = '1.0.0'
+            SecondRequest  = '2.0.0'
+            SecondResolved = '2.0.0'
+        }
+        @{
+            Case           = 'version ranges'
+            FirstRequest   = '[1.0,2.0)'
+            FirstResolved  = '1.9.0'
+            SecondRequest  = '[2.0,3.0)'
+            SecondResolved = '2.0.0'
+        }
+    ) {
+        param($Case, $FirstRequest, $FirstResolved, $SecondRequest, $SecondResolved)
+
+        $project = Join-Path $TestDrive "multiple-files-$Case"
+        $null = New-Item -ItemType Directory -Path $project
+        $firstFile = Join-Path $project 'first.depend.psd1'
+        $secondFile = Join-Path $project 'second.depend.psd1'
+        Set-Content -LiteralPath $firstFile -Value "@{ Lib = @{ DependencyType = 'FakeResolver'; Version = '$FirstRequest' } }"
+        Set-Content -LiteralPath $secondFile -Value "@{ Lib = @{ DependencyType = 'FakeResolver'; Version = '$SecondRequest' } }"
+
+        $lockPaths = @(Update-PSDependLock -Path $project -PSDependTypePath $script:MapPath -PassThru)
+
+        $lockPaths | Should -HaveCount 2
+        $lockPaths | Should -Contain (Join-Path $project 'first.depend.lock.json')
+        $lockPaths | Should -Contain (Join-Path $project 'second.depend.lock.json')
+
+        $dependencies = @(Get-Dependency -Path $project)
+        $firstDependency = $dependencies | Where-Object {
+            $_.DependencyFile -eq $firstFile -and $_.DependencyName -eq 'Lib'
+        }
+        $secondDependency = $dependencies | Where-Object {
+            $_.DependencyFile -eq $secondFile -and $_.DependencyName -eq 'Lib'
+        }
+        $firstDependency.Version | Should -Be $FirstResolved
+        $secondDependency.Version | Should -Be $SecondResolved
+    }
+
+    It 'Rejects conflicting <Case> within one dependency file' -TestCases @(
+        @{
+            Case          = 'exact versions'
+            FirstRequest  = '1.0.0'
+            SecondRequest = '2.0.0'
+        }
+        @{
+            Case          = 'version ranges'
+            FirstRequest  = '[1.0,2.0)'
+            SecondRequest = '[2.0,3.0)'
+        }
+    ) {
+        param($Case, $FirstRequest, $SecondRequest)
+
+        $file = Initialize-LockProject -Name "single-file-$Case" -Body @"
+@{
+    First  = @{ DependencyType = 'FakeResolver'; Name = 'Lib'; Version = '$FirstRequest' }
+    Second = @{ DependencyType = 'FakeResolver'; Name = 'Lib'; Version = '$SecondRequest' }
+}
+"@
+
+        { Update-PSDependLock -Path $file -PSDependTypePath $script:MapPath } |
+            Should -Throw -ExpectedMessage '*FakeResolver::Lib*requires*'
+        Test-Path (Join-Path (Split-Path $file) 'requirements.lock.json') | Should -BeFalse
+    }
+
     It 'Does not write a lock with WhatIf' {
         $file = Initialize-LockProject -Name 'whatif' -Body $script:AppBody
 
