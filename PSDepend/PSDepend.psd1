@@ -4,7 +4,7 @@
     RootModule = 'PSDepend.psm1'
 
     # Version number of this module.
-    ModuleVersion = '0.6.0'
+    ModuleVersion = '0.7.0'
 
     # ID used to uniquely identify this module
     GUID = '63ea9e2a-320d-43ff-a11a-4930ca03cce6'
@@ -110,7 +110,7 @@
             ReleaseNotes = 'https://github.com/PowerShellOrg/PSDepend/blob/main/CHANGELOG.md'
 
             # Prerelease string (e.g. 'beta1', 'rc2'). Empty string = stable release.
-            Prerelease   = ''
+            Prerelease   = 'beta1'
 
         } # End of PSData hashtable
 

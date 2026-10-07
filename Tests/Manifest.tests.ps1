@@ -12,8 +12,20 @@ BeforeAll {
     $manifestData = Test-ModuleManifest -Path $outputManifestPath -Verbose:$false -ErrorAction Stop -WarningAction SilentlyContinue
 
     $changelogPath = Join-Path -Path $env:BHProjectPath -ChildPath 'CHANGELOG.md'
-    $changelogLine = Get-Content -Path $changelogPath | Where-Object { $_ -match "^##\s\[(?<Version>(\d+\.){1,3}\d+)\]" } | Select-Object -First 1
-    $changelogVersion = if ($changelogLine -and ($changelogLine -match "^##\s\[(?<Version>(\d+\.){1,3}\d+)\]")) { $matches.Version } else { $null }
+    $versionPattern = '(?<Version>(?<BaseVersion>(\d+\.){2}\d+)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)'
+    $changelogLine = Get-Content -Path $changelogPath |
+        Where-Object { $_ -match "^##\s\[$versionPattern\]" } |
+        Select-Object -First 1
+    $changelogVersion = if ($changelogLine -and ($changelogLine -match "^##\s\[$versionPattern\]")) {
+        $matches.Version
+    }
+    else {
+        $null
+    }
+    $manifestVersion = $manifestData.Version.ToString()
+    if ($manifestData.PrivateData.PSData.Prerelease) {
+        $manifestVersion += "-$($manifestData.PrivateData.PSData.Prerelease)"
+    }
 
     $script:manifest = $null
 }
@@ -55,11 +67,11 @@ Describe 'Module manifest' {
 
         It 'Has a valid version in the changelog' {
             $changelogVersion | Should -Not -BeNullOrEmpty
-            $changelogVersion -as [Version] | Should -Not -BeNullOrEmpty
+            ($changelogVersion -split '-', 2)[0] -as [Version] | Should -Not -BeNullOrEmpty
         }
 
         It 'Changelog and manifest versions are the same' {
-            $changelogVersion -as [Version] | Should -Be ( $manifestData.Version -as [Version] )
+            $changelogVersion | Should -Be $manifestVersion
         }
     }
 }
