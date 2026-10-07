@@ -260,4 +260,89 @@ Describe 'PSGalleryModule script' {
             Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
         }
     }
+
+    Context 'PSDependAction = Resolve' {
+        BeforeAll {
+            InModuleScope PSDepend {
+                Mock Find-Module {
+                    @(
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'1.9.0'; Dependencies = @() }
+                        [PSCustomObject]@{
+                            Name         = 'TestModule'
+                            Version      = [version]'2.5.0'
+                            Dependencies = @(
+                                [ordered]@{ Name = 'psake'; MinimumVersion = '4.9.0'; CanonicalId = 'nuget:psake/4.9.0' }
+                                [ordered]@{ Name = 'BuildHelpers'; RequiredVersion = '2.0.1'; CanonicalId = 'nuget:BuildHelpers/[2.0.1]' }
+                            )
+                        }
+                        [PSCustomObject]@{ Name = 'TestModule'; Version = [version]'3.0.0'; Dependencies = @() }
+                    )
+                } -ParameterFilter { $AllVersions }
+            }
+        }
+
+        It 'Resolves a range to the highest in-range version and maps dependency metadata to NuGet ranges' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '[2.0.0,3.0.0)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            @($result).Count | Should -Be 1
+            $result.PSObject.TypeNames | Should -Contain 'PSDepend.ResolvedDependency'
+            $result.Name | Should -Be 'TestModule'
+            $result.Version | Should -Be '2.5.0'
+            $result.Dependencies.Count | Should -Be 2
+            $result.Dependencies['psake'] | Should -Be '[4.9.0,)'
+            $result.Dependencies['BuildHelpers'] | Should -Be '2.0.1'
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName Save-Module -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName Get-PackageProvider -ModuleName PSDepend -Times 0
+        }
+
+        It 'Resolves latest to the highest available version with an empty dependency map' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version 'latest'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Version | Should -Be '3.0.0'
+            $result.Dependencies.Count | Should -Be 0
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
+        }
+
+        It 'Maps Min+Max and Max-only dependency metadata to closed and open-lower ranges' {
+            InModuleScope PSDepend {
+                Mock Find-Module {
+                    @([PSCustomObject]@{
+                        Name         = 'TestModule'
+                        Version      = [version]'1.0.0'
+                        Dependencies = @(
+                            [ordered]@{ Name = 'Pester'; MinimumVersion = '5.0.0'; MaximumVersion = '5.9.9' }
+                            [ordered]@{ Name = 'PSScriptAnalyzer'; MaximumVersion = '1.20.0' }
+                            [ordered]@{ Name = 'Plaster' }
+                        )
+                    })
+                } -ParameterFilter { $AllVersions }
+            }
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '1.0.0'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Version | Should -Be '1.0.0'
+            $result.Dependencies['Pester'] | Should -Be '[5.0.0,5.9.9]'
+            $result.Dependencies['PSScriptAnalyzer'] | Should -Be '(,1.20.0]'
+            $result.Dependencies['Plaster'] | Should -Be 'latest'
+        }
+
+        It 'Writes an error and emits nothing when no available version satisfies the range' {
+            $dep = New-PSDependFixture -DependencyName 'TestModule' -Version '[4.0.0,5.0.0)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable resolveErr
+                $resolveErr
+            }
+            @($result).Count | Should -Be 1
+            $result[0] | Should -BeOfType [System.Management.Automation.ErrorRecord]
+            $result[0].ToString() | Should -Match 'No version of \[TestModule\]'
+            Should -Invoke -CommandName Install-Module -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName Save-Module -ModuleName PSDepend -Times 0
+        }
+    }
 }

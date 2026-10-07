@@ -16,7 +16,7 @@ Read a dependency psd1 file.
 ### File (Default)
 
 ```
-Get-Dependency [-Path <String[]>] [-Tags <String[]>] [-Recurse] [-Credentials <Hashtable>]
+Get-Dependency [-Path <String[]>] [-Tags <String[]>] [-Recurse] [-Credentials <Hashtable>] [-IgnoreLock]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -127,6 +127,25 @@ Aliases:
 Required: False
 Position: Named
 Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -IgnoreLock
+
+Skip any `<name>.lock.json` next to a dependency file and return the Dependencies as declared.
+By default an existing lock pins root versions and adds locked transitive packages as Prerequisites.
+Their names normally use `Name@Version`; duplicate installation contexts receive a `#RootName` suffix.
+A changed dependency, version, resolution source, or DependencyScript parameter makes the lock stale.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: File
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

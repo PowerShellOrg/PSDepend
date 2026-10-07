@@ -20,8 +20,8 @@ Invoke-DependencyScript -Dependency <PSObject> [-PSDependTypePath <String>] [-PS
 
 ## DESCRIPTION
 
-Low-level function that invokes the script for a specific dependency type and action
-(Test, Install, or Import). Typically called by Invoke-PSDepend rather than directly.
+Low-level function that invokes the DependencyScript for a specific DependencyType and action
+(Test, Install, Import, or Resolve). Typically called by Invoke-PSDepend rather than directly.
 
 ## EXAMPLES
 
@@ -69,8 +69,8 @@ Accept wildcard characters: False
 
 ### -PSDependAction
 
-The action to invoke: Test, Install, or Import.
-
+The action to invoke: Test, Install, Import, or Resolve. Resolve must run alone; a supporting
+DependencyScript queries its source and returns one exact `PSDepend.ResolvedDependency` without installing.
 ```yaml
 Type: String[]
 Parameter Sets: (All)

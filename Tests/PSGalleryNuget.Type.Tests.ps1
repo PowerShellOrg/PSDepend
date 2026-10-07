@@ -1,4 +1,4 @@
-﻿# cspell:ignore noplatform psgnuget
+﻿# cspell:ignore feedpass feeduser noplatform psgnuget
 #requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
@@ -134,6 +134,82 @@ Describe 'PSGalleryNuget script' {
                 & $ScriptPath -Dependency $Dep -ErrorAction SilentlyContinue
             }
             Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+        }
+    }
+
+    Context 'PSDependAction = Resolve' {
+        BeforeAll {
+            InModuleScope PSDepend {
+                Mock Get-Command { $null } -ParameterFilter { $Name -eq 'Nuget' }
+                Mock BootStrap-Nuget { }
+                Mock Find-NugetPackage {
+                    @(
+                        [PSCustomObject]@{ Version = '1.9.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = '' } }
+                        [PSCustomObject]@{ Version = '2.5.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'PSDeploy:0.2.5:|BuildHelpers:[2.0.0, ):' } }
+                        [PSCustomObject]@{ Version = '2.9.0-beta1'; Properties = @{ IsPrerelease = 'true'; Dependencies = '' } }
+                        [PSCustomObject]@{ Version = '3.0.0'; Properties = @{ IsPrerelease = 'false'; Dependencies = 'BuildHelpers::' } }
+                        [PSCustomObject]@{ Version = '3.1.0-beta1'; Properties = @{ IsPrerelease = 'true'; Dependencies = '' } }
+                    )
+                }
+            }
+        }
+
+        It 'Resolves a range to the highest in-range version without a Target or nuget.exe' {
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' -Version '[2.0.0,3.0.0)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Name | Should -Be 'PSDeploy'
+            $result.Version | Should -Be '2.5.0'
+            $result.Dependencies['PSDeploy'] | Should -Be '[0.2.5,)'
+            $result.Dependencies['BuildHelpers'] | Should -Be '[2.0.0,)'
+            $result.Dependencies.Count | Should -Be 2
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName BootStrap-Nuget -ModuleName PSDepend -Times 0
+            Should -Invoke -CommandName Import-PSDependModule -ModuleName PSDepend -Times 0
+        }
+
+        It 'Resolves latest to the highest stable version, skipping prerelease' {
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+            $result.Version | Should -Be '3.0.0'
+            $result.Dependencies['BuildHelpers'] | Should -Be 'latest'
+        }
+
+        It 'Resolves an explicitly requested prerelease version' {
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' -Version '2.9.0-beta1'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve
+            }
+
+            $result.Version | Should -Be '2.9.0-beta1'
+        }
+
+        It 'Errors with no output when nothing satisfies the range' {
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' -Version '[5.0.0,)'
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable e
+                $e.Count | Should -Be 1
+                $e[0] | Should -Match 'No version of \[PSDeploy\]'
+            }
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Invoke-ExternalCommand -ModuleName PSDepend -Times 0
+        }
+
+        It 'Rejects an HTTP source when credentials would be transmitted' {
+            $credential = New-TestCredential -UserName 'feeduser' -Password 'feedpass'
+            $dep = New-PSDependFixture -DependencyName 'PSDeploy' -DependencyType 'PSGalleryNuget' `
+                -Source 'http://packages.example.test/api/v2/' -Credential $credential
+
+            $result = InModuleScope PSDepend -Parameters @{ Dep = $dep; ScriptPath = $script:ScriptPath } {
+                & $ScriptPath -Dependency $Dep -PSDependAction Resolve -ErrorAction SilentlyContinue -ErrorVariable err
+                $err[0].ToString() | Should -Match 'requires an HTTPS Source'
+            }
+
+            $result | Should -BeNullOrEmpty
+            Should -Invoke -CommandName Find-NugetPackage -ModuleName PSDepend -Times 0 -Exactly
         }
     }
 }

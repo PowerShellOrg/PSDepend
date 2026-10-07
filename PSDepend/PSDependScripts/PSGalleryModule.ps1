@@ -40,11 +40,13 @@
         Deprecated.  Moving to PSDependAction
 
     .PARAMETER PSDependAction
-        Test, Install, or Import the module.  Defaults to Install
+        Test, Install, Import, or Resolve the module.  Defaults to Install
 
         Test: Return true or false on whether the dependency is in place
         Install: Install the dependency
         Import: Import the dependency
+        Resolve: Query the source for the highest version satisfying Version and report
+                 its dependencies. Honors AllowPrerelease and performs no installation.
 
     .EXAMPLE
         @{
@@ -117,7 +119,7 @@ param(
 
     [switch]$Import,
 
-    [ValidateSet('Test', 'Install', 'Import')]
+    [ValidateSet('Test', 'Install', 'Import', 'Resolve')]
     [string[]]$PSDependAction = @('Install')
 )
 
@@ -150,22 +152,24 @@ else {
     $command = 'install'
 }
 
-$nugetProvider = @(Get-PackageProvider -ErrorAction SilentlyContinue) |
-    Where-Object { $_.Name -eq 'NuGet' } |
-    Select-Object -First 1
+if ($PSDependAction -notcontains 'Resolve') {
+    $nugetProvider = @(Get-PackageProvider -ErrorAction SilentlyContinue) |
+        Where-Object { $_.Name -eq 'NuGet' } |
+        Select-Object -First 1
 
-if (-not $nugetProvider) {
-    Write-Debug 'NuGet provider not found. Attempting to install NuGet provider.'
-    # Bootstrap NuGet provider for Windows PowerShell 5.1 and PowerShell 7+.
-    $installPackageProviderSplat = @{
-        Name           = 'NuGet'
-        ForceBootstrap = $true
-        Force          = $true
-        Scope          = 'CurrentUser'
-        ErrorAction    = 'SilentlyContinue'
+    if (-not $nugetProvider) {
+        Write-Debug 'NuGet provider not found. Attempting to install NuGet provider.'
+        # Bootstrap NuGet provider for Windows PowerShell 5.1 and PowerShell 7+.
+        $installPackageProviderSplat = @{
+            Name           = 'NuGet'
+            ForceBootstrap = $true
+            Force          = $true
+            Scope          = 'CurrentUser'
+            ErrorAction    = 'SilentlyContinue'
+        }
+
+        $null = Install-PackageProvider @installPackageProviderSplat
     }
-
-    $null = Install-PackageProvider @installPackageProviderSplat
 }
 
 Write-Verbose -Message "Getting dependency [$name] from PowerShell repository [$Repository]"
@@ -218,6 +222,72 @@ if ($Version -and $Version -ne 'latest') {
 
 if ($Credential) {
     $Params.add('Credential', $Credential)
+}
+
+# Resolve: query the repository only, report the selected version and its declared
+# dependencies as NuGet ranges, and return before any local checks or installs.
+if ($PSDependAction -contains 'Resolve') {
+    $resolveParams = @{ Name = $Name }
+    if ($Repository) { $resolveParams.Add('Repository', $Repository) }
+    if ($Credential) { $resolveParams.Add('Credential', $Credential) }
+    if ($AllowPrerelease) { $resolveParams.Add('AllowPrerelease', $AllowPrerelease) }
+
+    $available = @(Find-Module @resolveParams -AllVersions -ErrorAction SilentlyContinue)
+    $candidates = @($available | ForEach-Object { $_.Version.ToString() })
+
+    $resolvedVersion = $null
+    if ($Version -eq 'latest') {
+        foreach ($candidate in $candidates) {
+            if ($null -eq $resolvedVersion -or (Compare-Version -ReferenceVersion $candidate -DifferenceVersion $resolvedVersion) -gt 0) {
+                $resolvedVersion = $candidate
+            }
+        }
+    }
+    else {
+        $resolvedVersion = Resolve-VersionInRange -Candidate $candidates -Required $Version
+    }
+
+    if (-not $resolvedVersion) {
+        $repositoryLabel = if ($Repository) { $Repository } else { 'the default repositories' }
+        Write-Error "No version of [$Name] at [$repositoryLabel] satisfies [$Version]"
+        return
+    }
+
+    $selected = $available | Where-Object { $_.Version.ToString() -eq $resolvedVersion } | Select-Object -First 1
+
+    # PowerShellGet reports each dependency as a hashtable with Name and optional
+    # RequiredVersion / MinimumVersion / MaximumVersion. Map to PSDepend range syntax.
+    $childDependencies = @{}
+    foreach ($dep in @($selected.Dependencies)) {
+        if (-not $dep -or -not $dep['Name']) { continue }
+        $min = $dep['MinimumVersion']
+        $max = $dep['MaximumVersion']
+        if ($dep['RequiredVersion']) {
+            $range = [string]$dep['RequiredVersion']
+        }
+        elseif ($min -and $max) {
+            $range = "[$min,$max]"
+        }
+        elseif ($min) {
+            $range = "[$min,)"
+        }
+        elseif ($max) {
+            $range = "(,$max]"
+        }
+        else {
+            $range = 'latest'
+        }
+        $childDependencies[$dep['Name']] = $range
+    }
+
+    $canonicalName = if ($selected.Name) { $selected.Name } else { $Name }
+    [PSCustomObject]@{
+        PSTypeName   = 'PSDepend.ResolvedDependency'
+        Name         = $canonicalName
+        Version      = $resolvedVersion
+        Dependencies = $childDependencies
+    }
+    return
 }
 
 # This code works for both install and save scenarios.

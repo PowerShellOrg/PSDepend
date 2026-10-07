@@ -14,7 +14,7 @@ No compilation; files are staged verbatim to `Output\` — do not edit files und
 
 Two files must be updated together:
 
-1. **`PSDepend/PSDependScripts/<Type>.ps1`** — handler script. Must include comment-based help and a `PSDependAction` parameter accepting `Install`, `Test`, and `Import` values.
+1. **`PSDepend/PSDependScripts/<Type>.ps1`** — handler script. Must include comment-based help and a `PSDependAction` parameter accepting `Install`, `Test`, and `Import` values. Optionally accept `Resolve` (lock support): query the source only and emit one `PSDepend.ResolvedDependency` object (`Name`, exact `Version`, `Dependencies` hashtable of name → NuGet range or `'latest'`); see `PSGalleryModule.ps1`.
 2. **`PSDepend/PSDependMap.psd1`** — registers the type, maps it to the script, and sets `Supports` to control platform filtering (`windows`, `core`, `macos`, `linux`).
 
 See `Git.ps1` and `PSGalleryModule.ps1` as reference implementations.

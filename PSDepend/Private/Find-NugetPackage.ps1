@@ -18,18 +18,21 @@ function Find-NugetPackage {
         [PSCredential]$Credential = $null
     )
 
+
+    $escapedName = ([string]$Name).Replace("'", "''")
+    $escapedVersion = ([string]$Version).Replace("'", "''")
     #Ugly way to do this.  Prefer islatest, otherwise look for version, otherwise grab all matching modules
     if ($IsLatest) {
         Write-Verbose "Searching for latest [$name] module"
-        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and IsLatestVersion"
+        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$escapedName' and IsLatestVersion"
     }
     elseif ($PSBoundParameters.ContainsKey('Version')) {
         Write-Verbose "Searching for version [$version] of [$name]"
-        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name' and Version eq '$Version'"
+        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$escapedName' and Version eq '$escapedVersion'"
     }
     else {
         Write-Verbose "Searching for all versions of [$name] module"
-        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$name'"
+        $URI = "${PackageSourceUrl}Packages?`$filter=Id eq '$escapedName'"
     }
 
     $headers = @{}
@@ -40,11 +43,28 @@ function Find-NugetPackage {
         $headers["Authentication"] = "Basic $basicAuthToken"
     }
 
-    Invoke-RestMethod $URI -Headers $headers |
-        Select-Object @{n = 'Name'; ex = { $_.title.('#text') } },
-        @{n = 'Author'; ex = { $_.author.name } },
-        @{n = 'Version'; ex = { $_.properties.NormalizedVersion } },
-        @{n = 'Uri'; ex = { $_.Content.src } },
-        @{n = 'Description'; ex = { $_.properties.Description } },
-        @{n = 'Properties'; ex = { $_.properties } }
+    $entries = [System.Collections.Generic.List[object]]::new()
+    if (-not $IsLatest -and -not $PSBoundParameters.ContainsKey('Version')) {
+        $pageSize = 100
+        $skip = 0
+        do {
+            $page = @(Invoke-RestMethod "$URI&`$top=$pageSize&`$skip=$skip" -Headers $headers)
+            foreach ($entry in $page) {
+                $entries.Add($entry)
+            }
+            $skip += $page.Count
+        } while ($page.Count -gt 0)
+    }
+    else {
+        foreach ($entry in @(Invoke-RestMethod $URI -Headers $headers)) {
+            $entries.Add($entry)
+        }
+    }
+
+    $entries | Select-Object @{n = 'Name'; ex = { $_.title.('#text') } },
+    @{n = 'Author'; ex = { $_.author.name } },
+    @{n = 'Version'; ex = { $_.properties.NormalizedVersion } },
+    @{n = 'Uri'; ex = { $_.Content.src } },
+    @{n = 'Description'; ex = { $_.properties.Description } },
+    @{n = 'Properties'; ex = { $_.properties } }
 }

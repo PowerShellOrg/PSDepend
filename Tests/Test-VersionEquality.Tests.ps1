@@ -1,5 +1,4 @@
-﻿# cspell:ignore normalisation normalises
-#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
+﻿#requires -Module @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
     if (-not $env:BHProjectPath) {
@@ -131,8 +130,8 @@ Describe 'Test-VersionEquality' {
     Context 'Tricky versions with zero components or zero-prefixed pre-release' {
 
         # 0.0.0.5 — [System.Version] Build=0 Revision=5
-        # Risk: Math.Max(Build,0) normalises absent build (-1) to 0,
-        # so 0.0.0.5 must NOT equal 0.0.0 even though both have Build→0 after normalisation.
+        # Risk: Math.Max(Build,0) normalizes absent build (-1) to 0,
+        # so 0.0.0.5 must NOT equal 0.0.0 even though both have Build→0 after normalization.
         It 'Returns true for 0.0.0.5 equal to itself' {
             InModuleScope PSDepend {
                 Test-VersionEquality -ReferenceVersion '0.0.0.5' -DifferenceVersion '0.0.0.5'

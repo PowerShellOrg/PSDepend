@@ -81,6 +81,13 @@ function Invoke-PSDepend {
                 AnotherPrivatePackage = $morePrivateCredentials
         }
 
+    .PARAMETER IgnoreLock
+        Skip any <name>.lock.json next to a DependencyFile and use versions as declared.
+
+        By default, a lock written by Update-PSDependLock pins roots and transitive
+        packages. Install actions install children first. With -Test, the locked
+        root and transitive versions are tested. Stale locks are errors.
+
     .EXAMPLE
         Invoke-PSDepend
 
@@ -90,6 +97,11 @@ function Invoke-PSDepend {
         Invoke-PSDepend -Path C:\Path\To\require.psd1
 
         # Install dependencies from require.psd1
+
+    .EXAMPLE
+        Invoke-PSDepend -Path .\requirements.psd1 -IgnoreLock
+
+        # Ignore requirements.lock.json and install versions as declared
 
     .EXAMPLE
         Invoke-PSDepend -Path C:\Requirements -Recurse $False
@@ -156,7 +168,11 @@ function Invoke-PSDepend {
 
         [parameter(ParameterSetName = 'installimport-file')]
         [parameter(ParameterSetName = 'installimport-hashtable')]
-        [hashtable]$Credentials
+        [hashtable]$Credentials,
+
+        [parameter(ParameterSetName = 'installimport-file')]
+        [parameter(ParameterSetName = 'test-file')]
+        [switch]$IgnoreLock
     )
     Begin {
         # Build parameters
@@ -193,6 +209,9 @@ function Invoke-PSDepend {
                 }
             }
             $GetPSDependParams.add('Path', $DependencyFiles)
+            if ($IgnoreLock) {
+                $GetPSDependParams.Add('IgnoreLock', $true)
+            }
         }
         elseif ($PSCmdlet.ParameterSetName -like '*-hashtable') {
             $GetPSDependParams.add('InputObject', $InputObject)
