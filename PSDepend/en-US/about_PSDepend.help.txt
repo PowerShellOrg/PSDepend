@@ -105,6 +105,24 @@ DETAILED DESCRIPTION
             Position?                    2
             Default value                PSGallery
 
+    Adding dependencies
+    ===================
+    Add-PSDepend appends a dependency to a DependencyFile, creating
+    requirements.psd1 if none exists yet:
+
+        Add-PSDepend psake latest
+        Add-PSDepend -DependencyType GitHub -Name 'RamblingCookieMonster/PowerShell' -Version main
+
+    It parses the file with the PowerShell AST and splices the new entry in
+    as text, leaving every other entry and any comments untouched. By
+    default it also re-runs Update-PSDependLock afterward so the
+    DependencyFile and its lock never drift apart; -NoLock skips that. If
+    the lock step fails, the DependencyFile edit is rolled back.
+
+    Add-PSDepend only declares the dependency; it does not install it. Run
+    Invoke-PSDepend afterward to install. Adding a Name that already exists
+    is an error unless -Force is passed, which fully replaces the entry.
+
     Locking dependencies
     ====================
     Like npm's package-lock.json, PSDepend can pin every dependency, and the
