@@ -74,6 +74,14 @@ Describe 'Add-PSDepend file discovery' {
         $resultPath | Should -Be $target
         Test-Path -LiteralPath $target | Should -BeTrue
     }
+
+    It 'Rejects an existing file that is not a .psd1' {
+        $dir = Initialize-AddProject -Name 'wrong-extension'
+        $target = Join-Path $dir 'requirements.json'
+        Set-Content -Path $target -Value '{}'
+
+        { Add-PSDepend -Path $target -Name psake -NoLock } | Should -Throw -ExpectedMessage '*not a .psd1 file*'
+    }
 }
 
 Describe 'Add-PSDepend entry format' {
@@ -95,7 +103,7 @@ Describe 'Add-PSDepend entry format' {
 
         $content | Should -Match "'Pester' = @\{"
         $content | Should -Match "DependencyType = 'PSGalleryModule'"
-        $content | Should -Match 'SkipPublisherCheck = \$true'
+        $content | Should -Match "'SkipPublisherCheck' = \`$true"
     }
 
     It 'Writes the full hashtable form when the effective DependencyType is not PSGalleryModule' {
@@ -106,6 +114,30 @@ Describe 'Add-PSDepend entry format' {
 
         $content | Should -Match "'App' = @\{"
         $content | Should -Match "DependencyType = 'FakeResolver'"
+    }
+
+    It 'Quotes a Parameters key that is not a valid bareword identifier' {
+        $dir = Initialize-AddProject -Name 'hashtable-key-quoting'
+
+        $file = Add-PSDepend -Path $dir -Name Pester -Parameters @{ 'Display Name' = 'x' } -NoLock -PassThru
+        $content = Get-Content -LiteralPath $file -Raw
+
+        $content | Should -Match "'Display Name' = 'x'"
+    }
+
+    It 'Serializes an empty Tags array as an empty array literal, not blank' {
+        $dir = Initialize-AddProject -Name 'empty-array'
+
+        $file = Add-PSDepend -Path $dir -Name Pester -Tags @() -NoLock -PassThru
+        $content = Get-Content -LiteralPath $file -Raw
+
+        $content | Should -Match 'Tags\s*=\s*@\(\)'
+
+        # and the result must still be valid, parseable PowerShell data
+        $tokens = $null
+        $errors = $null
+        [System.Management.Automation.Language.Parser]::ParseInput($content, [ref]$tokens, [ref]$errors) | Out-Null
+        $errors | Should -BeNullOrEmpty
     }
 }
 
@@ -209,6 +241,47 @@ Describe 'Add-PSDepend preserves existing content' {
         $content | Should -Match '# Keep this comment'
         $content | Should -Match "psake = 'latest' # inline comment"
         $content | Should -Match "'Pester' = '5\.9\.0'"
+    }
+
+    It 'Preserves a blank line before the closing brace instead of trimming it' {
+        $dir = Initialize-AddProject -Name 'blank-line' -Body "@{`r`n    psake = 'latest'`r`n`r`n}`r`n"
+
+        $file = Add-PSDepend -Path $dir -Name Pester -Version '5.9.0' -NoLock -PassThru
+        $content = Get-Content -LiteralPath $file -Raw
+
+        $content | Should -Match "psake = 'latest'`r`n`r`n    'Pester'"
+    }
+
+    It 'Preserves LF-only line endings instead of introducing CRLF' {
+        $dir = Initialize-AddProject -Name 'lf-only'
+        $target = Join-Path $dir 'requirements.psd1'
+        [System.IO.File]::WriteAllText($target, "@{`n    psake = 'latest'`n}`n", [System.Text.UTF8Encoding]::new($false))
+
+        $null = Add-PSDepend -Path $target -Name Pester -Version '5.9.0' -NoLock
+        $content = [System.IO.File]::ReadAllText($target)
+
+        $content | Should -Not -Match "`r`n"
+        $content | Should -Match "'Pester' = '5\.9\.0'`n"
+    }
+
+    It 'Preserves an existing UTF-8 BOM' {
+        $dir = Initialize-AddProject -Name 'utf8-bom'
+        $target = Join-Path $dir 'requirements.psd1'
+        [System.IO.File]::WriteAllText($target, "@{`r`n}`r`n", [System.Text.UTF8Encoding]::new($true))
+
+        $null = Add-PSDepend -Path $target -Name psake -NoLock
+        $bytes = [System.IO.File]::ReadAllBytes($target)
+
+        , $bytes[0..2] | Should -Be @(, @(0xEF, 0xBB, 0xBF))
+    }
+
+    It 'Writes brand-new DependencyFiles without a BOM' {
+        $dir = Initialize-AddProject -Name 'no-bom'
+
+        $file = Add-PSDepend -Path $dir -Name psake -NoLock -PassThru
+        $bytes = [System.IO.File]::ReadAllBytes($file)
+
+        , $bytes[0..2] | Should -Not -Be @(, @(0xEF, 0xBB, 0xBF))
     }
 }
 

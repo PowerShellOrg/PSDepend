@@ -35,7 +35,11 @@ function Resolve-PSDependFileTarget {
     )
 
     if (Test-Path -LiteralPath $Path -PathType Leaf) {
-        return (Resolve-Path -LiteralPath $Path).ProviderPath
+        $Resolved = (Resolve-Path -LiteralPath $Path).ProviderPath
+        if ([System.IO.Path]::GetExtension($Resolved) -ine '.psd1') {
+            throw "Path '$Resolved' is not a .psd1 file"
+        }
+        return $Resolved
     }
 
     if (-not (Test-Path -LiteralPath $Path)) {

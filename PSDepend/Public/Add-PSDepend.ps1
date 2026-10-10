@@ -8,11 +8,12 @@ function Add-PSDepend {
 
         Add-PSDepend parses the target DependencyFile with the PowerShell AST
         and splices the new entry in as text, leaving every other entry and
-        any comments byte-for-byte untouched. By default it then re-locks the
-        file with Update-PSDependLock, so the DependencyFile and its
-        requirements.lock.json never drift apart; if the lock step fails, the
-        DependencyFile edit is rolled back. Use -NoLock to skip that step for
-        offline or CI use.
+        any comments byte-for-byte untouched; the file's existing encoding
+        (including BOM) and newline style are also preserved. By default it
+        then re-locks the file with Update-PSDependLock, so the
+        DependencyFile and its requirements.lock.json never drift apart; if
+        the lock step fails, the DependencyFile edit is rolled back. Use
+        -NoLock to skip that step for offline or CI use.
 
         Add-PSDepend only declares the dependency; it does not install it.
         Run Invoke-PSDepend afterward to install.
@@ -28,8 +29,10 @@ function Add-PSDepend {
         See Get-Help about_PSDepend for more information.
 
     .PARAMETER Name
-        Name of the dependency. Becomes both the DependencyName (the psd1 key)
-        and the Name field.
+        Name of the dependency. Becomes the DependencyName: the psd1 key.
+        Entries Add-PSDepend writes never include a separate Name field, so
+        dependency scripts that need a package or repo name (and fall back to
+        DependencyName when Name is absent) read it from this key.
 
     .PARAMETER Version
         Version (or NuGet-style range) for the dependency.
@@ -195,7 +198,25 @@ function Add-PSDepend {
 
         $DependencyFile = Resolve-PSDependFileTarget -Path $Path -Recurse $Recurse
         $FileExisted = Test-Path -LiteralPath $DependencyFile -PathType Leaf
-        $OriginalFileText = if ($FileExisted) { Get-Content -LiteralPath $DependencyFile -Raw } else { $null }
+        $NoBomUtf8 = [System.Text.UTF8Encoding]::new($false)
+
+        if ($FileExisted) {
+            # detectEncodingFromByteOrderMarks: if the file has a BOM, CurrentEncoding
+            # reflects it; if not, it falls back to $NoBomUtf8, so round-tripping
+            # through $FileEncoding preserves the file's original encoding either way.
+            $Reader = [System.IO.StreamReader]::new($DependencyFile, $NoBomUtf8, $true)
+            try {
+                $OriginalFileText = $Reader.ReadToEnd()
+                $FileEncoding = $Reader.CurrentEncoding
+            }
+            finally {
+                $Reader.Dispose()
+            }
+        }
+        else {
+            $OriginalFileText = $null
+            $FileEncoding = $NoBomUtf8
+        }
 
         if ([string]::IsNullOrWhiteSpace($OriginalFileText)) {
             $ExistingData = @{}
@@ -207,6 +228,8 @@ function Add-PSDepend {
             $ExistingData = Import-LocalizedData -BaseDirectory $Base -FileName $Leaf
             $FileText = $OriginalFileText
         }
+
+        $NewlineStyle = if ($FileText -match "`r`n") { "`r`n" } elseif ($FileText -match "`n") { "`n" } else { "`r`n" }
 
         $ExistingKey = $null
         foreach ($Key in $ExistingData.Keys) {
@@ -281,15 +304,18 @@ function Add-PSDepend {
             throw "DependencyFile '$DependencyFile' must contain a single hashtable literal (@{ ... }) at the top level"
         }
 
+        $EntryKeyValueText = $EntryKeyValueText -replace "`r`n", $NewlineStyle
+
         if ($ExistingKey) {
             $Match = $HashtableAst.KeyValuePairs | Where-Object { $_.Item1.Value -ieq $Name } | Select-Object -First 1
             $NewText = $FileText.Substring(0, $Match.Item1.Extent.StartOffset) + $EntryKeyValueText + $FileText.Substring($Match.Item2.Extent.EndOffset)
         }
         else {
             $InsertPos = $HashtableAst.Extent.EndOffset - 1
-            $Before = $FileText.Substring(0, $InsertPos).TrimEnd()
+            $Before = $FileText.Substring(0, $InsertPos)
             $After = $FileText.Substring($InsertPos)
-            $NewText = $Before + "`r`n    $EntryKeyValueText`r`n" + $After
+            $Separator = if ($Before.Length -eq 0 -or $Before.EndsWith($NewlineStyle)) { '' } else { $NewlineStyle }
+            $NewText = $Before + $Separator + "    $EntryKeyValueText" + $NewlineStyle + $After
         }
 
         if (-not $PSCmdlet.ShouldProcess($DependencyFile, "Add dependency '$Name'")) {
@@ -300,7 +326,9 @@ function Add-PSDepend {
         if ($ParentDir -and -not (Test-Path -LiteralPath $ParentDir)) {
             $null = New-Item -ItemType Directory -Path $ParentDir -Force
         }
-        Set-Content -LiteralPath $DependencyFile -Value $NewText -Encoding UTF8 -NoNewline
+        # .NET WriteAllText throws on failure (unlike Set-Content's non-terminating
+        # errors), so a failed write never falls through into the lock step below.
+        [System.IO.File]::WriteAllText($DependencyFile, $NewText, $FileEncoding)
 
         if (-not $NoLock) {
             try {
@@ -315,7 +343,7 @@ function Add-PSDepend {
             }
             catch {
                 if ($FileExisted) {
-                    Set-Content -LiteralPath $DependencyFile -Value $OriginalFileText -Encoding UTF8 -NoNewline
+                    [System.IO.File]::WriteAllText($DependencyFile, $OriginalFileText, $FileEncoding)
                 }
                 else {
                     Remove-Item -LiteralPath $DependencyFile -Force -ErrorAction SilentlyContinue

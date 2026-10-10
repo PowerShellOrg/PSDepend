@@ -38,7 +38,8 @@ function ConvertTo-PSDependLiteral {
         $ChildIndent = '    ' * ($IndentLevel + 1)
         $ClosingIndent = '    ' * $IndentLevel
         $Entries = foreach ($Key in $Value.Keys) {
-            "$ChildIndent$Key = $(ConvertTo-PSDependLiteral -Value $Value[$Key] -IndentLevel ($IndentLevel + 1))"
+            $QuotedKey = "'$($Key.ToString() -replace "'", "''")'"
+            "$ChildIndent$QuotedKey = $(ConvertTo-PSDependLiteral -Value $Value[$Key] -IndentLevel ($IndentLevel + 1))"
         }
         return "@{`r`n$($Entries -join "`r`n")`r`n$ClosingIndent}"
     }
@@ -50,6 +51,9 @@ function ConvertTo-PSDependLiteral {
     }
     if ($Value -is [System.Collections.IEnumerable]) {
         $Items = @($Value | ForEach-Object { ConvertTo-PSDependLiteral -Value $_ -IndentLevel $IndentLevel })
+        if ($Items.Count -eq 0) {
+            return '@()'
+        }
         return ($Items -join ', ')
     }
     return "'$($Value.ToString() -replace "'", "''")'"
