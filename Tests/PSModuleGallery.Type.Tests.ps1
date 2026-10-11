@@ -476,6 +476,36 @@ Describe "PSModuleGallery Type" -Tag 'Integration' {
                 }
             }
         }
+
+        Context 'Prerelease version without AllowPrerelease' {
+            BeforeAll {
+                Mock Get-PSRepository { return $true } -ModuleName PSDepend
+                Mock Install-Module {} -ModuleName PSDepend
+                Mock Write-Warning {} -ModuleName PSDepend
+            }
+
+            It 'Warns when Version looks like a prerelease but AllowPrerelease is not specified' {
+                Invoke-PSDepend @Verbose -Path "$TestDepends\psgallerymodule.prerelease.missingparam.depend.psd1" -Force -ErrorAction Stop
+                Should -Invoke Write-Warning -Times 1 -Exactly -Scope Context -ModuleName PSDepend -ParameterFilter {
+                    $Message -like '*prerelease*'
+                }
+            }
+        }
+
+        Context 'Prerelease version with AllowPrerelease' {
+            BeforeAll {
+                Mock Get-PSRepository { return $true } -ModuleName PSDepend
+                Mock Install-Module {} -ModuleName PSDepend
+                Mock Write-Warning {} -ModuleName PSDepend
+            }
+
+            It 'Does not warn when AllowPrerelease is specified' {
+                Invoke-PSDepend @Verbose -Path "$TestDepends\psgallerymodule.prerelease.nowarning.depend.psd1" -Force -ErrorAction Stop
+                Should -Invoke Write-Warning -Times 0 -Exactly -Scope Context -ModuleName PSDepend -ParameterFilter {
+                    $Message -like '*prerelease*'
+                }
+            }
+        }
     }
 
     Describe "Git Type PS$PSVersion" -Skip:$nonWindows {
