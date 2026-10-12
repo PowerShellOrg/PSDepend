@@ -20,3 +20,17 @@ Two files must be updated together:
 See `Git.ps1` and `PSGalleryModule.ps1` as reference implementations.
 
 `PSDepend/PSDepend.Config` — path variables (`NuGetPath`, etc.) resolved at module load.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as GitHub issues at `PowerShellOrg/PSDepend`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical defaults (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` + `docs/adr/` at the repo root (a legacy `adr/` dir still holds two older entries pending consolidation). See `docs/agents/domain.md`.
