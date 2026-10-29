@@ -10,10 +10,10 @@ How the engineering skills should consume this repo's domain documentation when 
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
-> **Known split (as of this setup):** two ADR directories currently exist —
-> `docs/adr/` (canonical, going forward) and a legacy `adr/` at the repo root
-> with two older entries. Read both until they're consolidated, but write new
-> ADRs only to `docs/adr/`.
+> **Known layout (as of this setup):** only the legacy `adr/` directory currently
+> exists, with two older entries. Treat `docs/adr/` as canonical going forward:
+> read `adr/` until those entries are consolidated, but write new ADRs only to
+> `docs/adr/`.
 
 ## File structure
 
