@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Add-PSDepend` appends a dependency to a DependencyFile, creating
+  `requirements.psd1` if none exists. It parses the target file with the
+  PowerShell AST and splices the new entry in as text, leaving every other
+  entry and any comments untouched. By default it re-runs
+  `Update-PSDependLock` afterward, rolling back the edit if resolution
+  fails; `-NoLock` opts out. `-Force` overwrites an existing entry for the
+  same Name, replacing it entirely.
+- `PSGalleryModule` now warns when `Version` is an exact prerelease version
+  (e.g. `0.7.0-beta1`, including SemVer build metadata like `1.0.0-beta+build.5`)
+  but `AllowPrerelease` is not set, since `Install-Module` will otherwise fail
+  to find the package. The detection heuristic lives in the new
+  `Test-PSDependPrereleaseVersion` private helper (a regex, not
+  `SemanticVersion`, since that type isn't available on the inbox Windows
+  PowerShell 5.1 assembly this module targets).
+
 ## [0.7.0-beta1] - 2026-10-07
 
 ### Added

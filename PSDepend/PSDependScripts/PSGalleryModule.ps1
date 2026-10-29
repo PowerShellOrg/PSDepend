@@ -9,6 +9,7 @@
             Name: The name for this module
             Version: Used to identify existing installs meeting this criteria, and as RequiredVersion for installation.  Defaults to 'latest'
                 Also accepts a NuGet version range (e.g. '[2.2.3,3.0)', '[2.0,)', '(,3.0)').  A bare version (e.g. '3.2.1') still means that exact version.  When a range is given, the highest available version that satisfies it is installed.
+                A bare exact version that looks like a prerelease (e.g. '0.7.0-beta1') triggers a warning unless AllowPrerelease is also specified.
             Target: Used as 'Scope' for Install-Module.  If this is a path, we use Save-Module with this path.  On reruns, PSDepend checks existing modules first and skips reinstalling when the requested version is already present.  Defaults to 'AllUsers'
             AddToPath: If target is used as a path, prepend that path to ENV:PSModulePath
             Credential: The username and password used to authenticate against the private repository
@@ -217,6 +218,10 @@ if ($Version -and $Version -ne 'latest') {
     }
     if ($versionRange.IsExact) {
         $params.Add('RequiredVersion', $versionRange.Exact)
+
+        if ((Test-PSDependPrereleaseVersion -Version $versionRange.Exact) -and -not $AllowPrerelease) {
+            Write-Warning "Version [$($versionRange.Exact)] for [$Name] looks like a prerelease version, but AllowPrerelease was not specified. Add 'AllowPrerelease = `$true' to Parameters, or the module may not be found."
+        }
     }
 }
 

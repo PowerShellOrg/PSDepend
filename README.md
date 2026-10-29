@@ -149,6 +149,28 @@ Invoke-PSDepend -Path C:\requirements.psd1 -Credentials @{ 'my_gallery' = $creds
 
 The credential key must match between the dependency definition and the hashtable passed to `-Credentials`.
 
+## Adding Dependencies with Add-PSDepend
+
+`Add-PSDepend` appends a dependency to a DependencyFile in a PowerShell-y
+way instead of hand-editing the `.psd1`, creating `requirements.psd1` if
+none exists yet:
+
+```powershell
+Add-PSDepend psake latest
+Add-PSDepend -DependencyType GitHub -Name 'RamblingCookieMonster/PowerShell' -Version main
+```
+
+It parses the file with the PowerShell AST and splices the new entry in as
+text, so every other entry — and any comments — are left untouched. By
+default it also re-runs `Update-PSDependLock` afterward so the DependencyFile
+and its lock never drift apart; pass `-NoLock` to skip that (e.g. offline or
+in CI). If the lock step fails, the DependencyFile edit is rolled back.
+
+`Add-PSDepend` only declares the dependency — it does not install it. Run
+`Invoke-PSDepend` afterward to install. Calling it again for a `Name` that
+already exists is an error unless you pass `-Force`, which fully replaces
+the existing entry.
+
 ## Locking Dependencies
 
 Like npm's `package-lock.json`, PSDepend can pin every dependency — and the dependencies *they* pull in — to exact versions so that every machine installs the same thing:
