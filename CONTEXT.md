@@ -14,7 +14,7 @@ _Avoid_: requirements file, depend file, manifest
 
 **DependencyType**:
 The registered identifier that selects which DependencyScript handles a Dependency (e.g., `PSGalleryModule`, `Git`, `Chocolatey`).
-_Avoid_: type, provider, handler type
+_Avoid_: type, provider, handler type (bare "type"; the compound "Per-type default" below names a different concept and is fine)
 
 **DependencyScript**:
 A `PSDependScripts/<Type>.ps1` file that implements a DependencyType. Receives a typed Dependency object and a set of PSDependAction flags.
@@ -29,8 +29,16 @@ A Dependency field with dual semantics: a scope keyword (`AllUsers`, `CurrentUse
 _Avoid_: destination, scope, path (use Target regardless of which semantic applies)
 
 **PSDependOptions**:
-A reserved key in a DependencyFile that sets default field values applied to all Dependencies in that file.
-_Avoid_: defaults, global options, file options
+A reserved key in a DependencyFile holding default field values for its Dependencies: a Global default applies to every Dependency in the file, and a Per-type default narrows that to one DependencyType. Either is overridden by a value set directly on a Dependency.
+_Avoid_: defaults, global options, file options (as a name for this key; "Global default" below names a narrower, different concept and is fine)
+
+**Global default**:
+A value set directly under `PSDependOptions` for an option field (e.g. `PSDependOptions.Target`), applied to every Dependency in the file unless a Per-type default or the Dependency itself overrides it.
+_Avoid_: global option
+
+**Per-type default**:
+A default scoped to one DependencyType, set as a nested hashtable under `PSDependOptions` keyed by that type's name (e.g. `PSDependOptions.Git = @{ Target = '...' }`). Overrides the Global default for Dependencies of that type; overridden by a value set directly on a Dependency. A `PSDependOptions` key is read as a Per-type default only when its value is itself a hashtable and its name isn't one of the fixed option names (`Source`, `Target`, `Parameters`, `AddToPath`, `Tags`, `DependsOn`, `PreScripts`, `PostScripts`, `Credential`) — those names are reserved and therefore unavailable as DependencyType names.
+_Avoid_: per-dependency-type option, type-level option
 
 **Prerequisite**:
 A declared ordering constraint between Dependencies. Expressed via the `DependsOn` field; resolved into topological execution order before dispatch.

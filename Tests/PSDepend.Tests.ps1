@@ -148,6 +148,86 @@ Describe "Get-Dependency PS$PSVersion" -Tag 'Unit' {
             $Dependencies.DependencyType | Should -Be 'PSGalleryModule'
             $Dependencies.Version | Should -Be 'latest'
         }
+
+        It 'Applies a per-type default under PSDependOptions, overriding the global default' {
+            $inputObj = @{
+                PSDependOptions = @{
+                    Target = 'GlobalTarget'
+                    Git    = @{ Target = 'GitTarget' }
+                }
+                'Git::org/repo' = 'latest'
+                Pester     = 'latest'
+            }
+            $Dependencies = Get-Dependency -InputObject $inputObj
+            ($Dependencies | Where-Object DependencyType -EQ 'Git').Target | Should -Be 'GitTarget'
+            ($Dependencies | Where-Object DependencyType -EQ 'PSGalleryModule').Target | Should -Be 'GlobalTarget'
+        }
+
+        It 'Lets a Dependency''s own value win over a per-type default' {
+            $inputObj = @{
+                PSDependOptions = @{
+                    Git = @{ Target = 'GitTarget' }
+                }
+                Dep = @{
+                    DependencyType = 'Git'
+                    Name           = 'org/repo'
+                    Target         = 'DependencyTarget'
+                }
+            }
+            $Dependencies = Get-Dependency -InputObject $inputObj
+            $Dependencies.Target | Should -Be 'DependencyTarget'
+        }
+
+        It 'Overrides a per-type Parameters hashtable by whole value, not a deep merge' {
+            $inputObj = @{
+                PSDependOptions = @{
+                    Parameters = @{ Global = 'g' }
+                    Git        = @{ Parameters = @{ PerType = 'p' } }
+                }
+                Dep = @{
+                    DependencyType = 'Git'
+                    Name           = 'org/repo'
+                }
+            }
+            $Dependencies = Get-Dependency -InputObject $inputObj
+            $Dependencies.Parameters.ContainsKey('PerType') | Should -Be $True
+            $Dependencies.Parameters.ContainsKey('Global') | Should -Be $False
+        }
+
+        It 'Warns when a per-type default names a type no Dependency in the file uses' {
+            $inputObj = @{
+                PSDependOptions = @{
+                    Gti = @{ Target = 'Typo' }
+                }
+                Pester = 'latest'
+            }
+            $Warnings = @()
+            $null = Get-Dependency -InputObject $inputObj -WarningVariable Warnings -WarningAction SilentlyContinue
+            $Warnings.Message -join '' | Should -Match "'Gti'"
+        }
+
+        It 'Does not warn when a per-type default names a type a Dependency in the file uses' {
+            $inputObj = @{
+                PSDependOptions = @{
+                    PSGalleryModule = @{ Target = 'Used' }
+                }
+                Pester = 'latest'
+            }
+            $Warnings = @()
+            $null = Get-Dependency -InputObject $inputObj -WarningVariable Warnings -WarningAction SilentlyContinue
+            $Warnings.Count | Should -Be 0
+        }
+
+        It 'Applies a per-type Credential default for the bare PSGalleryModule syntax' {
+            $inputObj = @{
+                PSDependOptions = @{
+                    PSGalleryModule = @{ Credential = 'MyCredKey' }
+                }
+                Pester = 'latest'
+            }
+            $Dependencies = Get-Dependency -InputObject $inputObj -Credentials @{ MyCredKey = 'TheCredentialObject' }
+            $Dependencies.Credential | Should -Be 'TheCredentialObject'
+        }
     }
 }
 
