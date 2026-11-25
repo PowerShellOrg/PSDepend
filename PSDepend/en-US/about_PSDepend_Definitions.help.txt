@@ -120,6 +120,22 @@ DETAILED DESCRIPTION
                 DependsOn
                 PreScripts
                 PostScripts
+                Credential
+
+        A nested hashtable keyed by DependencyType sets a default for just that type,
+        overriding the global default and overridden by a value set on the dependency itself:
+
+            @{
+                PSDependOptions = @{
+                    Target = 'C:\MyProject'            # global default
+                    Git    = @{ Target = 'C:\git' }    # default for Git dependencies only
+                }
+                pester = 'latest'
+                'Git::buildhelpers/buildhelpers' = 'latest' # a Git dependency, uses 'C:\git'
+            }
+
+        A DependencyType name can't also be one of the attribute names above (Target,
+        Source, etc.) - those are reserved as scalar option keys.
 
     PSDepend configuration: PSDepend.Config
     =======================================

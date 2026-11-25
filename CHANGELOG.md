@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Per-type defaults under `PSDependOptions`: a nested hashtable keyed by
+  `DependencyType` (e.g. `PSDependOptions.Git = @{ Target = '...' }`) sets a
+  default scoped to that type, between the global `PSDependOptions` default
+  and a value set directly on a Dependency. Warns when a per-type block names
+  a `DependencyType` no Dependency in the file uses. (#42)
+
 ## [0.7.0-beta1] - 2026-10-07
 
 ### Added
